@@ -3,7 +3,9 @@
 import { PY_HARNESS } from './pyHarness.js';
 
 const PYODIDE_VERSION = '0.27.7'; // keep in sync with the pyodide devDependency
-const CDN = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`;
+// Overridable so the runtime can be self-hosted (VITE_PYODIDE_BASE=/pyodide/).
+const CDN =
+  import.meta.env?.VITE_PYODIDE_BASE || `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`;
 
 let pyodidePromise = null;
 let pandasLoaded = false;
