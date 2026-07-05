@@ -26,7 +26,7 @@ export const SEED_QUESTIONS = [
       { args: [[2, 7, 11, 15], 9], expected: [0, 1] },
       { args: [[3, 2, 4], 6], expected: [1, 2] },
       { args: [[3, 3], 6], expected: [0, 1] },
-      { args: [[-1, 0, 1, 2], 1], expected: [0, 3] },
+      { args: [[-3, 4, 1, 90], -2], expected: [0, 2] },
       { args: [[5, 75, 25], 100], expected: [1, 2] },
     ],
     hint: 'Walk the list once. For each value, check whether `target - value` is already in a dict of seen values; if so you have your pair. Otherwise store `value -> index`.',
