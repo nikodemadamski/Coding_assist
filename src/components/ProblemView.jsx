@@ -50,6 +50,10 @@ export default function ProblemView({ question, progress, onSolve, onFail, onDra
   }, []);
 
   async function execute(isSubmit) {
+    // Flush the pending draft save — the code being run must survive a reload
+    // even if the 500ms debounce hasn't fired yet.
+    clearTimeout(draftTimer.current);
+    onDraft(question.id, code);
     setRunning(true);
     setJustSolved(false);
     setReport(null);

@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "test": "node tests/progress-tests.mjs && node tests/run-seed-tests.mjs"
+    "test": "node tests/progress-tests.mjs && node tests/run-seed-tests.mjs",
+    "test:smoke": "node tests/smoke.mjs"
   },
   "dependencies": {
     "@codemirror/lang-python": "^6.1.6",
@@ -28,6 +29,7 @@
     "eslint-plugin-react": "^7.35.0",
     "eslint-plugin-react-hooks": "^5.1.0",
     "globals": "^15.9.0",
+    "playwright": "^1.61.1",
     "prettier": "^3.3.3",
     "pyodide": "^0.27.0",
     "undici": "^6.19.0",
