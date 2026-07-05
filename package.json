@@ -1,0 +1,36 @@
+{
+  "name": "zoroclaude-dojo",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Personal LeetCode-style dojo for Python, pandas and SQL training",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "test": "node tests/run-seed-tests.mjs"
+  },
+  "dependencies": {
+    "@codemirror/lang-python": "^6.1.6",
+    "@codemirror/lang-sql": "^6.7.0",
+    "@uiw/react-codemirror": "^4.23.0",
+    "marked": "^12.0.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "sql.js": "^1.11.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.9.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "eslint": "^9.9.0",
+    "eslint-plugin-react": "^7.35.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "globals": "^15.9.0",
+    "prettier": "^3.3.3",
+    "pyodide": "^0.27.0",
+    "undici": "^6.19.0",
+    "vite": "^5.4.0"
+  }
+}
