@@ -42,8 +42,13 @@ function touchStreak(streak, today) {
   return { count: 1, lastActiveDate: today };
 }
 
-// A successful submit. Returns a new Progress object.
-export function recordSolve(progress, questionId, now = new Date()) {
+// How a confidence rating on a review shifts the SRS stage.
+export const RATING_DELTA = { easy: 2, good: 1, hard: -1 };
+
+// A successful submit. `opts.stageDelta` lets a confidence rating move the review
+// forward faster (Easy) or hold it back (Hard); default +1 keeps the plain ladder.
+// Returns a new Progress object.
+export function recordSolve(progress, questionId, now = new Date(), { stageDelta = 1 } = {}) {
   const today = todayStr(now);
   const iso = now.toISOString();
   const next = structuredClone(progress);
@@ -52,6 +57,7 @@ export function recordSolve(progress, questionId, now = new Date()) {
   next.solved[questionId] = {
     firstSolvedAt: prev ? prev.firstSolvedAt : iso,
     attempts: (prev ? prev.attempts : 0) + 1,
+    solves: (prev ? prev.solves || 0 : 0) + 1,
     lastSolvedAt: iso,
   };
 
@@ -59,8 +65,8 @@ export function recordSolve(progress, questionId, now = new Date()) {
   if (!srs) {
     next.srs[questionId] = { stage: 0, nextDue: addDays(today, SRS_INTERVALS[0]) };
   } else if (isDue(srs, today)) {
-    // Reviewed on time: advance the stage (cap at the last interval).
-    const stage = Math.min(srs.stage + 1, SRS_INTERVALS.length - 1);
+    // Reviewed on time: move the stage by the rating delta (clamped to the ladder).
+    const stage = Math.max(0, Math.min(srs.stage + stageDelta, SRS_INTERVALS.length - 1));
     next.srs[questionId] = { stage, nextDue: addDays(today, SRS_INTERVALS[stage]) };
   }
   // Solving early (not due yet) leaves the schedule untouched.
@@ -74,8 +80,14 @@ export function recordFail(progress, questionId, now = new Date()) {
   const today = todayStr(now);
   const next = structuredClone(progress);
 
-  const prev = next.solved[questionId];
-  if (prev) next.solved[questionId] = { ...prev, attempts: prev.attempts + 1 };
+  // Track mistakes even on never-solved questions, so "what do I get wrong?"
+  // has data from the very first attempt.
+  const prev = next.solved[questionId] || { firstSolvedAt: null, attempts: 0, solves: 0 };
+  next.solved[questionId] = {
+    ...prev,
+    attempts: prev.attempts + 1,
+    mistakes: (prev.mistakes || 0) + 1,
+  };
 
   const srs = next.srs[questionId];
   if (srs && isDue(srs, today)) {
@@ -84,10 +96,67 @@ export function recordFail(progress, questionId, now = new Date()) {
   return next;
 }
 
+// "Solved" for gating/mastery = has actually been solved at least once. A
+// never-solved question that only has failed attempts is still New.
+export function isSolved(entry) {
+  return !!entry && (entry.solves || 0) > 0;
+}
+
 export function dueQuestionIds(progress, validIds, today = todayStr()) {
   return Object.entries(progress.srs)
     .filter(([id, entry]) => validIds.has(id) && isDue(entry, today))
     .map(([id]) => id);
+}
+
+// Questions never solved yet — the pool that unlocks once reviews are cleared.
+export function newQuestionIds(progress, questions) {
+  return questions.filter((q) => !isSolved(progress.solved[q.id])).map((q) => q.id);
+}
+
+// ---- deterministic shuffle (so a practice session has a stable random order) ----
+
+function mulberry32(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s |= 0;
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+export function shuffle(arr, seed = (Math.random() * 2 ** 32) >>> 0) {
+  const a = [...arr];
+  const rnd = mulberry32(seed);
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// The clear-reviews-before-new gating and re-queue-on-fail rule lives in
+// state/practiceSession.js (an explicit session queue). This module supplies
+// the pieces it composes: dueQuestionIds, newQuestionIds, and shuffle.
+
+export function practiceCounts(progress, questions, today = todayStr()) {
+  const validIds = new Set(questions.map((q) => q.id));
+  return {
+    due: dueQuestionIds(progress, validIds, today).length,
+    fresh: newQuestionIds(progress, questions).length,
+  };
+}
+
+// Mastery level for a question, for the NeetCode-style status pills.
+// new -> learning -> reviewing -> mastered as the SRS stage climbs.
+export function masteryLevel(progress, questionId) {
+  const entry = progress.solved[questionId];
+  if (!isSolved(entry)) return 'new';
+  const stage = progress.srs[questionId]?.stage ?? 0;
+  if (stage >= 4) return 'mastered';
+  if (stage >= 2) return 'reviewing';
+  return 'learning';
 }
 
 // ---- belts ----

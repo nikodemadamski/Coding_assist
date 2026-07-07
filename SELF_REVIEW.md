@@ -1,5 +1,41 @@
 # SELF_REVIEW — ZoroClaude Dojo
 
+## Redesign update — no-AI, NeetCode-style learning loop
+
+After the first build, the goal was refined: **no live AI in the app**, questions
+authored by talking to Claude and imported, and a NeetCode-style loop where you re-clear
+learned questions (random order) before new ones unlock, with feedback on whether you
+actually understood the code.
+
+What changed, and how it's verified:
+
+- **Removed the live Anthropic API entirely** (the old in-app "Forge"), including the API
+  key from Settings. The app makes zero calls to any LLM. Replaced with **＋ Import
+  questions**: paste a JSON pack Claude generated for you; each question is schema-checked
+  **and** its solution is executed in the real Pyodide/sql.js runner before it's accepted
+  — proven in the smoke test (a good pack is added; a solution that fails its own tests is
+  rejected).
+- **Mastery-gated random practice** (`src/state/practiceSession.js`): a session serves all
+  due reviews in random order, and new questions unlock only after every review is
+  answered correctly; a failed/skipped question re-queues. Covered by 20 new unit tests
+  and an end-to-end smoke check ("new unlocks only after every review is cleared").
+- **Confidence rating** (Hard/Good/Easy) after each correct answer tunes the next SRS
+  interval; unit-tested (Easy jumps two stages, Hard drops one).
+- **Understanding + mistakes**: after a correct answer, practice shows a reflection
+  prompt, the reference solution, and an "approach" walkthrough; the Stats page adds a
+  mastery breakdown and a "where you slip" list of most-missed problems.
+- Added the **Contains Duplicate** seed (the third of your named trio) and approach
+  walkthroughs; bank is now 31 questions, all still verified by `npm test`.
+
+All gates re-run green after the redesign: `npm test` (51 logic checks + 31 seed
+verifications + sabotage checks), `npm run build`, `npm run lint`, and the Playwright
+smoke test (31 checks incl. import + practice + 375px mobile).
+
+---
+
+## Original build notes
+
+
 ## What was tested, and what passed
 
 Everything below was actually executed, not eyeballed.

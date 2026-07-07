@@ -179,6 +179,33 @@ const PYTHON_QUESTIONS = [
       'def fizzbuzz(n):\n    out = []\n    for i in range(1, n + 1):\n        if i % 15 == 0:\n            out.append("FizzBuzz")\n        elif i % 3 == 0:\n            out.append("Fizz")\n        elif i % 5 == 0:\n            out.append("Buzz")\n        else:\n            out.append(str(i))\n    return out\n',
   },
   {
+    id: 'py-contains-duplicate',
+    track: 'python',
+    title: 'Contains Duplicate',
+    difficulty: 'easy',
+    pattern: 'hashing',
+    description:
+      'Given a list of integers `nums`, return `True` if any value appears **at least twice**, and `False` if every element is distinct.\n\nThis is the "have I seen this before?" pattern — the foundation for two-sum, anagrams, and most hashing problems.',
+    examples: [
+      'contains_duplicate([1, 2, 3, 1])  ->  True',
+      'contains_duplicate([1, 2, 3, 4])  ->  False',
+    ],
+    function_name: 'contains_duplicate',
+    starter_code: 'def contains_duplicate(nums):\n    # True if any value repeats\n    ...\n',
+    tests: [
+      { args: [[1, 2, 3, 1]], expected: true },
+      { args: [[1, 2, 3, 4]], expected: false },
+      { args: [[]], expected: false },
+      { args: [[7]], expected: false },
+      { args: [[0, 0]], expected: true },
+      { args: [[-1, -1, 2]], expected: true },
+    ],
+    hint: 'A set drops duplicates. If the set is smaller than the list, something repeated.',
+    approach:
+      "Build a `set` from the list and compare lengths: `len(set(nums)) != len(nums)`. Converting to a set removes duplicates, so if the set is shorter, at least one value appeared more than once. This is O(n) time and O(n) space.\n\nThe manual version — loop with a `seen` set, return `True` the moment you re-encounter a value — is worth writing once too, because that early-exit `seen` set is the exact move behind Two Sum and Valid Anagram.",
+    solution: 'def contains_duplicate(nums):\n    return len(set(nums)) != len(nums)\n',
+  },
+  {
     id: 'py-two-sum',
     track: 'python',
     title: 'Two Sum',
@@ -198,6 +225,8 @@ const PYTHON_QUESTIONS = [
       { args: [[5, 75, 25], 100], expected: [1, 2] },
     ],
     hint: 'Walk the list once. For each value, check whether `target - value` is already in a dict of seen values; if so you have your pair. Otherwise store `value -> index`.',
+    approach:
+      'Keep a dict mapping each value you have seen to its index. For each `n`, the number that would complete the pair is `target - n` (its *complement*). If that complement is already in the dict, you have found the answer and return `[seen[complement], i]`. Otherwise record `seen[n] = i` and move on.\n\nOne pass, O(n) time, O(n) space. The naive double loop is O(n²) — the dict trades space to remove the inner loop. Note you check the dict *before* inserting the current value, so an element is never paired with itself.',
     solution:
       'def two_sum(nums, target):\n    seen = {}\n    for i, n in enumerate(nums):\n        if target - n in seen:\n            return [seen[target - n], i]\n        seen[n] = i\n',
   },
@@ -220,6 +249,8 @@ const PYTHON_QUESTIONS = [
       { args: ['aacc', 'ccac'], expected: false },
     ],
     hint: 'Shortest: `sorted(s) == sorted(t)`. Interview-grade: compare two frequency dicts.',
+    approach:
+      'Two strings are anagrams iff they contain the same characters with the same counts. The one-liner `sorted(s) == sorted(t)` sorts both into the same canonical order — O(n log n).\n\nThe O(n) interview answer builds a frequency dict for each string (or one dict, incrementing for `s` and decrementing for `t`) and checks they match. Same counting move as Contains Duplicate and Group Anagrams.',
     solution: 'def is_anagram(s, t):\n    return sorted(s) == sorted(t)\n',
   },
   {

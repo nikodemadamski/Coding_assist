@@ -1,11 +1,26 @@
 # ⚔️ ZoroClaude Dojo
 
-A **personal LeetCode-style training platform** for rebuilding Python, pandas, and SQL
-foundations — built for a 12-week data-science / FDE interview prep plan.
+A **personal, NeetCode-style training platform** for rebuilding Python 3, pandas, and
+SQL foundations — LeetCode-style problems with instructions, examples, hints, solution
+walkthroughs, and a real in-browser code runner.
 
-Read a problem → write code in the browser → run tests → submit → track progress with
-spaced repetition, streaks, and belt ranks. Generate brand-new practice problems on
-demand with the Anthropic API ("Forge").
+Read a problem → write code in the browser → run tests → submit → get it graded → track
+mastery with spaced repetition. The learning loop is built around how you actually learn:
+
+- **Clear your reviews first, then unlock new questions.** Each practice session serves
+  every question that's due for review — in **random order** — and a new question only
+  appears once you've answered every review correctly. Miss one and it comes back around;
+  you can't move on by failing.
+- **Rate your confidence** after each solve (Hard / Good / Easy) — that tunes when the
+  question comes back, Anki-style.
+- **Check your understanding**, not just your output: after each correct answer you
+  compare against the reference solution and an approach walkthrough, and the Stats page
+  shows exactly which problems you get wrong most.
+
+**The app never connects to any AI service.** New questions come from *you*: you ask
+Claude (in a Claude Project or chat) for a batch using the built-in prompt, paste the
+JSON it returns into **＋ Import questions**, and the dojo verifies every solution in the
+real runner before accepting it.
 
 **Everything runs in your browser. There is no backend and nothing to pay for.**
 
@@ -13,7 +28,7 @@ demand with the Anthropic API ("Forge").
   WebAssembly, loaded from the jsDelivr CDN). pandas is lazy-loaded only when you open a
   pandas problem.
 - **SQL** executes via [sql.js](https://sql.js.org) (SQLite compiled to WebAssembly).
-- **Progress, drafts, forged questions, and your review schedule** live in
+- **Progress, drafts, imported questions, and your review schedule** live in
   `localStorage`, with one-click JSON export/import so you never lose data.
 
 ## Quick start
@@ -35,18 +50,28 @@ npm run preview  # serve the production build locally
 npm run lint     # ESLint
 ```
 
-## Adding your Anthropic API key (for the Forge)
+## How you get new questions (no AI in the app)
 
-The "✦ Forge new question" feature asks Claude to write a brand-new, auto-verified
-practice problem. It needs your own API key:
+The app is deliberately offline of any LLM. You are the bridge:
 
-1. Create a key at <https://console.anthropic.com/settings/keys>.
-2. In the app, open **Settings** (gear icon in the header).
-3. Paste the key into the **Anthropic API key** field.
+1. In the app, click **＋ Import questions** on the home screen and hit **Copy prompt**.
+2. Paste that prompt into a **Claude Project or chat**, and tell it what you want at the
+   end — e.g. *"3 easy python on hashing: contains-duplicate, valid-palindrome,
+   group-anagrams"* or *"5 SQL window-function problems, medium"*. Do this daily.
+3. Claude replies with a JSON pack. Paste it back into the **Import questions** box and
+   click **Import & verify**.
+4. The dojo runs each generated solution through the real Python/SQL runner and only adds
+   the ones that actually pass their own tests — a bad question can never enter your bank.
 
-Your key is stored only in your browser's `localStorage` and is sent only to
-`api.anthropic.com` — it never touches any other server. Solving problems works fully
-offline-of-Anthropic; the key is needed only for forging new questions.
+Because *you* run the model in your own Claude session, there's no API key to manage and
+the website itself makes zero calls to any AI service. The exact JSON schema is shown
+inside the Import dialog.
+
+### The daily loop
+
+Open the app → **Today's practice** shows how many reviews are due and how many new
+questions are ready → **Start review**. Clear the reviews (random order), rate each one,
+then new questions unlock. Import a fresh pack from Claude whenever you want more.
 
 ## Free deployment
 
@@ -87,5 +112,9 @@ npx vercel deploy dist --prod
 - Vite + React (JSX), CodeMirror 6 editor with Python/SQL syntax highlighting.
 - Python code runs inside a **Web Worker**, so an infinite loop can be killed after 5
   seconds without freezing the page.
+- Spaced repetition intervals: 1 / 3 / 7 / 16 / 30 days. A confidence rating nudges the
+  next interval; a failed review resets it.
+- The review-gating and re-queue-on-fail logic lives in `src/state/practiceSession.js`
+  and is covered by unit tests (`npm test`).
 - Dark "dojo" theme: Zilla Slab display, IBM Plex Sans body, IBM Plex Mono code.
   Mobile-first — under 900 px the Problem / Code / Result panes become tabs.

@@ -348,10 +348,6 @@ button {
   border-color: #5a2c2e;
 }
 
-.tag.forged {
-  color: var(--gold);
-  border-color: var(--gold);
-}
 
 .solved-mark {
   color: var(--jade);
@@ -916,6 +912,260 @@ details.hint[open] summary {
   font-family: var(--font-code);
   font-size: 0.78rem;
   color: var(--text-dim);
+}
+
+/* ── shared bits ───────────────────────────────────────────────────────── */
+
+.solution-pre {
+  background: var(--ink);
+  border: 1px solid var(--line);
+  padding: 10px 12px;
+  border-radius: 8px;
+  overflow: auto;
+  font-family: var(--font-code);
+  font-size: 0.83rem;
+  white-space: pre;
+  margin: 0;
+}
+
+.btn-lg {
+  padding: 11px 22px;
+  font-size: 1rem;
+}
+
+.tag.imported {
+  color: var(--gold);
+  border-color: var(--gold);
+}
+
+.tag.due-tag {
+  color: var(--gold);
+  border-color: var(--gold);
+}
+
+/* ── Today's practice card ─────────────────────────────────────────────── */
+
+.today-card {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--crimson) 10%, var(--panel)), var(--panel));
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px;
+  margin-top: 8px;
+}
+
+.today-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.today-head h2 {
+  font-size: 1.3rem;
+}
+
+.today-progress {
+  font-family: var(--font-code);
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.today-line {
+  font-size: 1rem;
+  margin: 8px 0 14px;
+}
+
+.today-line .due-num,
+.today-line strong {
+  color: var(--gold);
+}
+
+.today-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.today-rule {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin: 14px 0 0;
+}
+
+/* ── mastery pills & dots ──────────────────────────────────────────────── */
+
+.pill {
+  font-size: 0.7rem;
+  font-family: var(--font-code);
+  border-radius: 999px;
+  padding: 2px 9px;
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.pill-new {
+  color: var(--text-dim);
+}
+.pill-learning {
+  color: var(--gold);
+  border-color: #63512c;
+}
+.pill-reviewing {
+  color: #6fb5e8;
+  border-color: #2c4a63;
+}
+.pill-mastered {
+  color: var(--jade);
+  border-color: #2c5a44;
+}
+
+.mastery-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+}
+.dot-new {
+  background: transparent;
+}
+.dot-learning {
+  background: var(--gold);
+}
+.dot-reviewing {
+  background: #6fb5e8;
+}
+.dot-mastered {
+  background: var(--jade);
+}
+
+.mastery-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ── grouped browse list ───────────────────────────────────────────────── */
+
+.pattern-group {
+  margin-top: 14px;
+}
+
+.pattern-head {
+  font-size: 0.95rem;
+  color: var(--text-dim);
+  text-transform: capitalize;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 5px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+/* ── practice phase pill & reflection ──────────────────────────────────── */
+
+.phase-pill {
+  font-family: var(--font-code);
+  font-size: 0.78rem;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.phase-pill.review {
+  color: var(--gold);
+  border-color: #63512c;
+}
+.phase-pill.new {
+  color: #6fb5e8;
+  border-color: #2c4a63;
+}
+
+.reflect-q {
+  color: var(--text);
+  font-size: 0.9rem;
+  margin: 12px 0 6px;
+}
+
+.reflect-block {
+  margin: 10px 0;
+}
+.reflect-block h4 {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  margin-bottom: 5px;
+}
+
+.rating-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.rating-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 96px;
+  gap: 2px;
+}
+.rating-btn span {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  font-weight: 400;
+}
+.rating-hard {
+  border-color: var(--crimson);
+}
+.rating-good {
+  border-color: var(--gold);
+}
+.rating-easy {
+  border-color: var(--jade);
+}
+
+.retry-note {
+  border: 1px solid #63512c;
+  background: color-mix(in srgb, var(--gold) 8%, var(--ink));
+  color: var(--gold);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 12px 0;
+  font-size: 0.88rem;
+}
+
+.session-done {
+  max-width: 520px;
+  margin: 40px auto;
+  text-align: center;
+  border: 1px solid var(--jade);
+  border-radius: 14px;
+  padding: 28px 22px;
+  background: color-mix(in srgb, var(--jade) 8%, var(--panel));
+}
+.session-done h2 {
+  color: var(--jade);
+  font-size: 1.4rem;
+  margin-bottom: 10px;
+}
+
+/* ── import modal ──────────────────────────────────────────────────────── */
+
+.import-result {
+  margin-top: 14px;
+  font-size: 0.9rem;
+}
+.reject-list {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  padding-left: 18px;
+  margin: 4px 0 0;
+}
+.reject-list code {
+  color: var(--text);
 }
 
 /* screen-reader only */

@@ -3,7 +3,6 @@
 
 const PROGRESS_KEY = 'zoro.progress.v1';
 const CUSTOM_QUESTIONS_KEY = 'zoro.customQuestions.v1';
-const API_KEY_KEY = 'zoro.apiKey.v1';
 
 export const EMPTY_PROGRESS = {
   solved: {}, // questionId -> { firstSolvedAt, attempts, lastSolvedAt }
@@ -42,15 +41,6 @@ export function loadCustomQuestions() {
 
 export function saveCustomQuestions(questions) {
   localStorage.setItem(CUSTOM_QUESTIONS_KEY, JSON.stringify(questions));
-}
-
-export function loadApiKey() {
-  return localStorage.getItem(API_KEY_KEY) || '';
-}
-
-export function saveApiKey(key) {
-  if (key) localStorage.setItem(API_KEY_KEY, key);
-  else localStorage.removeItem(API_KEY_KEY);
 }
 
 // ---- export / import ----

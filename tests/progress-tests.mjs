@@ -8,7 +8,20 @@ import {
   addDays,
   todayStr,
   SRS_INTERVALS,
+  isSolved,
+  newQuestionIds,
+  masteryLevel,
+  practiceCounts,
+  RATING_DELTA,
 } from '../src/state/progress.js';
+import {
+  createSession,
+  currentId,
+  currentPhase,
+  sessionCounts,
+  onPass,
+  onRequeue,
+} from '../src/state/practiceSession.js';
 import { EMPTY_PROGRESS, exportData, parseImport } from '../src/state/storage.js';
 
 let failures = 0;
@@ -140,6 +153,96 @@ console.log('Training logic tests\n');
     threw = true;
   }
   check(threw, 'import rejects foreign JSON');
+}
+
+// ---- mastery-gated random practice (the core learning rule) ----
+{
+  const questions = [
+    { id: 'a', track: 'python', pattern: 'p' },
+    { id: 'b', track: 'python', pattern: 'p' },
+    { id: 'c', track: 'python', pattern: 'p' },
+    { id: 'd', track: 'python', pattern: 'p' },
+  ];
+  const today = todayStr();
+
+  // a,b are learned and due today; c,d are brand new.
+  const prog = {
+    solved: {
+      a: { firstSolvedAt: '2026-01-01', attempts: 1, solves: 1, lastSolvedAt: '2026-01-01' },
+      b: { firstSolvedAt: '2026-01-01', attempts: 1, solves: 1, lastSolvedAt: '2026-01-01' },
+    },
+    drafts: {},
+    srs: {
+      a: { stage: 0, nextDue: today },
+      b: { stage: 0, nextDue: today },
+    },
+    streak: { count: 0, lastActiveDate: null },
+  };
+
+  check(isSolved(prog.solved.a) === true, 'isSolved true for a solved question');
+  check(isSolved(prog.solved.c) === false, 'isSolved false for a never-solved question');
+  check(
+    JSON.stringify(newQuestionIds(prog, questions).sort()) === JSON.stringify(['c', 'd']),
+    'newQuestionIds returns exactly the unsolved questions'
+  );
+  const counts = practiceCounts(prog, questions, today);
+  check(counts.due === 2 && counts.fresh === 2, 'practiceCounts: 2 due, 2 new');
+
+  // ---- session gating: reviews before new, re-queue on fail ----
+  let sess = createSession(prog, questions, { seed: 7 });
+  check(currentPhase(sess) === 'review', 'session starts in the review phase');
+  check(sessionCounts(sess).reviewLeft === 2 && sessionCounts(sess).newLeft === 2, 'session queues 2 reviews + 2 new');
+  check(['a', 'b'].includes(currentId(sess)), 'first served question is a due review');
+
+  // Failing/skipping a review keeps it in the review queue (it comes back).
+  const firstReview = currentId(sess);
+  const afterSkip = onRequeue(sess);
+  check(currentPhase(afterSkip) === 'review', 'still in review phase after a skip');
+  check(currentId(afterSkip) !== firstReview, 'skip moves to the other review, not the same one');
+  check(sessionCounts(afterSkip).reviewLeft === 2, 'skipped review is re-queued, not dropped');
+
+  // New stays locked until BOTH reviews are passed.
+  let s2 = onPass(sess); // clear first review
+  check(currentPhase(s2) === 'review', 'new still locked with one review left');
+  s2 = onPass(s2); // clear second review
+  check(currentPhase(s2) === 'new', 'new unlocks only after all reviews cleared');
+  check(['c', 'd'].includes(currentId(s2)), 'now serving a new question');
+  s2 = onPass(s2);
+  s2 = onPass(s2);
+  check(currentId(s2) === null && currentPhase(s2) === 'done', 'session ends after clearing everything');
+
+  // A lone remaining item repeats on skip rather than vanishing.
+  const oneLeft = createSession(
+    { ...prog, solved: { a: prog.solved.a }, srs: { a: prog.srs.a } },
+    [{ id: 'a', track: 'python', pattern: 'p' }],
+    { seed: 1 }
+  );
+  check(currentId(onRequeue(oneLeft)) === 'a', 'the only remaining question repeats on skip (must clear it)');
+
+  // Failing a brand-new question does NOT mark it solved — still counts as new.
+  let failedNew = recordFail(prog, 'c', new Date());
+  check(!isSolved(failedNew.solved.c), 'failing a new question leaves it unsolved (new)');
+  check(failedNew.solved.c.mistakes === 1, 'mistake logged on a failed new question');
+
+  // Confidence rating tunes the interval: Easy jumps further than Good.
+  const dueProg = {
+    solved: { a: { firstSolvedAt: 'x', attempts: 1, solves: 1, lastSolvedAt: 'x' } },
+    drafts: {},
+    srs: { a: { stage: 1, nextDue: today } },
+    streak: { count: 0, lastActiveDate: null },
+  };
+  const good = recordSolve(dueProg, 'a', new Date(), { stageDelta: RATING_DELTA.good });
+  const easy = recordSolve(dueProg, 'a', new Date(), { stageDelta: RATING_DELTA.easy });
+  const hard = recordSolve(dueProg, 'a', new Date(), { stageDelta: RATING_DELTA.hard });
+  check(good.srs.a.stage === 2, 'Good advances one stage');
+  check(easy.srs.a.stage === 3, 'Easy advances two stages');
+  check(hard.srs.a.stage === 0, 'Hard drops a stage');
+
+  // Mastery levels track the ladder.
+  check(masteryLevel(prog, 'c') === 'new', 'never-solved -> new');
+  check(masteryLevel({ ...prog, srs: { a: { stage: 0, nextDue: today } } }, 'a') === 'learning', 'stage 0 -> learning');
+  check(masteryLevel({ ...prog, srs: { a: { stage: 2, nextDue: today } } }, 'a') === 'reviewing', 'stage 2 -> reviewing');
+  check(masteryLevel({ ...prog, srs: { a: { stage: 4, nextDue: today } } }, 'a') === 'mastered', 'stage 4 -> mastered');
 }
 
 console.log(failures === 0 ? '\nAll training-logic tests green.' : `\n${failures} FAILURE(S).`);

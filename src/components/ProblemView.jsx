@@ -3,6 +3,7 @@ import Editor from './Editor.jsx';
 import Results from './Results.jsx';
 import Markdown from './Markdown.jsx';
 import { runQuestion } from '../engine/runnerClient.js';
+import { RATING_DELTA, isSolved } from '../state/progress.js';
 
 const TABS = [
   { id: 'problem', label: 'Problem' },
@@ -10,7 +11,24 @@ const TABS = [
   { id: 'result', label: 'Result' },
 ];
 
-export default function ProblemView({ question, progress, onSolve, onFail, onDraft, onBack }) {
+const RATINGS = [
+  { key: 'hard', label: 'Hard', note: 'bring it back soon' },
+  { key: 'good', label: 'Good', note: 'normal interval' },
+  { key: 'easy', label: 'Easy', note: 'wait longer' },
+];
+
+export default function ProblemView({
+  question,
+  progress,
+  onSolve,
+  onFail,
+  onDraft,
+  onBack,
+  // practice-mode props (optional)
+  practiceMode = false,
+  practiceInfo = null,
+  onNext,
+}) {
   const [code, setCode] = useState(
     () => progress.drafts[question.id] ?? question.starter_code ?? ''
   );
@@ -19,11 +37,11 @@ export default function ProblemView({ question, progress, onSolve, onFail, onDra
   const [running, setRunning] = useState(false);
   const [statusText, setStatusText] = useState('');
   const [justSolved, setJustSolved] = useState(false);
+  const [outcome, setOutcome] = useState(null); // practice: 'pass' | 'fail' | null
   const draftTimer = useRef(null);
 
-  const solved = !!progress.solved[question.id];
+  const solved = isSolved(progress.solved[question.id]);
 
-  // Debounced draft persistence so a reload never loses work.
   const handleChange = useCallback(
     (value) => {
       setCode(value);
@@ -56,6 +74,7 @@ export default function ProblemView({ question, progress, onSolve, onFail, onDra
     onDraft(question.id, code);
     setRunning(true);
     setJustSolved(false);
+    setOutcome(null);
     setReport(null);
     setTab('result');
     try {
@@ -63,10 +82,17 @@ export default function ProblemView({ question, progress, onSolve, onFail, onDra
       setReport(rep);
       if (isSubmit) {
         if (rep.allPassed) {
-          onSolve(question.id);
-          setJustSolved(true);
+          if (practiceMode) {
+            // Wait for a confidence rating before scheduling — the rating tunes
+            // the next review interval.
+            setOutcome('pass');
+          } else {
+            onSolve(question.id);
+            setJustSolved(true);
+          }
         } else {
           onFail(question.id);
+          if (practiceMode) setOutcome('fail');
         }
       }
     } catch (err) {
@@ -82,6 +108,13 @@ export default function ProblemView({ question, progress, onSolve, onFail, onDra
     }
   }
 
+  // Rating a correct answer records the solve (with the confidence delta) AND
+  // advances the session — onSolve is the practice handler that drops the
+  // question from the queue, so we must NOT also call onNext (that re-queues).
+  function rate(level) {
+    onSolve(question.id, { stageDelta: RATING_DELTA[level] });
+  }
+
   function handleReset() {
     if (code !== question.starter_code && !window.confirm('Replace your code with the starter?')) {
       return;
@@ -89,14 +122,28 @@ export default function ProblemView({ question, progress, onSolve, onFail, onDra
     handleChange(question.starter_code);
   }
 
+  const phaseLabel =
+    practiceInfo?.phase === 'review'
+      ? `⟳ Review · ${practiceInfo.reviewsLeft} to clear`
+      : practiceInfo?.phase === 'new'
+        ? `✦ New · ${practiceInfo.newLeft} left`
+        : '';
+
   return (
     <div className="problem-view">
       <div className="pv-toolbar">
-        <button className="icon-btn" onClick={onBack} aria-label="Back to problem list">
-          ←
+        <button
+          className="icon-btn"
+          onClick={onBack}
+          aria-label={practiceMode ? 'End practice session' : 'Back to problem list'}
+        >
+          {practiceMode ? '✕ End' : '←'}
         </button>
+        {practiceMode && phaseLabel && (
+          <span className={`phase-pill ${practiceInfo.phase}`}>{phaseLabel}</span>
+        )}
         <span className="pv-title">
-          {solved && (
+          {solved && !practiceMode && (
             <span style={{ color: 'var(--jade)' }} title="Solved">
               ✓{' '}
             </span>
@@ -144,19 +191,15 @@ export default function ProblemView({ question, progress, onSolve, onFail, onDra
             <summary>Show hint</summary>
             <Markdown text={question.hint} />
           </details>
+          {question.approach && (
+            <details className="hint">
+              <summary>Approach — how the solution works</summary>
+              <Markdown text={question.approach} />
+            </details>
+          )}
           <details className="hint">
             <summary>Show solution (last resort!)</summary>
-            <pre
-              style={{
-                background: 'var(--ink)',
-                padding: '10px 12px',
-                borderRadius: 8,
-                overflowX: 'auto',
-                fontSize: '0.83rem',
-              }}
-            >
-              {question.solution}
-            </pre>
+            <pre className="solution-pre">{question.solution}</pre>
           </details>
         </section>
 
@@ -185,13 +228,63 @@ export default function ProblemView({ question, progress, onSolve, onFail, onDra
               ⚔ Solved! Scheduled for review — spaced repetition will bring it back.
             </div>
           )}
+
+          {/* Practice: correct → reflect + rate to schedule the next review */}
+          {practiceMode && outcome === 'pass' && (
+            <div className="reflect">
+              <div className="solved-banner">✓ Correct! Now lock in the understanding.</div>
+              <p className="reflect-q">
+                Before you move on: in one sentence, what does your solution actually do — and
+                what would break it?
+              </p>
+              {question.approach && (
+                <div className="reflect-block">
+                  <h4>How this solution works</h4>
+                  <Markdown text={question.approach} />
+                </div>
+              )}
+              <div className="reflect-block">
+                <h4>Reference solution — compare with yours</h4>
+                <pre className="solution-pre">{question.solution}</pre>
+              </div>
+              <p className="reflect-q">How well did you know it?</p>
+              <div className="rating-row">
+                {RATINGS.map((r) => (
+                  <button key={r.key} className={`btn rating-btn rating-${r.key}`} onClick={() => rate(r.key)}>
+                    <strong>{r.label}</strong>
+                    <span>{r.note}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Practice: wrong → it will come back; fix it or skip */}
+          {practiceMode && outcome === 'fail' && (
+            <div className="reflect">
+              <Results report={report} question={question} />
+              <div className="retry-note">
+                Not quite — this one stays in your queue and will come back until you get it. Fix
+                it and Submit again, or skip for now.
+              </div>
+              <div className="rating-row">
+                <button className="btn" onClick={() => setOutcome(null)}>
+                  Try again
+                </button>
+                <button className="btn btn-gold" onClick={() => onNext?.()}>
+                  Skip for now →
+                </button>
+              </div>
+            </div>
+          )}
+
           {running ? (
             <div className="loader">
               <div className="spinner" aria-hidden="true" />
               <span>{statusText || 'Running…'}</span>
             </div>
           ) : (
-            <Results report={report} question={question} />
+            !outcome && <Results report={report} question={question} />
           )}
         </section>
       </div>

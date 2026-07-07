@@ -118,8 +118,8 @@ try {
   await page.reload();
   const twoSumCard = page.locator('.q-card', { hasText: 'Two Sum' }).first();
   check(
-    (await twoSumCard.locator('.solved-mark').innerText()).trim() === '✓',
-    'solve persists after reload'
+    (await twoSumCard.locator('.pill').innerText()).trim() === 'learning',
+    'solve persists after reload (mastery pill turns "learning")'
   );
   const storedDraft = await page.evaluate(
     () => JSON.parse(localStorage.getItem('zoro.progress.v1') || '{}')?.drafts?.['py-two-sum'] || ''
@@ -167,17 +167,95 @@ try {
   await page.locator('.error-box').waitFor({ timeout: 30000 });
   check((await resultText(page)).includes('syntax error'), 'SQLite error shown verbatim');
 
-  // ---- forge without an API key ----
+  // ---- offline import: paste a question, verify in the runner, add it ----
   await page.locator('.icon-btn[aria-label="Back to problem list"]').click();
-  await page.locator('button', { hasText: '✦ Forge new question' }).click();
-  await page.locator('.chip', { hasText: 'sets' }).first().click();
-  await page.locator('.modal button', { hasText: '✦ Forge' }).click();
-  await page.locator('.modal [role="alert"]').waitFor({ timeout: 15000 });
+  await page.locator('button', { hasText: '＋ Import questions' }).click();
+  const goodPack = JSON.stringify({
+    questions: [
+      {
+        id: 'smoke-import-echo',
+        track: 'python',
+        title: 'Smoke Double',
+        difficulty: 'easy',
+        pattern: 'smoke',
+        description: 'Return n doubled.',
+        examples: ['double(2) -> 4'],
+        function_name: 'double',
+        starter_code: 'def double(n):\n    ...',
+        hint: 'multiply by two',
+        solution: 'def double(n):\n    return n * 2',
+        tests: [
+          { args: [2], expected: 4 },
+          { args: [0], expected: 0 },
+          { args: [-3], expected: -6 },
+          { args: [10], expected: 20 },
+        ],
+      },
+    ],
+  });
+  await page.fill('#import-json', goodPack);
+  await page.locator('.modal button', { hasText: 'Import & verify' }).click();
+  await page.locator('.import-result').waitFor({ timeout: 60000 });
   check(
-    (await page.locator('.modal [role="alert"]').innerText()).includes('No API key'),
-    'forging without an API key explains itself'
+    (await page.locator('.import-result').innerText()).includes('Added 1'),
+    'imported question is verified in the runner and added (no AI, offline)'
   );
-  await page.locator('.modal button', { hasText: 'Cancel' }).click();
+  // a solution that fails its own tests must be rejected
+  await page.fill(
+    '#import-json',
+    JSON.stringify({ ...JSON.parse(goodPack).questions[0], id: 'smoke-bad', solution: 'def double(n):\n    return n * 3' })
+  );
+  await page.locator('.modal button', { hasText: 'Import & verify' }).click();
+  await page.locator('.reject-list').waitFor({ timeout: 60000 });
+  check(
+    (await page.locator('.import-result').innerText()).includes('Rejected 1'),
+    'import rejects a question whose solution fails its own tests'
+  );
+  await page.locator('.modal').getByRole('button', { name: /^(Close|Done)$/ }).click();
+
+  // ---- practice session: reviews-before-new gating + confidence rating ----
+  await page.evaluate(() => {
+    const t = new Date();
+    const today = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+    const solved = { firstSolvedAt: today, attempts: 1, solves: 1, lastSolvedAt: today };
+    localStorage.setItem(
+      'zoro.progress.v1',
+      JSON.stringify({
+        solved: { 'py-contains-duplicate': { ...solved }, 'py-two-sum': { ...solved } },
+        drafts: {},
+        srs: {
+          'py-contains-duplicate': { stage: 0, nextDue: today },
+          'py-two-sum': { stage: 0, nextDue: today },
+        },
+        streak: { count: 1, lastActiveDate: today },
+      })
+    );
+  });
+  await page.reload();
+  check((await page.locator('.today-line').innerText()).includes('2 review'), 'today card shows 2 reviews due');
+
+  await page.locator('button', { hasText: 'Start review' }).click();
+  check((await page.locator('.phase-pill').innerText()).includes('Review'), 'session opens in the review phase');
+
+  const SOLUTIONS = {
+    'Contains Duplicate': 'def contains_duplicate(nums):\n    return len(set(nums)) != len(nums)',
+    'Two Sum':
+      'def two_sum(nums, target):\n    seen = {}\n    for i, n in enumerate(nums):\n        if target - n in seen:\n            return [seen[target - n], i]\n        seen[n] = i',
+  };
+  for (let r = 0; r < 2; r++) {
+    const title = (await page.locator('.pv-title').innerText()).trim();
+    await setEditor(page, SOLUTIONS[title]);
+    await page.locator('button', { hasText: 'Submit' }).click();
+    await page.locator('.reflect').waitFor({ timeout: 60000 });
+    check(await page.locator('.rating-btn.rating-good').isVisible(), `review ${r + 1}: reflect + rating shown`);
+    await page.locator('.rating-btn.rating-good').click();
+  }
+  check(
+    (await page.locator('.phase-pill').innerText()).includes('New'),
+    'new questions unlock only after every review is cleared'
+  );
+  await page.locator('.icon-btn[aria-label="End practice session"]').click();
+  check(await page.locator('.today-card').isVisible(), 'End session returns to the dojo');
 
   check(pageErrors.length === 0, `no uncaught page errors${pageErrors.length ? `: ${pageErrors[0]}` : ''}`);
   await page.close();

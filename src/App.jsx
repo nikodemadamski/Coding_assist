@@ -2,9 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Header from './components/Header.jsx';
 import Picker from './components/Picker.jsx';
 import ProblemView from './components/ProblemView.jsx';
+import PracticeView from './components/PracticeView.jsx';
 import Stats from './components/Stats.jsx';
 import Settings from './components/Settings.jsx';
-import ForgeModal from './components/ForgeModal.jsx';
+import ImportModal from './components/ImportModal.jsx';
 import { SEED_QUESTIONS } from './data/questions.js';
 import {
   loadProgress,
@@ -19,21 +20,21 @@ export default function App() {
   const [customQuestions, setCustomQuestions] = useState(loadCustomQuestions);
   const [view, setView] = useState({ name: 'home' });
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [forgeOpen, setForgeOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   useEffect(() => saveProgress(progress), [progress]);
   useEffect(() => saveCustomQuestions(customQuestions), [customQuestions]);
 
   const allQuestions = useMemo(
-    () => [...SEED_QUESTIONS, ...customQuestions.map((q) => ({ ...q, forged: true }))],
+    () => [...SEED_QUESTIONS, ...customQuestions.map((q) => ({ ...q, imported: true }))],
     [customQuestions]
   );
 
   const currentQuestion =
     view.name === 'problem' ? allQuestions.find((q) => q.id === view.id) : null;
 
-  const handleSolve = useCallback((questionId) => {
-    setProgress((p) => recordSolve(p, questionId));
+  const handleSolve = useCallback((questionId, opts) => {
+    setProgress((p) => recordSolve(p, questionId, new Date(), opts));
   }, []);
 
   const handleFail = useCallback((questionId) => {
@@ -44,13 +45,11 @@ export default function App() {
     setProgress((p) => ({ ...p, drafts: { ...p.drafts, [questionId]: code } }));
   }, []);
 
-  const handleForged = useCallback((question) => {
-    setCustomQuestions((qs) => [...qs, question]);
-    setView({ name: 'problem', id: question.id });
-    setForgeOpen(false);
+  const handleImported = useCallback((questions) => {
+    setCustomQuestions((qs) => [...qs, ...questions]);
   }, []);
 
-  const handleImport = useCallback(({ progress: p, customQuestions: qs }) => {
+  const handleRestore = useCallback(({ progress: p, customQuestions: qs }) => {
     setProgress(p);
     setCustomQuestions(qs);
   }, []);
@@ -69,7 +68,18 @@ export default function App() {
             questions={allQuestions}
             progress={progress}
             onOpen={(id) => setView({ name: 'problem', id })}
-            onForge={() => setForgeOpen(true)}
+            onPractice={() => setView({ name: 'practice' })}
+            onImport={() => setImportOpen(true)}
+          />
+        )}
+        {view.name === 'practice' && (
+          <PracticeView
+            questions={allQuestions}
+            progress={progress}
+            onSolve={handleSolve}
+            onFail={handleFail}
+            onDraft={handleDraft}
+            onExit={() => setView({ name: 'home' })}
           />
         )}
         {view.name === 'problem' && currentQuestion && (
@@ -97,15 +107,15 @@ export default function App() {
         <Settings
           progress={progress}
           customQuestions={customQuestions}
-          onImport={handleImport}
+          onImport={handleRestore}
           onClose={() => setSettingsOpen(false)}
         />
       )}
-      {forgeOpen && (
-        <ForgeModal
+      {importOpen && (
+        <ImportModal
           existingIds={allQuestions.map((q) => q.id)}
-          onForged={handleForged}
-          onClose={() => setForgeOpen(false)}
+          onImported={handleImported}
+          onClose={() => setImportOpen(false)}
         />
       )}
     </div>

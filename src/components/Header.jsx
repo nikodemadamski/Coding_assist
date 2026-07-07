@@ -1,7 +1,7 @@
-import { beltFor, currentStreak } from '../state/progress.js';
+import { beltFor, currentStreak, isSolved } from '../state/progress.js';
 
 export default function Header({ progress, onHome, onStats, onSettings }) {
-  const solvedCount = Object.keys(progress.solved).length;
+  const solvedCount = Object.values(progress.solved).filter(isSolved).length;
   const belt = beltFor(solvedCount);
   const streak = currentStreak(progress.streak);
 

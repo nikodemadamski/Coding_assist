@@ -1,5 +1,5 @@
 // Strict Question schema validation. Used by the seed test gate and by the
-// forge before any generated question is accepted.
+// import flow before any pasted question is accepted.
 
 const TRACKS = ['python', 'pandas', 'sql'];
 const DIFFICULTIES = ['easy', 'medium', 'hard'];
@@ -24,6 +24,8 @@ export function validateQuestion(q, { existingIds = [], minTests = 1 } = {}) {
   need(typeof q.starter_code === 'string' && q.starter_code.trim(), 'starter_code is required');
   need(typeof q.hint === 'string' && q.hint.trim(), 'hint is required');
   need(typeof q.solution === 'string' && q.solution.trim(), 'solution is required');
+  // approach is optional, but if present it must be a string
+  need(q.approach === undefined || typeof q.approach === 'string', 'approach must be a string if present');
 
   if (q.track === 'sql') {
     need(
