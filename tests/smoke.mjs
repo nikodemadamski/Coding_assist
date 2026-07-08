@@ -9,6 +9,7 @@
 //           VITE_PYODIDE_BASE=/pyodide/ npm run build
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
+import { WARMUP_SETS } from '../src/data/warmups.js';
 
 const PORT = 4173;
 const BASE = `http://localhost:${PORT}`;
@@ -374,6 +375,40 @@ try {
   await page.locator('.icon-btn[aria-label="Close visualizer"]').click();
   check((await page.locator('.viz-modal').count()) === 0, 'visualizer closes');
   await page.locator('.icon-btn[aria-label="Back to problem list"]').click();
+
+  // ---- warm-up mode: rapid-fire typing drills ----
+  await page.locator('.btn-warmup').click();
+  check((await page.locator('.wu-level-card').count()) === 3, 'warm-up offers 3 difficulty levels');
+  await page.locator('.wu-level-card', { hasText: 'Beginner' }).click();
+  await page.locator('.wu-prompt').waitFor({ timeout: 10000 });
+  check(await page.locator('.wu-timerbar').isVisible(), 'warm-up run shows the countdown timer');
+  for (let i = 0; i < 3; i++) {
+    const prompt = (await page.locator('.wu-prompt').innerText()).trim();
+    const wuItem = WARMUP_SETS.beginner.find((it) => it.prompt === prompt);
+    check(!!wuItem, `warm-up question ${i + 1} comes from the beginner bank`);
+    await page.fill('.wu-input', wuItem.answer);
+    await page.keyboard.press('Enter');
+  }
+  check(
+    (await page.locator('.wu-run-streak').innerText()).includes('3'),
+    'three correct answers build the streak'
+  );
+  await page.fill('.wu-input', 'definitely_wrong()');
+  await page.keyboard.press('Enter');
+  await page.locator('.wu-miss').waitFor({ timeout: 5000 });
+  const wuSummary = await page.locator('.warmup').innerText();
+  check(wuSummary.includes('3/50'), 'summary reports 3/50 answered');
+  check(wuSummary.includes('definitely_wrong()'), 'summary shows what you typed');
+  check(
+    await page.locator('.wu-miss .wu-good').isVisible(),
+    'summary shows the correct answer to learn from'
+  );
+  await page.locator('button', { hasText: 'Change level' }).click();
+  check(
+    (await page.locator('.wu-level-card', { hasText: 'Beginner' }).innerText()).includes('best 3/50'),
+    'best streak persists on the level card'
+  );
+  await page.locator('button', { hasText: '← Back to the dojo' }).click();
 
   check(pageErrors.length === 0, `no uncaught page errors${pageErrors.length ? `: ${pageErrors[0]}` : ''}`);
   await page.close();

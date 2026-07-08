@@ -10,6 +10,7 @@ export const EMPTY_PROGRESS = {
   srs: {}, // questionId -> { stage: 0..4, nextDue: 'YYYY-MM-DD' }
   streak: { count: 0, lastActiveDate: null },
   activity: {}, // 'YYYY-MM-DD' -> { visited, solves, fails, missed: [id], goalMet }
+  warmup: {}, // level -> { best, runs, lastRunAt }
 };
 
 function safeParse(raw, fallback) {

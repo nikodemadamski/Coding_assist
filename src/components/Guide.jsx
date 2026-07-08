@@ -10,7 +10,9 @@ loud, without bugs.** That is a *trainable* skill, and this dojo is built to tra
 
 1. **Show up daily — small is fine.** 45 focused minutes every day beats a 6-hour cram on
    Sunday. The attendance calendar on the Stats page exists to make the chain visible; your
-   only rule is *don't break the chain*.
+   only rule is *don't break the chain*. Start each session with a **⚡ Warm-up** run — two
+   minutes of rapid-fire syntax drills gets the brain juices flowing before the real reps,
+   exactly like stretching before the gym.
 2. **Reviews before new — always.** Open the app, hit **Start review**, and clear what's due
    in random order *before* you touch anything new. This is spaced repetition: a problem you
    solved a week ago is resurfaced right as you're about to forget it. Re-deriving *two-sum*

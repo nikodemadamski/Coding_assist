@@ -87,6 +87,13 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
   backtracking, graphs, dynamic programming, greedy, intervals, math & geometry, and bit
   manipulation — plus pandas and SQL. The Browse list is ordered as a **syllabus**,
   foundations first.
+- **⚡ Warm-up** (home screen): like stretching before the gym — rapid-fire "type the
+  Python" one-liners (*create an empty list called nums* → `nums = []`) against a
+  per-question countdown. 50 questions each at Beginner, Intermediate and Hard; the run
+  ends on the first mistake, a timeout, or a perfect 50, then a quick summary shows what
+  you nailed, what you typed vs. the right answer, and your slowest answers to drill.
+  Answer checking is forgiving about spacing and quote style, and every answer in the bank
+  is machine-verified to compile as real Python. Best streaks are saved per level.
 - **🗺 Visual roadmap** (header): a NeetCode-style dependency tree of every topic with a
   progress bar per node — arrows mean "learn this pattern before that one". Click a topic
   to browse its questions.

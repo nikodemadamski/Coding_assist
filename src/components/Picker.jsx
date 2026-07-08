@@ -46,6 +46,7 @@ export default function Picker({
   onOpen,
   onPractice,
   onDrill,
+  onWarmup,
   onImport,
 }) {
   const [track, setTrack] = useState('all');
@@ -157,6 +158,13 @@ export default function Picker({
               : brandNew
                 ? '▶ Begin the path'
                 : '▶ Continue the path'}
+          </button>
+          <button
+            className="btn btn-warmup"
+            onClick={onWarmup}
+            title="Rapid-fire Python one-liners against the clock — stretch before the workout"
+          >
+            ⚡ Warm-up
           </button>
           {missCount > 0 && (
             <button className="btn btn-drill" onClick={onDrill}>

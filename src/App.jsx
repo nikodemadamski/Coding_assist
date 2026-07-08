@@ -3,6 +3,7 @@ import Header from './components/Header.jsx';
 import Picker from './components/Picker.jsx';
 import ProblemView from './components/ProblemView.jsx';
 import PracticeView from './components/PracticeView.jsx';
+import WarmupView from './components/WarmupView.jsx';
 import Stats from './components/Stats.jsx';
 import Guide from './components/Guide.jsx';
 import RoadmapGraph from './components/RoadmapGraph.jsx';
@@ -56,6 +57,23 @@ export default function App() {
     setProgress((p) => ({ ...p, drafts: { ...p.drafts, [questionId]: code } }));
   }, []);
 
+  const handleWarmupResult = useCallback((level, correctCount) => {
+    setProgress((p) => {
+      const cur = p.warmup?.[level] ?? { best: 0, runs: 0 };
+      return {
+        ...p,
+        warmup: {
+          ...p.warmup,
+          [level]: {
+            best: Math.max(cur.best, correctCount),
+            runs: cur.runs + 1,
+            lastRunAt: new Date().toISOString(),
+          },
+        },
+      };
+    });
+  }, []);
+
   const handleImported = useCallback((questions) => {
     setCustomQuestions((qs) => [...qs, ...questions]);
   }, []);
@@ -84,6 +102,7 @@ export default function App() {
             onOpen={(id) => setView({ name: 'problem', id })}
             onPractice={() => setView({ name: 'practice' })}
             onDrill={() => setView({ name: 'drill' })}
+            onWarmup={() => setView({ name: 'warmup' })}
             onImport={() => setImportOpen(true)}
           />
         )}
@@ -92,6 +111,13 @@ export default function App() {
             questions={allQuestions}
             progress={progress}
             onSelect={(key) => setView({ name: 'home', focusCategory: key })}
+          />
+        )}
+        {view.name === 'warmup' && (
+          <WarmupView
+            progress={progress}
+            onResult={handleWarmupResult}
+            onExit={() => setView({ name: 'home' })}
           />
         )}
         {(view.name === 'practice' || view.name === 'drill') && (
