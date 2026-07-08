@@ -1,18 +1,27 @@
 // A practice session is an explicit, in-memory queue so the learning rule holds
 // *within the session*, independent of the spaced-repetition schedule:
-//   1. Clear every DUE review (random order) before any NEW question appears.
-//   2. A review or new question you get wrong goes to the back of its queue and
-//      comes back around — you cannot move past it by failing.
+//   1. Clear every DUE review (RANDOM order — retrieval practice) before any
+//      NEW question appears.
+//   2. New questions come in PATH order — you continue exactly where you left
+//      off on the curriculum, never a random jump.
+//   3. A question you get wrong goes to the back of its queue and comes back
+//      around — you cannot move past it by failing.
 // Global progress (SRS, streak, mistakes) is still recorded by the caller on
 // each pass/fail; this module only governs ordering and gating for one sitting.
 import { dueQuestionIds, newQuestionIds, shuffle } from './progress.js';
 import { todaysMisses } from './activity.js';
+import { byPathOrder } from '../data/roadmap.js';
 
 export function createSession(progress, questions, { seed = (Math.random() * 2 ** 32) >>> 0 } = {}) {
   const validIds = new Set(questions.map((q) => q.id));
+  const freshIds = new Set(newQuestionIds(progress, questions));
+  const fresh = questions
+    .filter((q) => freshIds.has(q.id))
+    .sort(byPathOrder)
+    .map((q) => q.id);
   return {
     review: shuffle(dueQuestionIds(progress, validIds), seed),
-    fresh: shuffle(newQuestionIds(progress, questions), (seed ^ 0x9e3779b9) >>> 0),
+    fresh,
     cleared: [],
   };
 }

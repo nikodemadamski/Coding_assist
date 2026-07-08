@@ -7,7 +7,7 @@ import {
   todayStr,
 } from '../state/progress.js';
 import { todaysMisses, isGoalMetToday } from '../state/activity.js';
-import { ROADMAP, categoryKeyOf } from '../data/roadmap.js';
+import { ROADMAP, categoryKeyOf, categoryOf, byPathOrder, pathStep, nextOnPath } from '../data/roadmap.js';
 
 const TRACKS = ['all', 'python', 'pandas', 'sql'];
 const DIFFICULTIES = ['all', 'easy', 'medium', 'hard'];
@@ -19,11 +19,16 @@ const MASTERY_LABEL = {
   mastered: 'mastered',
 };
 
-function QuestionRow({ q, level, due, onOpen }) {
+function QuestionRow({ q, level, due, isNext, onOpen }) {
+  const step = pathStep(q.id);
   return (
-    <button className="q-card" onClick={() => onOpen(q.id)}>
+    <button className={`q-card ${isNext ? 'q-next' : ''}`} onClick={() => onOpen(q.id)}>
       <span className={`mastery-dot dot-${level}`} aria-hidden="true" />
-      <span className="q-title">{q.title}</span>
+      {step && <span className="step-num">{step}</span>}
+      <span className="q-title">
+        {q.title}
+        {isNext && <span className="you-are-here">← you are here</span>}
+      </span>
       <span className="q-meta">
         {due && <span className="tag due-tag">⟳ due</span>}
         {q.imported && <span className="tag imported">imported</span>}
@@ -51,13 +56,20 @@ export default function Picker({ questions, progress, onOpen, onPractice, onDril
   );
   const goalMet = isGoalMetToday(progress);
 
+  // Where you left off on the path — the next unsolved question in order.
+  const nextUp = useMemo(
+    () => nextOnPath(questions, (id) => isSolved(progress.solved[id])),
+    [questions, progress]
+  );
+  const brandNew = solvedCount === 0;
+
   const filtered = questions.filter(
     (q) =>
       (track === 'all' || q.track === track) &&
       (difficulty === 'all' || q.difficulty === difficulty)
   );
 
-  // NeetCode-style: group by roadmap category, in curriculum order.
+  // NeetCode-style: group by roadmap category, questions in path order.
   const groups = useMemo(() => {
     const byCat = new Map();
     for (const q of filtered) {
@@ -67,7 +79,7 @@ export default function Picker({ questions, progress, onOpen, onPractice, onDril
     }
     return ROADMAP.filter((cat) => byCat.has(cat.key)).map((cat) => ({
       cat,
-      qs: byCat.get(cat.key),
+      qs: byCat.get(cat.key).sort(byPathOrder),
     }));
   }, [filtered]);
 
@@ -75,12 +87,26 @@ export default function Picker({ questions, progress, onOpen, onPractice, onDril
 
   return (
     <div className="picker">
+      {/* ---- Welcome (first visit, nothing solved yet) ---- */}
+      {brandNew && (
+        <section className="welcome-card">
+          <h2>Welcome to the dojo 🥋</h2>
+          <p>
+            This is a <strong>{questions.length}-step path</strong> from &ldquo;I barely know
+            Python&rdquo; to interview-ready — the same arc as NeetCode: warm-ups first, then
+            hashing, pointers, windows, trees, graphs, and dynamic programming, with pandas and
+            SQL on the way. You don&apos;t choose what to study; the path does. Just press the
+            button, solve, and come back tomorrow.
+          </p>
+        </section>
+      )}
+
       {/* ---- Today's Practice ---- */}
       <section className="today-card">
         <div className="today-head">
           <h2>Today&apos;s practice</h2>
           <span className="today-progress">
-            {solvedCount}/{questions.length} learned
+            step {Math.min(solvedCount + 1, questions.length)} of {questions.length}
           </span>
         </div>
         <p className="today-line">
@@ -88,29 +114,34 @@ export default function Picker({ questions, progress, onOpen, onPractice, onDril
             <>
               <strong className="due-num">{counts.due}</strong> review
               {counts.due === 1 ? '' : 's'} to clear
-              {counts.fresh > 0 && (
-                <>
-                  , then <strong>{counts.fresh}</strong> new unlock{counts.fresh === 1 ? 's' : ''}
-                </>
-              )}
-              .
+              {counts.fresh > 0 && <>, then the path continues</>}.
             </>
           ) : counts.fresh > 0 ? (
-            <>
-              No reviews due — <strong>{counts.fresh}</strong> new question
-              {counts.fresh === 1 ? '' : 's'} ready.
-            </>
+            <>No reviews due — the path is open.</>
           ) : (
             <>All caught up. Import more questions to keep going.</>
           )}
         </p>
+        {nextUp && (
+          <p className="next-up">
+            Next on your path:{' '}
+            <button className="next-up-link" onClick={() => onOpen(nextUp.id)}>
+              Step {pathStep(nextUp.id) ?? '—'} · {nextUp.title}
+            </button>{' '}
+            <span className="next-up-cat">({categoryOf(nextUp)?.label})</span>
+          </p>
+        )}
         <div className="today-actions">
           <button
             className="btn btn-primary btn-lg"
             onClick={onPractice}
             disabled={counts.due === 0 && counts.fresh === 0}
           >
-            {counts.due > 0 ? '⟳ Start review' : '▶ Start practice'}
+            {counts.due > 0
+              ? '⟳ Start review'
+              : brandNew
+                ? '▶ Begin the path'
+                : '▶ Continue the path'}
           </button>
           {missCount > 0 && (
             <button className="btn btn-drill" onClick={onDrill}>
@@ -129,8 +160,8 @@ export default function Picker({ questions, progress, onOpen, onPractice, onDril
           )}
         </p>
         <p className="today-rule">
-          Reviews come first, in random order. New questions unlock only once every review is
-          answered correctly — the way you learn NeetCode.
+          Reviews come first, in random order — that&apos;s retrieval practice. Then new
+          questions continue the path <em>in order</em>, exactly where you left off.
         </p>
       </section>
 
@@ -185,6 +216,7 @@ export default function Picker({ questions, progress, onOpen, onPractice, onDril
                 q={q}
                 level={masteryLevel(progress, q.id)}
                 due={isDue(progress.srs[q.id], today)}
+                isNext={nextUp?.id === q.id}
                 onOpen={onOpen}
               />
             ))}

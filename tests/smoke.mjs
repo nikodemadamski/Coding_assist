@@ -66,7 +66,16 @@ try {
 
   await page.goto(BASE);
   check(await page.locator('.header-logo').isVisible(), 'app loads with header');
-  check((await page.locator('.q-card').count()) >= 30, 'picker lists all 30 seed questions');
+  check((await page.locator('.q-card').count()) >= 76, 'picker lists all 76 seed questions');
+  check(await page.locator('.welcome-card').isVisible(), 'first visit shows the welcome/purpose card');
+  check(
+    (await page.locator('.q-card.q-next .q-title').innerText()).includes('Reverse a string'),
+    'step 1 is marked "you are here" for a new user'
+  );
+  check(
+    (await page.locator('.next-up').innerText()).includes('Step 1'),
+    'today card names the next step on the path'
+  );
 
   // ---- open first question, problem renders ----
   await page.locator('.q-card', { hasText: 'Character frequency' }).first().click();
@@ -243,7 +252,8 @@ try {
       'def two_sum(nums, target):\n    seen = {}\n    for i, n in enumerate(nums):\n        if target - n in seen:\n            return [seen[target - n], i]\n        seen[n] = i',
   };
   for (let r = 0; r < 2; r++) {
-    const title = (await page.locator('.pv-title').innerText()).trim();
+    const heading = (await page.locator('.pv-title').innerText()).trim();
+    const title = Object.keys(SOLUTIONS).find((t) => heading.includes(t));
     await setEditor(page, SOLUTIONS[title]);
     await page.locator('button', { hasText: 'Submit' }).click();
     await page.locator('.reflect').waitFor({ timeout: 60000 });
@@ -253,6 +263,10 @@ try {
   check(
     (await page.locator('.phase-pill').innerText()).includes('New'),
     'new questions unlock only after every review is cleared'
+  );
+  check(
+    (await page.locator('.pv-title').innerText()).includes('Reverse a string'),
+    'after reviews, the path continues at the lowest unsolved step (step 1)'
   );
   await page.locator('.icon-btn[aria-label="End practice session"]').click();
   check(await page.locator('.today-card').isVisible(), 'End session returns to the dojo');

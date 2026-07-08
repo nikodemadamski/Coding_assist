@@ -7,10 +7,15 @@ walkthroughs, and a real in-browser code runner.
 Read a problem → write code in the browser → run tests → submit → get it graded → track
 mastery with spaced repetition. The learning loop is built around how you actually learn:
 
-- **Clear your reviews first, then unlock new questions.** Each practice session serves
-  every question that's due for review — in **random order** — and a new question only
-  appears once you've answered every review correctly. Miss one and it comes back around;
-  you can't move on by failing.
+- **A 76-step ordered path.** Every question has a step number, laid out in true teaching
+  order: Python warm-ups → hashing → two pointers → windows → stack → binary search →
+  pandas → SQL → linked lists → trees → heaps → backtracking → graphs → DP → greedy →
+  intervals → bits. "Where do I begin?" is never a question — the home screen names your
+  exact next step.
+- **Clear your reviews first, then continue the path.** Each practice session serves
+  every question that's due for review — in **random order** (retrieval practice) — and
+  then new questions continue the path **in order**, exactly where you left off
+  yesterday. Miss one and it comes back around; you can't move on by failing.
 - **Rate your confidence** after each solve (Hard / Good / Easy) — that tunes when the
   question comes back, Anki-style.
 - **Check your understanding**, not just your output: after each correct answer you

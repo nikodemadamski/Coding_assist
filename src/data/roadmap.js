@@ -1,13 +1,21 @@
 // The learning roadmap — pattern categories in the order a NeetCode-style
-// curriculum teaches them. Raw question `pattern` tags map into these buckets so
-// the browse view reads like a syllabus, foundations first.
+// curriculum teaches them, plus THE PATH: an explicit ordered list of every
+// seed question. Reviews are served randomly (retrieval practice), but new
+// questions always follow the path — step 1 teaches you Python, step 76 is
+// interview-grade. "Where do I begin?" → at the next unsolved step.
 
 export const ROADMAP = [
   {
+    key: 'warmups',
+    label: '0 · Python Warm-ups',
+    blurb: 'Loops, strings, dicts and sets — learn the language before the patterns.',
+    patterns: ['strings', 'control-flow', 'sets', 'dict-items'],
+  },
+  {
     key: 'arrays-hashing',
     label: '1 · Arrays & Hashing',
-    blurb: 'Counting, sets, and dictionaries. Everything else builds on this.',
-    patterns: ['hashing', 'arrays-hashing', 'frequency-dict', 'sets', 'dict-items', 'strings', 'control-flow'],
+    blurb: 'Counting and dictionaries. Everything else builds on this.',
+    patterns: ['hashing', 'arrays-hashing', 'frequency-dict'],
   },
   {
     key: 'two-pointers',
@@ -34,78 +42,203 @@ export const ROADMAP = [
     patterns: ['binary-search'],
   },
   {
-    key: 'linked-list',
-    label: '6 · Linked List',
-    blurb: 'Pointer surgery: dummy heads, fast/slow, in-place reversal.',
-    patterns: ['linked-list'],
-  },
-  {
-    key: 'trees',
-    label: '7 · Trees',
-    blurb: 'Recursion over structure — DFS depth/validate, BFS by level.',
-    patterns: ['trees'],
-  },
-  {
-    key: 'heap',
-    label: '8 · Heap / Priority Queue',
-    blurb: 'Top-K and "always grab the extreme" in O(log n).',
-    patterns: ['heap'],
-  },
-  {
-    key: 'backtracking',
-    label: '9 · Backtracking',
-    blurb: 'Build a decision tree; choose, recurse, un-choose.',
-    patterns: ['backtracking'],
-  },
-  {
-    key: 'graphs',
-    label: '10 · Graphs',
-    blurb: 'Grids and adjacency: DFS flood-fill, BFS shortest-time, topo-sort.',
-    patterns: ['graphs'],
-  },
-  {
-    key: 'dp',
-    label: '11 · Dynamic Programming',
-    blurb: 'Overlapping subproblems. Define the state, write the recurrence.',
-    patterns: ['dp-1d', 'dp-2d'],
-  },
-  {
-    key: 'greedy',
-    label: '12 · Greedy',
-    blurb: 'Locally optimal choices that provably reach the global optimum.',
-    patterns: ['greedy'],
-  },
-  {
-    key: 'intervals',
-    label: '13 · Intervals',
-    blurb: 'Sort by start, then sweep. Merge, overlap, schedule.',
-    patterns: ['intervals'],
-  },
-  {
-    key: 'bits',
-    label: '14 · Bit Manipulation',
-    blurb: 'XOR cancellation, masks, and shift tricks.',
-    patterns: ['bits'],
-  },
-  {
     key: 'pandas',
-    label: 'pandas',
+    label: '6 · pandas',
     blurb: 'DataFrame fluency for the data-science side of the loop.',
     patterns: ['filtering', 'selection', 'groupby', 'merge', 'sorting', 'missing-data', 'transform'],
   },
   {
     key: 'sql',
-    label: 'SQL',
+    label: '7 · SQL',
     blurb: 'Joins, aggregation, subqueries, and window functions.',
     patterns: ['select-where', 'order-limit', 'group-by', 'having', 'join', 'subquery', 'window-functions'],
   },
   {
+    key: 'linked-list',
+    label: '8 · Linked List',
+    blurb: 'Pointer surgery: dummy heads, fast/slow, in-place reversal.',
+    patterns: ['linked-list'],
+  },
+  {
+    key: 'trees',
+    label: '9 · Trees',
+    blurb: 'Recursion over structure — DFS depth/validate, BFS by level.',
+    patterns: ['trees'],
+  },
+  {
+    key: 'heap',
+    label: '10 · Heap / Priority Queue',
+    blurb: 'Top-K and "always grab the extreme" in O(log n).',
+    patterns: ['heap'],
+  },
+  {
+    key: 'backtracking',
+    label: '11 · Backtracking',
+    blurb: 'Build a decision tree; choose, recurse, un-choose.',
+    patterns: ['backtracking'],
+  },
+  {
+    key: 'graphs',
+    label: '12 · Graphs',
+    blurb: 'Grids and adjacency: DFS flood-fill, BFS shortest-time, topo-sort.',
+    patterns: ['graphs'],
+  },
+  {
+    key: 'dp',
+    label: '13 · Dynamic Programming',
+    blurb: 'Overlapping subproblems. Define the state, write the recurrence.',
+    patterns: ['dp-1d', 'dp-2d'],
+  },
+  {
+    key: 'greedy',
+    label: '14 · Greedy',
+    blurb: 'Locally optimal choices that provably reach the global optimum.',
+    patterns: ['greedy'],
+  },
+  {
+    key: 'intervals',
+    label: '15 · Intervals',
+    blurb: 'Sort by start, then sweep. Merge, overlap, schedule.',
+    patterns: ['intervals'],
+  },
+  {
+    key: 'bits',
+    label: '16 · Bit Manipulation',
+    blurb: 'XOR cancellation, masks, and shift tricks.',
+    patterns: ['bits'],
+  },
+  {
     key: 'other',
-    label: 'Other',
-    blurb: 'Everything else, including questions you imported.',
+    label: 'Extra · Imported',
+    blurb: 'Questions you brought in from Claude — slotted after the main path.',
     patterns: [],
   },
 ];
+
+// THE PATH — every seed question in teaching order. New questions in practice
+// are always served in this order, so "continue" means exactly that.
+export const PATH = [
+  // 0 · Python warm-ups: learn the language
+  'py-reverse-string',
+  'py-fizzbuzz',
+  'py-common-elements',
+  'py-invert-dict',
+  'py-merge-counts',
+  // 1 · Arrays & hashing: the counting patterns
+  'py-contains-duplicate',
+  'py-char-frequency',
+  'py-first-unique-char',
+  'py-valid-anagram',
+  'py-two-sum',
+  'py-group-anagrams',
+  'py-top-k-frequent',
+  'py-product-except-self',
+  'py-longest-consecutive',
+  // 2 · Two pointers
+  'py-valid-palindrome',
+  'py-two-sum-sorted',
+  'py-container-water',
+  'py-three-sum',
+  // 3 · Sliding window
+  'py-max-profit',
+  'py-longest-substring-norepeat',
+  'py-char-replacement',
+  'py-permutation-in-string',
+  'py-min-window-substring',
+  // 4 · Stack
+  'py-valid-parentheses',
+  'py-min-stack',
+  'py-eval-rpn',
+  'py-daily-temperatures',
+  // 5 · Binary search
+  'py-binary-search',
+  'py-find-min-rotated',
+  'py-search-rotated',
+  'py-koko-bananas',
+  // 6 · pandas: the data-science muscle
+  'pd-filter-rows',
+  'pd-select-columns',
+  'pd-computed-column',
+  'pd-value-counts',
+  'pd-top-n',
+  'pd-groupby-agg',
+  'pd-merge-frames',
+  'pd-handle-nan',
+  // 7 · SQL
+  'sql-select-where',
+  'sql-order-limit',
+  'sql-count-group',
+  'sql-having',
+  'sql-inner-join',
+  'sql-left-join-null',
+  'sql-subquery',
+  'sql-window-top-per-group',
+  // 8 · Linked list
+  'py-merge-sorted-lists',
+  'py-reorder-list',
+  // 9 · Trees
+  'py-max-depth-tree',
+  'py-same-tree',
+  'py-invert-tree',
+  'py-tree-diameter',
+  'py-level-order',
+  'py-validate-bst',
+  // 10 · Heap
+  'py-kth-largest',
+  'py-last-stone-weight',
+  // 11 · Backtracking
+  'py-subsets',
+  'py-permutations',
+  'py-combination-sum',
+  // 12 · Graphs
+  'py-number-of-islands',
+  'py-max-area-island',
+  'py-rotting-oranges',
+  'py-course-schedule',
+  // 13 · Dynamic programming
+  'py-climbing-stairs',
+  'py-house-robber',
+  'py-coin-change',
+  'py-longest-increasing-subseq',
+  'py-unique-paths',
+  'py-longest-common-subseq',
+  // 14 · Greedy
+  'py-max-subarray',
+  'py-jump-game',
+  // 15 · Intervals
+  'py-meeting-rooms',
+  'py-merge-intervals',
+  // 16 · Bits
+  'py-single-number',
+  'py-count-bits',
+];
+
+const STEP_OF = (() => {
+  const map = {};
+  PATH.forEach((id, i) => {
+    map[id] = i + 1;
+  });
+  return map;
+})();
+
+// 1-based step on the path, or null for questions off the path (imports).
+export function pathStep(id) {
+  return STEP_OF[id] ?? null;
+}
+
+// Sort comparator: path questions in step order, then off-path (imported) ones
+// in their existing order.
+export function byPathOrder(a, b) {
+  const sa = STEP_OF[a.id] ?? Infinity;
+  const sb = STEP_OF[b.id] ?? Infinity;
+  return sa - sb;
+}
+
+// The next unsolved question on the path — "where you left off".
+export function nextOnPath(questions, isSolvedFn) {
+  const sorted = [...questions].sort(byPathOrder);
+  return sorted.find((q) => !isSolvedFn(q.id)) || null;
+}
 
 const PATTERN_TO_CATEGORY = (() => {
   const map = {};
@@ -117,7 +250,6 @@ export function categoryKeyOf(pattern) {
   return PATTERN_TO_CATEGORY[pattern] || 'other';
 }
 
-export const ROADMAP_ORDER = ROADMAP.reduce((acc, cat, i) => {
-  acc[cat.key] = i;
-  return acc;
-}, {});
+export function categoryOf(question) {
+  return ROADMAP.find((c) => c.key === categoryKeyOf(question.pattern));
+}

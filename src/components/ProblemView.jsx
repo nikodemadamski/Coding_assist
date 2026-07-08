@@ -4,6 +4,7 @@ import Results from './Results.jsx';
 import Markdown from './Markdown.jsx';
 import { runQuestion } from '../engine/runnerClient.js';
 import { RATING_DELTA, isSolved } from '../state/progress.js';
+import { pathStep } from '../data/roadmap.js';
 
 const TABS = [
   { id: 'problem', label: 'Problem' },
@@ -150,6 +151,11 @@ export default function ProblemView({
               ✓{' '}
             </span>
           )}
+          {pathStep(question.id) && (
+            <span className="step-num" title="Step on the learning path">
+              {pathStep(question.id)}
+            </span>
+          )}{' '}
           {question.title}
         </span>
         <span className={`tag track-${question.track}`}>{question.track}</span>
