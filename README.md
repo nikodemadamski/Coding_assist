@@ -71,7 +71,23 @@ inside the Import dialog.
 
 Open the app → **Today's practice** shows how many reviews are due and how many new
 questions are ready → **Start review**. Clear the reviews (random order), rate each one,
-then new questions unlock. Import a fresh pack from Claude whenever you want more.
+then new questions unlock. Anything you get wrong lands in **🔥 Drill today's misses** —
+do that before you close the app. Import a fresh pack from Claude whenever you want more.
+
+### Staying on pace for a Google / Anthropic loop
+
+- **~75 verified questions** across the full NeetCode-150 roadmap: arrays & hashing, two
+  pointers, sliding window, stack, binary search, linked list, trees, heap, backtracking,
+  graphs, dynamic programming, greedy, intervals, and bit manipulation — plus pandas and
+  SQL. The Browse list is ordered as a **syllabus**, foundations first.
+- **Attendance calendar + daily goal** (Stats page): a GitHub-style grid of every day you
+  showed up, and whether you met the goal (clear your reviews + solve ≥1). Don't break the
+  chain.
+- **Drill today's misses**: a targeted session of exactly what you got wrong today,
+  repeat-until-pass — so a mistake becomes a skill instead of a habit.
+- **🥋 Sensei guide** (header): a written method — how to learn, what to learn in what
+  order, a 10–12 week arc, and the interview-day habits (clarify, state complexity, test
+  your own code, recover from a stall).
 
 ## Free deployment
 

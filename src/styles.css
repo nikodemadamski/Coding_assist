@@ -1054,14 +1054,39 @@ details.hint[open] summary {
 
 .pattern-head {
   font-size: 0.95rem;
-  color: var(--text-dim);
-  text-transform: capitalize;
+  color: var(--text);
   border-bottom: 1px solid var(--line);
-  padding-bottom: 5px;
+  padding-bottom: 6px;
   margin-bottom: 8px;
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+  gap: 12px;
+}
+
+.pattern-blurb {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  font-weight: 400;
+  font-family: var(--font-body);
+  margin-top: 2px;
+}
+
+.guide-page {
+  max-width: 760px;
+  line-height: 1.65;
+}
+.guide-page h1 {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+.guide-page h2 {
+  color: var(--gold);
+  margin: 24px 0 6px;
+}
+.guide-page strong {
+  color: var(--text);
 }
 
 /* ── practice phase pill & reflection ──────────────────────────────────── */
@@ -1166,6 +1191,97 @@ details.hint[open] summary {
 }
 .reject-list code {
   color: var(--text);
+}
+
+/* ── attendance calendar ───────────────────────────────────────────────── */
+
+.calendar-block {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.cal-summary {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+}
+.cal-summary strong {
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+}
+
+.cal-grid {
+  display: flex;
+  gap: 3px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.cal-week {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.cal-cell {
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  background: var(--panel-2);
+  flex-shrink: 0;
+}
+.cal-empty {
+  background: transparent;
+}
+.cal-none {
+  background: var(--panel-2);
+}
+.cal-visited {
+  background: var(--gold);
+  opacity: 0.55;
+}
+.cal-goal {
+  background: var(--jade);
+}
+.cal-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+.cal-legend .cal-cell {
+  margin-left: 8px;
+}
+
+/* ── daily goal + drill ────────────────────────────────────────────────── */
+
+.today-goal {
+  font-size: 0.85rem;
+  margin: 12px 0 0;
+  color: var(--text-dim);
+}
+.today-goal.met {
+  color: var(--jade);
+}
+
+.btn-drill {
+  background: transparent;
+  border-color: var(--crimson);
+  color: var(--crimson);
+}
+.btn-drill:hover {
+  background: color-mix(in srgb, var(--crimson) 12%, transparent);
+}
+
+.phase-pill.drill {
+  color: var(--crimson);
+  border-color: var(--crimson-dim);
 }
 
 /* screen-reader only */

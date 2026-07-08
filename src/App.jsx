@@ -4,6 +4,7 @@ import Picker from './components/Picker.jsx';
 import ProblemView from './components/ProblemView.jsx';
 import PracticeView from './components/PracticeView.jsx';
 import Stats from './components/Stats.jsx';
+import Guide from './components/Guide.jsx';
 import Settings from './components/Settings.jsx';
 import ImportModal from './components/ImportModal.jsx';
 import { SEED_QUESTIONS } from './data/questions.js';
@@ -14,6 +15,7 @@ import {
   saveCustomQuestions,
 } from './state/storage.js';
 import { recordSolve, recordFail } from './state/progress.js';
+import { markVisit, recordDaySolve, recordDayFail } from './state/activity.js';
 
 export default function App() {
   const [progress, setProgress] = useState(loadProgress);
@@ -24,6 +26,8 @@ export default function App() {
 
   useEffect(() => saveProgress(progress), [progress]);
   useEffect(() => saveCustomQuestions(customQuestions), [customQuestions]);
+  // Stamp attendance once when the app opens today.
+  useEffect(() => setProgress((p) => markVisit(p)), []);
 
   const allQuestions = useMemo(
     () => [...SEED_QUESTIONS, ...customQuestions.map((q) => ({ ...q, imported: true }))],
@@ -33,12 +37,18 @@ export default function App() {
   const currentQuestion =
     view.name === 'problem' ? allQuestions.find((q) => q.id === view.id) : null;
 
-  const handleSolve = useCallback((questionId, opts) => {
-    setProgress((p) => recordSolve(p, questionId, new Date(), opts));
-  }, []);
+  const handleSolve = useCallback(
+    (questionId, opts) => {
+      setProgress((p) => {
+        const afterSolve = recordSolve(p, questionId, new Date(), opts);
+        return recordDaySolve(afterSolve, questionId, allQuestions);
+      });
+    },
+    [allQuestions]
+  );
 
   const handleFail = useCallback((questionId) => {
-    setProgress((p) => recordFail(p, questionId));
+    setProgress((p) => recordDayFail(recordFail(p, questionId), questionId));
   }, []);
 
   const handleDraft = useCallback((questionId, code) => {
@@ -60,6 +70,7 @@ export default function App() {
         progress={progress}
         onHome={() => setView({ name: 'home' })}
         onStats={() => setView({ name: 'stats' })}
+        onGuide={() => setView({ name: 'guide' })}
         onSettings={() => setSettingsOpen(true)}
       />
       <main className="app-main">
@@ -69,13 +80,16 @@ export default function App() {
             progress={progress}
             onOpen={(id) => setView({ name: 'problem', id })}
             onPractice={() => setView({ name: 'practice' })}
+            onDrill={() => setView({ name: 'drill' })}
             onImport={() => setImportOpen(true)}
           />
         )}
-        {view.name === 'practice' && (
+        {(view.name === 'practice' || view.name === 'drill') && (
           <PracticeView
+            key={view.name}
             questions={allQuestions}
             progress={progress}
+            mode={view.name === 'drill' ? 'drill' : 'practice'}
             onSolve={handleSolve}
             onFail={handleFail}
             onDraft={handleDraft}
@@ -102,6 +116,7 @@ export default function App() {
           </div>
         )}
         {view.name === 'stats' && <Stats questions={allQuestions} progress={progress} />}
+        {view.name === 'guide' && <Guide />}
       </main>
       {settingsOpen && (
         <Settings

@@ -257,6 +257,44 @@ try {
   await page.locator('.icon-btn[aria-label="End practice session"]').click();
   check(await page.locator('.today-card').isVisible(), 'End session returns to the dojo');
 
+  // ---- drill today's misses ----
+  await page.evaluate(() => {
+    const t = new Date();
+    const today = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+    localStorage.setItem(
+      'zoro.progress.v1',
+      JSON.stringify({
+        solved: {
+          'py-contains-duplicate': { firstSolvedAt: today, attempts: 2, solves: 1, mistakes: 1, lastSolvedAt: today },
+        },
+        drafts: {},
+        srs: { 'py-contains-duplicate': { stage: 0, nextDue: '2999-01-01' } },
+        streak: { count: 1, lastActiveDate: today },
+        activity: {
+          [today]: { visited: true, solves: 1, fails: 1, missed: ['py-contains-duplicate'], goalMet: false },
+        },
+      })
+    );
+  });
+  await page.reload();
+  check((await page.locator('.btn-drill').innerText()).includes('1'), "drill button shows today's miss count");
+  await page.locator('.btn-drill').click();
+  check((await page.locator('.phase-pill').innerText()).includes('Drill'), 'drill session shows the drill phase');
+  await setEditor(page, 'def contains_duplicate(nums):\n    return len(set(nums)) != len(nums)');
+  await page.locator('button', { hasText: 'Submit' }).click();
+  await page.locator('.reflect').waitFor({ timeout: 60000 });
+  await page.locator('.rating-btn.rating-good').click();
+  await page.locator('.session-done').waitFor({ timeout: 30000 });
+  check(true, 'drill completes after re-clearing the miss');
+  await page.locator('.session-done button', { hasText: 'Back to the dojo' }).click();
+
+  // ---- Sensei guide + attendance calendar ----
+  await page.locator('.icon-btn', { hasText: 'Sensei' }).click();
+  check(await page.locator('.guide-page h1').isVisible(), 'Sensei guide page renders');
+  await page.locator('.icon-btn', { hasText: 'Stats' }).click();
+  check(await page.locator('.calendar-block').isVisible(), 'Stats page shows the attendance calendar');
+  await page.locator('.header-logo').click();
+
   check(pageErrors.length === 0, `no uncaught page errors${pageErrors.length ? `: ${pageErrors[0]}` : ''}`);
   await page.close();
 

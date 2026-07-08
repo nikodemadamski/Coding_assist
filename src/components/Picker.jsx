@@ -6,6 +6,8 @@ import {
   practiceCounts,
   todayStr,
 } from '../state/progress.js';
+import { todaysMisses, isGoalMetToday } from '../state/activity.js';
+import { ROADMAP, categoryKeyOf } from '../data/roadmap.js';
 
 const TRACKS = ['all', 'python', 'pandas', 'sql'];
 const DIFFICULTIES = ['all', 'easy', 'medium', 'hard'];
@@ -32,7 +34,7 @@ function QuestionRow({ q, level, due, onOpen }) {
   );
 }
 
-export default function Picker({ questions, progress, onOpen, onPractice, onImport }) {
+export default function Picker({ questions, progress, onOpen, onPractice, onDrill, onImport }) {
   const [track, setTrack] = useState('all');
   const [difficulty, setDifficulty] = useState('all');
   const today = todayStr();
@@ -42,6 +44,12 @@ export default function Picker({ questions, progress, onOpen, onPractice, onImpo
     () => questions.filter((q) => isSolved(progress.solved[q.id])).length,
     [questions, progress]
   );
+  const validIds = useMemo(() => new Set(questions.map((q) => q.id)), [questions]);
+  const missCount = useMemo(
+    () => todaysMisses(progress).filter((id) => validIds.has(id)).length,
+    [progress, validIds]
+  );
+  const goalMet = isGoalMetToday(progress);
 
   const filtered = questions.filter(
     (q) =>
@@ -49,14 +57,18 @@ export default function Picker({ questions, progress, onOpen, onPractice, onImpo
       (difficulty === 'all' || q.difficulty === difficulty)
   );
 
-  // NeetCode-style: group the list by pattern.
+  // NeetCode-style: group by roadmap category, in curriculum order.
   const groups = useMemo(() => {
-    const byPattern = new Map();
+    const byCat = new Map();
     for (const q of filtered) {
-      if (!byPattern.has(q.pattern)) byPattern.set(q.pattern, []);
-      byPattern.get(q.pattern).push(q);
+      const key = categoryKeyOf(q.pattern);
+      if (!byCat.has(key)) byCat.set(key, []);
+      byCat.get(key).push(q);
     }
-    return [...byPattern.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    return ROADMAP.filter((cat) => byCat.has(cat.key)).map((cat) => ({
+      cat,
+      qs: byCat.get(cat.key),
+    }));
   }, [filtered]);
 
   const nothingDue = counts.due === 0;
@@ -100,10 +112,22 @@ export default function Picker({ questions, progress, onOpen, onPractice, onImpo
           >
             {counts.due > 0 ? '⟳ Start review' : '▶ Start practice'}
           </button>
+          {missCount > 0 && (
+            <button className="btn btn-drill" onClick={onDrill}>
+              🔥 Drill today&apos;s misses ({missCount})
+            </button>
+          )}
           <button className="btn btn-gold" onClick={onImport}>
             ＋ Import questions
           </button>
         </div>
+        <p className={`today-goal ${goalMet ? 'met' : ''}`}>
+          {goalMet ? (
+            <>✓ Daily goal met — reviews cleared and at least one solved. Come back tomorrow.</>
+          ) : (
+            <>Daily goal: clear every due review and solve at least one question.</>
+          )}
+        </p>
         <p className="today-rule">
           Reviews come first, in random order. New questions unlock only once every review is
           answered correctly — the way you learn NeetCode.
@@ -143,10 +167,13 @@ export default function Picker({ questions, progress, onOpen, onPractice, onImpo
         )}
       </h2>
 
-      {groups.map(([pattern, qs]) => (
-        <section key={pattern} className="pattern-group">
+      {groups.map(({ cat, qs }) => (
+        <section key={cat.key} className="pattern-group">
           <h3 className="pattern-head">
-            {pattern}
+            <span>
+              {cat.label}
+              <span className="pattern-blurb">{cat.blurb}</span>
+            </span>
             <span className="count">
               {qs.filter((q) => isSolved(progress.solved[q.id])).length}/{qs.length}
             </span>

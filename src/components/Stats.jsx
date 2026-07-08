@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { beltFor, currentStreak, dueQuestionIds, isSolved, masteryLevel } from '../state/progress.js';
+import Calendar from './Calendar.jsx';
 
 function BarChart({ rows }) {
   const max = Math.max(1, ...rows.map((r) => r.total));
@@ -90,7 +91,10 @@ export default function Stats({ questions, progress }) {
         </div>
       </div>
 
-      <h2 style={{ margin: '18px 0 8px' }}>Mastery</h2>
+      <h2 style={{ margin: '20px 0 8px' }}>Attendance</h2>
+      <Calendar progress={progress} />
+
+      <h2 style={{ margin: '22px 0 8px' }}>Mastery</h2>
       <div className="mastery-row">
         <span className="pill pill-new">{mastery.new} new</span>
         <span className="pill pill-learning">{mastery.learning} learning</span>

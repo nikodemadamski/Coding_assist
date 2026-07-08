@@ -5,10 +5,11 @@ const PROGRESS_KEY = 'zoro.progress.v1';
 const CUSTOM_QUESTIONS_KEY = 'zoro.customQuestions.v1';
 
 export const EMPTY_PROGRESS = {
-  solved: {}, // questionId -> { firstSolvedAt, attempts, lastSolvedAt }
+  solved: {}, // questionId -> { firstSolvedAt, attempts, solves, mistakes, lastSolvedAt }
   drafts: {}, // questionId -> code string
   srs: {}, // questionId -> { stage: 0..4, nextDue: 'YYYY-MM-DD' }
   streak: { count: 0, lastActiveDate: null },
+  activity: {}, // 'YYYY-MM-DD' -> { visited, solves, fails, missed: [id], goalMet }
 };
 
 function safeParse(raw, fallback) {
@@ -27,6 +28,7 @@ export function loadProgress() {
     ...structuredClone(EMPTY_PROGRESS),
     ...p,
     streak: { ...EMPTY_PROGRESS.streak, ...(p.streak || {}) },
+    activity: p.activity || {},
   };
 }
 
@@ -74,6 +76,7 @@ export function parseImport(jsonText) {
     ...structuredClone(EMPTY_PROGRESS),
     ...data.progress,
     streak: { ...EMPTY_PROGRESS.streak, ...(data.progress.streak || {}) },
+    activity: data.progress.activity || {},
   };
   const customQuestions = Array.isArray(data.customQuestions) ? data.customQuestions : [];
   return { progress, customQuestions };

@@ -127,7 +127,9 @@ export default function ProblemView({
       ? `⟳ Review · ${practiceInfo.reviewsLeft} to clear`
       : practiceInfo?.phase === 'new'
         ? `✦ New · ${practiceInfo.newLeft} left`
-        : '';
+        : practiceInfo?.phase === 'drill'
+          ? `🔥 Drill · ${practiceInfo.reviewsLeft} left`
+          : '';
 
   return (
     <div className="problem-view">

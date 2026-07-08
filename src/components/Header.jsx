@@ -1,6 +1,6 @@
 import { beltFor, currentStreak, isSolved } from '../state/progress.js';
 
-export default function Header({ progress, onHome, onStats, onSettings }) {
+export default function Header({ progress, onHome, onStats, onGuide, onSettings }) {
   const solvedCount = Object.values(progress.solved).filter(isSolved).length;
   const belt = beltFor(solvedCount);
   const streak = currentStreak(progress.streak);
@@ -33,6 +33,9 @@ export default function Header({ progress, onHome, onStats, onSettings }) {
           />
         </span>
       </span>
+      <button className="icon-btn" onClick={onGuide}>
+        🥋 Sensei
+      </button>
       <button className="icon-btn" onClick={onStats}>
         Stats
       </button>

@@ -6,6 +6,7 @@
 // Global progress (SRS, streak, mistakes) is still recorded by the caller on
 // each pass/fail; this module only governs ordering and gating for one sitting.
 import { dueQuestionIds, newQuestionIds, shuffle } from './progress.js';
+import { todaysMisses } from './activity.js';
 
 export function createSession(progress, questions, { seed = (Math.random() * 2 ** 32) >>> 0 } = {}) {
   const validIds = new Set(questions.map((q) => q.id));
@@ -14,6 +15,14 @@ export function createSession(progress, questions, { seed = (Math.random() * 2 *
     fresh: shuffle(newQuestionIds(progress, questions), (seed ^ 0x9e3779b9) >>> 0),
     cleared: [],
   };
+}
+
+// "Drill today's misses": a session made only of the questions you got wrong
+// today, repeat-until-pass. No new questions — this is targeted remediation.
+export function createDrillSession(progress, questions, { seed = (Math.random() * 2 ** 32) >>> 0 } = {}) {
+  const validIds = new Set(questions.map((q) => q.id));
+  const misses = todaysMisses(progress).filter((id) => validIds.has(id));
+  return { review: shuffle(misses, seed), fresh: [], cleared: [] };
 }
 
 export function currentId(session) {
