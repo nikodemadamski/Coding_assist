@@ -93,7 +93,12 @@ try {
   await page.locator('.result-summary').waitFor({ timeout: 120000 }); // first run loads Pyodide
   check((await resultText(page)).includes('tests passed'), 'Run executes Python in the browser');
   check(/✗ \d\/5 tests passed/.test(await resultText(page)), 'wrong answer shows failed tests');
-  check((await resultText(page)).includes('expected'), 'failed test shows expected vs got');
+  const failText = await resultText(page);
+  check(
+    failText.includes('Expected') && failText.includes('Your output'),
+    'failed test shows Expected vs Your output'
+  );
+  check(failText.includes('two_sum('), 'failed test shows the exact call as Input');
 
   // ---- failure path: renamed function ----
   await setEditor(page, 'def wrong_name(nums, target):\n    return [0, 1]');

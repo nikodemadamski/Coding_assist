@@ -83,7 +83,10 @@ def _user_error():
                 kept.append("    " + lines[i + 1].strip())
                 i += 1
         i += 1
-    kept.append(lines[-1])
+    # Don't repeat the exception line when it already surfaced as frame context
+    # (exec'd "<string>" code has no source, so the context IS the exception).
+    if not kept or kept[-1].strip() != lines[-1].strip():
+        kept.append(lines[-1])
     return "\\n".join(kept)
 
 outcome = {"status": "ok", "results": []}
@@ -122,8 +125,10 @@ if outcome["status"] == "ok":
             exp_c = _canon(t["expected"])
             got_c = _canon(got)
             entry["pass"] = exp_c == got_c
-            entry["expectedRepr"] = exp_c
-            entry["gotRepr"] = got_c
+            # Comparison uses canonical JSON; DISPLAY uses Python repr so the
+            # learner sees True/None/'text', not true/null/"text".
+            entry["expectedRepr"] = repr(_normalize(t["expected"]))
+            entry["gotRepr"] = repr(_normalize(got))
         except Exception:
             entry["error"] = _user_error()
         entry["stdout"] = buf.getvalue()[:4000]

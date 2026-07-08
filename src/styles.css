@@ -466,24 +466,31 @@ button {
     display: none;
   }
 
+  /* Fixed-proportion rows: the editor always keeps 58% and the result pane
+     scrolls inside its own 42% — long errors can never push behind the code. */
   .pv-body {
     grid-template-columns: minmax(320px, 5fr) 7fr;
-    grid-template-rows: minmax(0, 1fr) minmax(0, auto);
+    grid-template-rows: minmax(0, 58fr) minmax(0, 42fr);
   }
 
   .pane-problem {
+    grid-column: 1;
     grid-row: 1 / 3;
     border-right: 1px solid var(--line);
   }
 
   .pane-code {
-    min-height: 260px;
+    grid-column: 2;
+    grid-row: 1;
+    min-height: 0;
   }
 
   .pane-result {
+    grid-column: 2;
+    grid-row: 2;
     border-top: 1px solid var(--line);
-    max-height: 45%;
-    min-height: 120px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 }
 
@@ -644,6 +651,22 @@ details.hint[open] summary {
 
 .test-row-detail .lbl {
   color: var(--text-dim);
+  display: inline-block;
+  min-width: 92px;
+}
+
+.io-line {
+  margin: 3px 0;
+}
+.io-line code {
+  background: none;
+  padding: 0;
+}
+.io-expected {
+  color: var(--jade);
+}
+.io-got {
+  color: var(--crimson);
 }
 
 .stdout-block {

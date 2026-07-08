@@ -47,7 +47,9 @@ export default function Editor({ track, value, onChange }) {
         lineNumbers: true,
         foldGutter: false,
         highlightActiveLine: true,
-        autocompletion: true,
+        // CM6's built-in python "completions" are keyword noise (AttributeError,
+        // ConnectionRefusedError, ...) and the popup hangs over the result pane.
+        autocompletion: false,
         bracketMatching: true,
         closeBrackets: true,
         indentOnInput: true,

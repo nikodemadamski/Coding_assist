@@ -1,31 +1,36 @@
 import SqlResultTable from './SqlResultTable.jsx';
 
-function PyTestRow({ result, index }) {
+function PyTestRow({ result, index, functionName }) {
+  const call = functionName ? `${functionName}(${result.argsRepr})` : result.argsRepr;
   return (
     <div className={`test-row ${result.pass ? 'pass' : 'fail'}`}>
       <div className="test-row-head">
         <span>{result.pass ? '✓' : '✗'}</span>
         <span>Test {index + 1}</span>
         <span style={{ color: 'var(--text-dim)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {result.argsRepr}
+          {call}
         </span>
       </div>
       {!result.pass && (
         <div className="test-row-detail">
+          <div className="io-line">
+            <span className="lbl">Input </span>
+            <code>{call}</code>
+          </div>
           {result.error ? (
-            <div style={{ whiteSpace: 'pre-wrap' }}>
-              <span className="lbl">error: </span>
+            <div style={{ whiteSpace: 'pre-wrap', marginTop: 6 }}>
+              <span className="lbl">Error </span>
               {result.error}
             </div>
           ) : (
             <>
-              <div>
-                <span className="lbl">expected: </span>
-                {result.expectedRepr}
+              <div className="io-line">
+                <span className="lbl">Expected </span>
+                <code className="io-expected">{result.expectedRepr}</code>
               </div>
-              <div>
-                <span className="lbl">got: </span>
-                {result.gotRepr}
+              <div className="io-line">
+                <span className="lbl">Your output </span>
+                <code className="io-got">{result.gotRepr}</code>
               </div>
             </>
           )}
@@ -101,7 +106,7 @@ export default function Results({ report, question }) {
         {passed === results.length ? '✓' : '✗'} {passed}/{results.length} tests passed
       </div>
       {results.map((r, i) => (
-        <PyTestRow key={i} result={r} index={i} />
+        <PyTestRow key={i} result={r} index={i} functionName={question.function_name} />
       ))}
       {stdout && (
         <div className="stdout-block">
