@@ -66,7 +66,7 @@ try {
 
   await page.goto(BASE);
   check(await page.locator('.header-logo').isVisible(), 'app loads with header');
-  check((await page.locator('.q-card').count()) >= 76, 'picker lists all 76 seed questions');
+  check((await page.locator('.q-card').count()) >= 123, 'picker lists the full seed bank (123+)');
   check(await page.locator('.welcome-card').isVisible(), 'first visit shows the welcome/purpose card');
   check(
     (await page.locator('.q-card.q-next .q-title').innerText()).includes('Reverse a string'),

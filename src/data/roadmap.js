@@ -66,44 +66,56 @@ export const ROADMAP = [
     patterns: ['trees'],
   },
   {
+    key: 'tries',
+    label: '10 · Tries',
+    blurb: 'Prefix trees — the data structure behind autocomplete and word search.',
+    patterns: ['tries'],
+  },
+  {
     key: 'heap',
-    label: '10 · Heap / Priority Queue',
+    label: '11 · Heap / Priority Queue',
     blurb: 'Top-K and "always grab the extreme" in O(log n).',
     patterns: ['heap'],
   },
   {
     key: 'backtracking',
-    label: '11 · Backtracking',
+    label: '12 · Backtracking',
     blurb: 'Build a decision tree; choose, recurse, un-choose.',
     patterns: ['backtracking'],
   },
   {
     key: 'graphs',
-    label: '12 · Graphs',
+    label: '13 · Graphs',
     blurb: 'Grids and adjacency: DFS flood-fill, BFS shortest-time, topo-sort.',
     patterns: ['graphs'],
   },
   {
     key: 'dp',
-    label: '13 · Dynamic Programming',
+    label: '14 · Dynamic Programming',
     blurb: 'Overlapping subproblems. Define the state, write the recurrence.',
     patterns: ['dp-1d', 'dp-2d'],
   },
   {
     key: 'greedy',
-    label: '14 · Greedy',
+    label: '15 · Greedy',
     blurb: 'Locally optimal choices that provably reach the global optimum.',
     patterns: ['greedy'],
   },
   {
     key: 'intervals',
-    label: '15 · Intervals',
+    label: '16 · Intervals',
     blurb: 'Sort by start, then sweep. Merge, overlap, schedule.',
     patterns: ['intervals'],
   },
   {
+    key: 'math-geometry',
+    label: '17 · Math & Geometry',
+    blurb: 'Matrix moves, number tricks, and simulation.',
+    patterns: ['math-geometry'],
+  },
+  {
     key: 'bits',
-    label: '16 · Bit Manipulation',
+    label: '18 · Bit Manipulation',
     blurb: 'XOR cancellation, masks, and shift tricks.',
     patterns: ['bits'],
   },
@@ -139,21 +151,27 @@ export const PATH = [
   'py-two-sum-sorted',
   'py-container-water',
   'py-three-sum',
+  'py-trapping-rain',
   // 3 · Sliding window
   'py-max-profit',
   'py-longest-substring-norepeat',
   'py-char-replacement',
   'py-permutation-in-string',
   'py-min-window-substring',
+  'py-sliding-window-max',
   // 4 · Stack
   'py-valid-parentheses',
   'py-min-stack',
   'py-eval-rpn',
   'py-daily-temperatures',
+  'py-generate-parens',
+  'py-car-fleet',
+  'py-largest-rectangle',
   // 5 · Binary search
   'py-binary-search',
   'py-find-min-rotated',
   'py-search-rotated',
+  'py-search-2d-matrix',
   'py-koko-bananas',
   // 6 · pandas: the data-science muscle
   'pd-filter-rows',
@@ -174,43 +192,86 @@ export const PATH = [
   'sql-subquery',
   'sql-window-top-per-group',
   // 8 · Linked list
+  'py-reverse-list',
   'py-merge-sorted-lists',
   'py-reorder-list',
+  'py-remove-nth-end',
+  'py-add-two-numbers',
+  'py-merge-k-lists',
   // 9 · Trees
   'py-max-depth-tree',
   'py-same-tree',
   'py-invert-tree',
+  'py-subtree',
   'py-tree-diameter',
   'py-level-order',
   'py-validate-bst',
-  // 10 · Heap
+  'py-kth-smallest-bst',
+  'py-lca-bst',
+  'py-max-path-sum',
+  // 10 · Tries
+  'py-implement-trie',
+  // 11 · Heap
   'py-kth-largest',
   'py-last-stone-weight',
-  // 11 · Backtracking
+  'py-task-scheduler',
+  // 12 · Backtracking
   'py-subsets',
-  'py-permutations',
+  'py-subsets-ii',
   'py-combination-sum',
-  // 12 · Graphs
+  'py-permutations',
+  'py-palindrome-partition',
+  'py-word-search',
+  // 13 · Graphs
   'py-number-of-islands',
   'py-max-area-island',
   'py-rotting-oranges',
+  'py-pacific-atlantic',
   'py-course-schedule',
-  // 13 · Dynamic programming
+  'py-course-schedule-ii',
+  'py-count-components',
+  // 14 · Dynamic programming
   'py-climbing-stairs',
   'py-house-robber',
+  'py-house-robber-ii',
   'py-coin-change',
   'py-longest-increasing-subseq',
+  'py-max-product-subarray',
+  'py-longest-palindrome-substr',
+  'py-count-palindromic-substrings',
+  'py-decode-ways',
+  'py-word-break',
+  'py-can-partition',
   'py-unique-paths',
   'py-longest-common-subseq',
-  // 14 · Greedy
+  'py-min-path-sum',
+  'py-edit-distance',
+  // 15 · Greedy
   'py-max-subarray',
   'py-jump-game',
-  // 15 · Intervals
+  'py-jump-game-ii',
+  'py-gas-station',
+  'py-hand-of-straights',
+  // 16 · Intervals
   'py-meeting-rooms',
   'py-merge-intervals',
-  // 16 · Bits
+  'py-insert-interval',
+  'py-non-overlapping',
+  'py-min-meeting-rooms',
+  // 17 · Math & geometry
+  'py-plus-one',
+  'py-happy-number',
+  'py-rotate-array',
+  'py-spiral-matrix',
+  'py-rotate-image',
+  'py-pow',
+  // 18 · Bits
   'py-single-number',
   'py-count-bits',
+  'py-hamming-weight',
+  'py-missing-number',
+  'py-reverse-bits',
+  'py-sum-two-integers',
 ];
 
 const STEP_OF = (() => {

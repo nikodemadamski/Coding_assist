@@ -1137,6 +1137,7 @@ import { NEETCODE_1 } from './neetcode1.js';
 import { NEETCODE_2 } from './neetcode2.js';
 import { NEETCODE_3 } from './neetcode3.js';
 import { NEETCODE_4 } from './neetcode4.js';
+import { NEETCODE_5 } from './neetcode5.js';
 
 export const SEED_QUESTIONS = [
   ...PYTHON_QUESTIONS,
@@ -1146,4 +1147,5 @@ export const SEED_QUESTIONS = [
   ...NEETCODE_2,
   ...NEETCODE_3,
   ...NEETCODE_4,
+  ...NEETCODE_5,
 ];
