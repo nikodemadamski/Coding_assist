@@ -1,6 +1,7 @@
-import { useMemo } from 'react';
-import { ROADMAP, categoryKeyOf } from '../data/roadmap.js';
-import { isSolved } from '../state/progress.js';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ROADMAP, categoryKeyOf, byPathOrder, pathStep, nextOnPath } from '../data/roadmap.js';
+import { isSolved, isDue, masteryLevel, practiceCounts, todayStr } from '../state/progress.js';
+import { todaysMisses } from '../state/activity.js';
 import {
   GRAPH_NODES,
   GRAPH_EDGES,
@@ -10,28 +11,82 @@ import {
   NODE_H,
 } from '../data/roadmapGraph.js';
 
-// The NeetCode-style visual roadmap: category nodes with progress bars,
-// connected by "learn this first" arrows. Clicking a node jumps to that
-// section of the Browse list.
-export default function RoadmapGraph({ questions, progress, onSelect }) {
-  const stats = useMemo(() => {
-    const s = {};
+const MASTERY_LABEL = { new: 'new', learning: 'learning', reviewing: 'reviewing', mastered: 'mastered' };
+
+// The home page: a NeetCode-style visual roadmap. The whole map scales to fit
+// the viewport width (no scroll box), each node shows its progress, and
+// clicking a node opens a popup listing that topic's questions.
+export default function RoadmapGraph({
+  questions,
+  progress,
+  onOpenQuestion,
+  onStartPractice,
+  onWarmup,
+  onDrill,
+  onBrowse,
+}) {
+  const [openCat, setOpenCat] = useState(null);
+  const [scale, setScale] = useState(1);
+  const fitRef = useRef(null);
+  const today = todayStr();
+
+  // Fit the fixed-size canvas to whatever width we actually have.
+  useEffect(() => {
+    const el = fitRef.current;
+    if (!el) return;
+    const fit = () => setScale(Math.min(el.clientWidth / GRAPH_W, 1.2));
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const byCat = useMemo(() => {
+    const m = new Map();
     for (const q of questions) {
       const key = categoryKeyOf(q.pattern);
-      s[key] = s[key] || { total: 0, solved: 0 };
-      s[key].total++;
-      if (isSolved(progress.solved[q.id])) s[key].solved++;
+      if (!m.has(key)) m.set(key, []);
+      m.get(key).push(q);
+    }
+    for (const list of m.values()) list.sort(byPathOrder);
+    return m;
+  }, [questions]);
+
+  const stats = useMemo(() => {
+    const s = {};
+    for (const [key, list] of byCat) {
+      s[key] = {
+        total: list.length,
+        solved: list.filter((q) => isSolved(progress.solved[q.id])).length,
+      };
     }
     return s;
-  }, [questions, progress]);
+  }, [byCat, progress]);
 
-  const byKey = Object.fromEntries(GRAPH_NODES.map((n) => [n.key, n]));
-  const label = (key) => ROADMAP.find((c) => c.key === key)?.label.replace(/^\d+ · /, '') ?? key;
+  const counts = useMemo(() => practiceCounts(progress, questions, today), [progress, questions, today]);
+  const validIds = useMemo(() => new Set(questions.map((q) => q.id)), [questions]);
+  const missCount = useMemo(
+    () => todaysMisses(progress).filter((id) => validIds.has(id)).length,
+    [progress, validIds]
+  );
+  const solvedCount = useMemo(
+    () => questions.filter((q) => isSolved(progress.solved[q.id])).length,
+    [questions, progress]
+  );
+  const brandNew = solvedCount === 0;
+  const nextUp = useMemo(
+    () => nextOnPath(questions, (id) => isSolved(progress.solved[id])),
+    [questions, progress]
+  );
+
+  const nodeById = Object.fromEntries(GRAPH_NODES.map((n) => [n.key, n]));
+  const catDef = (key) => ROADMAP.find((c) => c.key === key);
+  const label = (key) => catDef(key)?.label.replace(/^\d+ · /, '') ?? key;
 
   // Curved edge from the bottom-center of `a` to the top-center of `b`.
   const edgePath = ([from, to]) => {
-    const a = byKey[from];
-    const b = byKey[to];
+    const a = nodeById[from];
+    const b = nodeById[to];
     if (!a || !b) return null;
     const x1 = a.x + NODE_W / 2;
     const y1 = a.y + NODE_H;
@@ -41,15 +96,70 @@ export default function RoadmapGraph({ questions, progress, onSelect }) {
     return `M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`;
   };
 
+  const openList = openCat ? (byCat.get(openCat) ?? []) : [];
+  const openStats = openCat ? (stats[openCat] ?? { total: 0, solved: 0 }) : null;
+
   return (
-    <div className="stats">
-      <h1>The roadmap</h1>
-      <p style={{ color: 'var(--text-dim)', margin: '6px 0 14px' }}>
-        Learn top to bottom — each arrow means &ldquo;this pattern builds on that one.&rdquo;
-        Click a topic to browse its questions.
+    <div className="stats roadmap-home">
+      {brandNew && (
+        <section className="welcome-card">
+          <h2>Welcome to the dojo 🥋</h2>
+          <p>
+            This map is your whole journey — <strong>{questions.length} questions</strong> from
+            &ldquo;I barely know Python&rdquo; to interview-ready. Learn top to bottom: each
+            arrow means &ldquo;this pattern builds on that one.&rdquo; Click any topic to see
+            its questions, or just press <strong>Begin the path</strong> and let the dojo pick
+            for you.
+          </p>
+        </section>
+      )}
+
+      {/* Daily loop, right on the front door */}
+      <div className="map-strip">
+        <span className="map-strip-line">
+          {counts.due > 0 ? (
+            <>
+              <strong className="due-num">{counts.due}</strong> review
+              {counts.due === 1 ? '' : 's'} to clear today
+            </>
+          ) : counts.fresh > 0 ? (
+            <>No reviews due — the path is open{nextUp ? <>: step {pathStep(nextUp.id)} · {nextUp.title}</> : ''}</>
+          ) : (
+            <>All caught up for today</>
+          )}
+        </span>
+        <button
+          className="btn btn-primary"
+          onClick={onStartPractice}
+          disabled={counts.due === 0 && counts.fresh === 0}
+        >
+          {counts.due > 0 ? '⟳ Start review' : brandNew ? '▶ Begin the path' : '▶ Continue the path'}
+        </button>
+        {missCount > 0 && (
+          <button className="btn btn-drill" onClick={onDrill}>
+            🔥 Drill misses ({missCount})
+          </button>
+        )}
+        <button className="btn btn-warmup" onClick={onWarmup}>
+          ⚡ Warm-up
+        </button>
+      </div>
+
+      <p className="map-hint">
+        Learn top to bottom — arrows mean &ldquo;learn this pattern first.&rdquo; Click a topic
+        to open its questions.
       </p>
-      <div className="graph-scroll">
-        <div className="graph-canvas" style={{ width: GRAPH_W, height: GRAPH_H }}>
+
+      <div className="graph-fit" ref={fitRef} style={{ height: GRAPH_H * scale }}>
+        <div
+          className="graph-canvas"
+          style={{
+            width: GRAPH_W,
+            height: GRAPH_H,
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
+          }}
+        >
           <svg
             className="graph-edges"
             width={GRAPH_W}
@@ -95,7 +205,7 @@ export default function RoadmapGraph({ questions, progress, onSelect }) {
                 key={n.key}
                 className={`graph-node ${done ? 'done' : ''}`}
                 style={{ left: n.x, top: n.y, width: NODE_W, height: NODE_H }}
-                onClick={() => onSelect(n.key)}
+                onClick={() => setOpenCat(n.key)}
                 title={`${label(n.key)} — ${st.solved}/${st.total} solved`}
               >
                 <span className="graph-node-label">{label(n.key)}</span>
@@ -107,6 +217,57 @@ export default function RoadmapGraph({ questions, progress, onSelect }) {
           })}
         </div>
       </div>
+
+      {/* Topic popup: the category's questions, click any to open it */}
+      {openCat && (
+        <div
+          className="modal-backdrop"
+          onClick={(e) => e.target === e.currentTarget && setOpenCat(null)}
+        >
+          <div className="modal cat-modal" role="dialog" aria-modal="true" aria-label={`${label(openCat)} questions`}>
+            <div className="cat-modal-head">
+              <div>
+                <h2>{label(openCat)}</h2>
+                <p className="cat-modal-blurb">{catDef(openCat)?.blurb}</p>
+              </div>
+              <span className="cat-modal-count">
+                {openStats.solved}/{openStats.total} solved
+              </span>
+              <button className="icon-btn" onClick={() => setOpenCat(null)} aria-label="Close">
+                ✕
+              </button>
+            </div>
+            <div className="cat-modal-list">
+              {openList.map((q) => {
+                const level = masteryLevel(progress, q.id);
+                const step = pathStep(q.id);
+                return (
+                  <button key={q.id} className="cat-q" onClick={() => onOpenQuestion(q.id)}>
+                    <span className={`mastery-dot dot-${level}`} aria-hidden="true" />
+                    {step && <span className="step-num">{step}</span>}
+                    <span className="cat-q-title">
+                      {isSolved(progress.solved[q.id]) && (
+                        <span style={{ color: 'var(--jade)' }}>✓ </span>
+                      )}
+                      {q.title}
+                    </span>
+                    <span className="q-meta">
+                      {isDue(progress.srs[q.id], today) && <span className="tag due-tag">⟳ due</span>}
+                      <span className={`tag diff-${q.difficulty}`}>{q.difficulty}</span>
+                      <span className={`pill pill-${level}`}>{MASTERY_LABEL[level]}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="cat-modal-foot">
+              <button className="btn" onClick={() => onBrowse(openCat)}>
+                Open in the full list →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

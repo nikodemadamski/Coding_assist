@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import Markdown from './Markdown.jsx';
 import { runPythonTrace } from '../engine/pyClient.js';
 
 // NeetCode-style algorithm visualizer: replays a REAL traced execution of the
@@ -62,7 +63,7 @@ function VarValue({ value }) {
   return <code className="viz-prim">{fmt(value)}</code>;
 }
 
-export default function VisualizerModal({ question, code, label, onClose }) {
+export default function VisualizerModal({ question, code, label, note, onClose }) {
   const [testIndex, setTestIndex] = useState(0);
   const [trace, setTrace] = useState(null); // null=loading | {status:...}
   const [status, setStatus] = useState('');
@@ -138,6 +139,19 @@ export default function VisualizerModal({ question, code, label, onClose }) {
             ✕
           </button>
         </div>
+
+        <p className="viz-what">
+          This runs the <strong>{label}</strong> code for real on the test case below, one line
+          at a time. The left pane highlights the line being executed, the right pane shows
+          every variable at that moment, and the sentence underneath explains <em>why</em> that
+          line runs — with the actual values plugged in.
+        </p>
+        {note && (
+          <div className="viz-plan">
+            <span className="viz-plan-label">The idea</span>
+            <Markdown text={note} />
+          </div>
+        )}
 
         <div className="viz-input-row">
           <label htmlFor="viz-test">Test case</label>
@@ -250,11 +264,18 @@ export default function VisualizerModal({ question, code, label, onClose }) {
             </div>
 
             <div className="viz-caption" role="status">
-              {cur
-                ? `Line ${cur.line}${cur.func && cur.func !== question.function_name ? ` · in ${cur.func}()` : ''}: ${
-                    (trace.lines[cur.line - 1] || '').trim()
-                  }`
-                : 'No steps captured.'}
+              {cur ? (
+                <>
+                  {cur.note && <div className="viz-why">{cur.note}</div>}
+                  <div className="viz-src">
+                    Line {cur.line}
+                    {cur.func && cur.func !== question.function_name ? ` · in ${cur.func}()` : ''}
+                    : <code>{(trace.lines[cur.line - 1] || '').trim()}</code>
+                  </div>
+                </>
+              ) : (
+                'No steps captured.'
+              )}
             </div>
           </>
         )}

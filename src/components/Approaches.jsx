@@ -19,7 +19,7 @@ export default function Approaches({ question, onVisualize }) {
           <div className="approach-meta">
             <button
               className="btn btn-viz"
-              onClick={() => onVisualize(question.solution, 'Solution')}
+              onClick={() => onVisualize(question.solution, 'Solution', question.approach)}
             >
               ▶ Visualize
             </button>
@@ -49,7 +49,7 @@ export default function Approaches({ question, onVisualize }) {
       <div className="approach-meta">
         <span className="approach-complexity">{a.complexity}</span>
         {canVisualize && (
-          <button className="btn btn-viz" onClick={() => onVisualize(a.code, a.name)}>
+          <button className="btn btn-viz" onClick={() => onVisualize(a.code, a.name, a.note)}>
             ▶ Visualize
           </button>
         )}

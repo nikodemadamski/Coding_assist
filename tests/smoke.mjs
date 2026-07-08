@@ -67,8 +67,34 @@ try {
 
   await page.goto(BASE);
   check(await page.locator('.header-logo').isVisible(), 'app loads with header');
-  check((await page.locator('.q-card').count()) >= 123, 'picker lists the full seed bank (123+)');
+
+  // ---- the home page IS the roadmap now ----
+  check((await page.locator('.graph-node').count()) >= 15, 'home page shows the roadmap graph');
   check(await page.locator('.welcome-card').isVisible(), 'first visit shows the welcome/purpose card');
+  check(
+    await page.locator('.map-strip button', { hasText: 'Begin the path' }).isVisible(),
+    'daily practice strip lives on the map home'
+  );
+  const fitsViewport = await page.evaluate(
+    () => document.querySelector('.graph-canvas').getBoundingClientRect().width <= window.innerWidth
+  );
+  check(fitsViewport, 'the whole map fits the viewport width (scaled, no scroll box)');
+
+  // clicking a topic opens its question list as a popup
+  await page.locator('.graph-node', { hasText: 'Arrays & Hashing' }).click();
+  await page.locator('.cat-modal').waitFor({ timeout: 5000 });
+  check((await page.locator('.cat-q').count()) >= 5, 'topic popup lists its questions');
+  await page.locator('.cat-q', { hasText: 'Two Sum' }).click();
+  check(
+    (await page.locator('.pv-title').innerText()).includes('Two Sum'),
+    'clicking a question in the popup opens it'
+  );
+  await page.locator('.icon-btn[aria-label="Back to problem list"]').click();
+  check((await page.locator('.graph-node').count()) >= 15, 'Back returns to the map it came from');
+
+  // ---- the old home is now the Browse tab ----
+  await page.locator('.icon-btn', { hasText: 'Browse' }).click();
+  check((await page.locator('.q-card').count()) >= 123, 'Browse tab lists the full seed bank (123+)');
   check(
     (await page.locator('.q-card.q-next .q-title').innerText()).includes('Reverse a string'),
     'step 1 is marked "you are here" for a new user'
@@ -156,6 +182,7 @@ try {
 
   // ---- persistence across reload ----
   await page.reload();
+  await page.locator('.icon-btn', { hasText: 'Browse' }).click();
   const twoSumCard = page.locator('.q-card', { hasText: 'Two Sum' }).first();
   check(
     (await twoSumCard.locator('.pill').innerText()).trim() === 'learning',
@@ -272,6 +299,11 @@ try {
     );
   });
   await page.reload();
+  check(
+    (await page.locator('.map-strip').innerText()).includes('2 review'),
+    'map home strip shows 2 reviews due'
+  );
+  await page.locator('.icon-btn', { hasText: 'Browse' }).click();
   check((await page.locator('.today-line').innerText()).includes('2 review'), 'today card shows 2 reviews due');
 
   await page.locator('button', { hasText: 'Start review' }).click();
@@ -322,7 +354,10 @@ try {
     );
   });
   await page.reload();
-  check((await page.locator('.btn-drill').innerText()).includes('1'), "drill button shows today's miss count");
+  check(
+    (await page.locator('.btn-drill').first().innerText()).includes('1'),
+    "drill button shows today's miss count"
+  );
   await page.locator('.btn-drill').click();
   check((await page.locator('.phase-pill').innerText()).includes('Drill'), 'drill session shows the drill phase');
   await setEditor(page, 'def contains_duplicate(nums):\n    return len(set(nums)) != len(nums)');
@@ -340,24 +375,23 @@ try {
   check(await page.locator('.calendar-block').isVisible(), 'Stats page shows the attendance calendar');
   await page.locator('.header-logo').click();
 
-  // ---- visual roadmap graph ----
-  await page.locator('.icon-btn', { hasText: 'Roadmap' }).click();
-  check((await page.locator('.graph-node').count()) >= 15, 'roadmap graph renders the category nodes');
+  // ---- roadmap home after real progress ----
   check(
     (await page.locator('.graph-edges path[marker-end]').count()) >= 10,
     'roadmap draws "learn this first" arrows between topics'
   );
-  await page.locator('.graph-node', { hasText: 'Arrays & Hashing' }).click();
-  check(
-    (await page.locator('#cat-arrays-hashing').count()) === 1,
-    'clicking a roadmap node jumps to that category in Browse'
-  );
 
   // ---- algorithm visualizer: replays a real traced execution ----
-  await page.locator('.q-card', { hasText: 'Two Sum' }).first().click();
+  await page.locator('.graph-node', { hasText: 'Arrays & Hashing' }).click();
+  await page.locator('.cat-q', { hasText: 'Two Sum' }).click();
   await page.locator('.pane-problem details.hint summary', { hasText: 'Show solution' }).click();
   await page.locator('.btn-viz').first().click();
   await page.locator('.viz-modal').waitFor({ timeout: 60000 });
+  check(
+    (await page.locator('.viz-what').innerText()).includes('one line'),
+    'visualizer explains what it does before it runs'
+  );
+  check(await page.locator('.viz-plan').isVisible(), "the approach's idea is shown in the modal");
   await page.locator('.viz-line.active').waitFor({ timeout: 120000 });
   check(true, 'visualizer traces the solution and highlights the current line');
   const stepBefore = await page.locator('.viz-step-count').innerText();
@@ -370,8 +404,23 @@ try {
   check((await page.locator('.viz-var').count()) >= 2, 'variable panel shows the local variables');
   check(
     (await page.locator('.viz-caption').innerText()).includes('Line'),
-    'caption narrates the current line'
+    'caption shows the current source line'
   );
+  // scrub through the trace: at least one step must carry a plain-English
+  // "why" with live values (e.g. "Is nums[i] + nums[j] (= 9) equal to ...")
+  let sawWhy = false;
+  for (;;) {
+    if (
+      (await page.locator('.viz-why').count()) > 0 &&
+      /\(= .*\)/.test(await page.locator('.viz-why').innerText())
+    ) {
+      sawWhy = true;
+      break;
+    }
+    if (await page.locator('button[aria-label="Next step"]').isDisabled()) break;
+    await page.locator('button[aria-label="Next step"]').click();
+  }
+  check(sawWhy, 'steps narrate WHY they run, with live values plugged in');
   await page.locator('.icon-btn[aria-label="Close visualizer"]').click();
   check((await page.locator('.viz-modal').count()) === 0, 'visualizer closes');
   await page.locator('.icon-btn[aria-label="Back to problem list"]').click();
@@ -416,6 +465,16 @@ try {
   // ================= mobile (375px) =================
   const mobile = await browser.newPage({ viewport: { width: 375, height: 667 } });
   await mobile.goto(BASE);
+  const noHScrollMap = await mobile.evaluate(
+    () => document.documentElement.scrollWidth <= window.innerWidth
+  );
+  check(noHScrollMap, 'mobile: the map home scales down with no horizontal scroll');
+  check(
+    (await mobile.locator('.graph-node').count()) >= 15,
+    'mobile: the whole roadmap is visible on a phone'
+  );
+
+  await mobile.locator('.icon-btn', { hasText: 'Browse' }).click();
   const noHScroll = await mobile.evaluate(
     () => document.documentElement.scrollWidth <= window.innerWidth
   );

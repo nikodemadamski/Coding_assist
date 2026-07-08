@@ -43,6 +43,54 @@ const twoSum = SEED_QUESTIONS.find((q) => q.id === 'py-two-sum');
   check(JSON.stringify(t.result) === JSON.stringify([0, 1]), `traced result is the answer (${JSON.stringify(t.result)})`);
 }
 
+// ---- narration: every step explains itself with live values ----
+{
+  const t = await trace(twoSum, twoSum.solution, 0);
+  const notes = t.steps.map((s) => s.note).filter(Boolean);
+  check(notes.length >= t.steps.length - 1, `nearly every step has a narration (${notes.length}/${t.steps.length})`);
+
+  const setNote = t.steps.find((s) => s.note?.startsWith('Set seen'));
+  check(!!setNote, 'assignment narrated', setNote?.note);
+
+  // the hash-map lookup must read like a human sentence WITH the real numbers
+  const checkNote = t.steps.find((s) => s.note?.startsWith('Is target - n'));
+  check(!!checkNote, 'condition narrated as a question about target - n');
+  check(
+    /Is target - n \(= -?\d+\) in seen( \(= .*\))?\? (Yes|No) ->/.test(checkNote?.note ?? ''),
+    'condition shows evaluated values and the outcome',
+    checkNote?.note
+  );
+
+  const storeNote = t.steps.find((s) => s.note?.startsWith('Store'));
+  check(
+    /Store i \(= \d+\) under key n \(= -?\d+\) in seen\./.test(storeNote?.note ?? ''),
+    'dict store narrated with key and value',
+    storeNote?.note
+  );
+
+  const retNote = t.steps.find((s) => s.note?.startsWith('Return'));
+  check(/Return .*\(= \[0, 1\]\)\./.test(retNote?.note ?? ''), 'return narrated with the final value', retNote?.note);
+
+  const forNote = t.steps.find((s) => s.note?.startsWith('Take the next'));
+  check(!!forNote, 'for-loop narrated', forNote?.note);
+}
+
+// ---- narration never mutates: impure expressions are left alone ----
+{
+  // Sums the whole list by popping; if the narrator ever re-evaluated
+  // q.pop() the total would come out wrong. tests[0] is [2,7,11,15] -> 35.
+  const code =
+    'def two_sum(nums, target):\n    q = list(nums)\n    total = 0\n    while q:\n        total += q.pop()\n    return total';
+  const t = await trace(twoSum, code, 0);
+  const expectedSum = twoSum.tests[0].args[0].reduce((a, b) => a + b, 0);
+  check(
+    t.status === 'ok' && t.result === expectedSum,
+    `impure expressions are not re-evaluated by the narrator (sum ${t.result} === ${expectedSum})`
+  );
+  const aug = t.steps.find((s) => s.note?.startsWith('Update total'));
+  check(!!aug, 'augmented assignment narrated', aug?.note);
+}
+
 // ---- brute-force approach traces too ----
 {
   const brute = twoSum.approaches.find((a) => a.name === 'Brute force');

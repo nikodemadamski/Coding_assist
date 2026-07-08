@@ -94,14 +94,18 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
   you nailed, what you typed vs. the right answer, and your slowest answers to drill.
   Answer checking is forgiving about spacing and quote style, and every answer in the bank
   is machine-verified to compile as real Python. Best streaks are saved per level.
-- **🗺 Visual roadmap** (header): a NeetCode-style dependency tree of every topic with a
-  progress bar per node — arrows mean "learn this pattern before that one". Click a topic
-  to browse its questions.
+- **🗺 Visual roadmap — the home page**: a NeetCode-style dependency tree of every topic
+  with a progress bar per node — arrows mean "learn this pattern before that one". The map
+  scales to fit any screen, phone included. Clicking a topic pops up its question list;
+  click any question to open it. The daily loop (reviews due, Continue the path, Warm-up,
+  Drill) sits right on top. The classic list view lives in the **📋 Browse** tab.
 - **▶ Visualize** (on any solution): a step-by-step execution player. It traces the actual
   solution — brute force or optimal — running on one of the real test cases, highlighting
   the current line and showing every variable (lists as indexed cells, dicts as key→value
-  chips) as it changes, with play/pause/scrub. Watching *how* the hash map fills up beats
-  re-reading the code.
+  chips) as it changes, with play/pause/scrub. Every step is narrated in plain English with
+  the live values plugged in — *"Is target - n (= 7) in seen (= {2: 0})? No → skip it."* —
+  and the approach's core idea is shown up top, so you see not just what the code does but
+  why each line runs.
 - **Attendance calendar + daily goal** (Stats page): a GitHub-style grid of every day you
   showed up, and whether you met the goal (clear your reviews + solve ≥1). Don't break the
   chain.

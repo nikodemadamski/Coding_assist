@@ -148,7 +148,7 @@ json.dumps(outcome)
 // Snapshot markers the UI understands: a set becomes {"__set__":[...]},
 // a dict becomes {"__dict__":[[k,v],...]} (order preserved).
 export const PY_TRACE_HARNESS = `
-import sys, json, copy, traceback
+import sys, json, copy, traceback, ast
 
 payload = json.loads(PAYLOAD_JSON)
 user_code = payload["code"]
@@ -188,6 +188,136 @@ def _snap(v, depth=0):
         return {"__dict__": [[_snap(k, depth + 1), _snap(x, depth + 1)] for k, x in list(v.items())[:30]]}
     return repr(v)[:60]
 
+# ---- per-step narration: say WHY each line runs, with the live values ----
+# The statement on each source line is looked up in the AST; conditions and
+# pure sub-expressions are re-evaluated against the frame's locals so the
+# caption can read "Is target - n (= 7) in seen (= {2: 0})? No -> skip it."
+_MUT = {"append", "pop", "add", "insert", "remove", "extend", "popleft",
+        "appendleft", "update", "discard", "clear", "sort", "reverse",
+        "heappush", "heappop", "heapify", "heappushpop", "heapreplace",
+        "setdefault", "write", "next", "input", "open", "print", "readline"}
+
+def _is_pure(node):
+    for sub in ast.walk(node):
+        if isinstance(sub, ast.Call):
+            f = sub.func
+            name = f.attr if isinstance(f, ast.Attribute) else (f.id if isinstance(f, ast.Name) else "?")
+            if name in _MUT:
+                return False
+        if isinstance(sub, (ast.NamedExpr, ast.Yield, ast.YieldFrom, ast.Await)):
+            return False
+    return True
+
+_MISS = object()
+
+def _ev(node, frame):
+    if node is None or not _is_pure(node):
+        return _MISS
+    try:
+        expr = ast.Expression(body=node)
+        ast.fix_missing_locations(expr)
+        return eval(compile(expr, "<viz-ev>", "eval"), frame.f_globals, dict(frame.f_locals))
+    except Exception:
+        return _MISS
+
+def _short(v, n=44):
+    r = repr(v)
+    return r if len(r) <= n else r[: n - 3] + "..."
+
+def _seg(node):
+    try:
+        return (ast.get_source_segment(user_code, node) or "?").strip()
+    except Exception:
+        return "?"
+
+def _with_val(node, frame):
+    src = _seg(node)
+    v = _ev(node, frame)
+    if v is _MISS or _short(v) == src:
+        return src
+    return src + " (= " + _short(v) + ")"
+
+_CMP = {ast.Eq: "equal to", ast.NotEq: "different from", ast.Lt: "less than",
+        ast.LtE: "at most", ast.Gt: "greater than", ast.GtE: "at least",
+        ast.In: "in", ast.NotIn: "not in", ast.Is: "is", ast.IsNot: "is not"}
+_OPS = {ast.Add: "+", ast.Sub: "-", ast.Mult: "*", ast.Div: "/",
+        ast.FloorDiv: "//", ast.Mod: "%", ast.Pow: "**", ast.BitOr: "|",
+        ast.BitAnd: "&", ast.BitXor: "^", ast.LShift: "<<", ast.RShift: ">>"}
+
+def _cond_text(test, frame, yes, no):
+    if isinstance(test, ast.Compare) and len(test.ops) == 1 and type(test.ops[0]) in _CMP:
+        head = ("Is " + _with_val(test.left, frame) + " "
+                + _CMP[type(test.ops[0])] + " "
+                + _with_val(test.comparators[0], frame) + "?")
+    else:
+        head = "Check " + _with_val(test, frame) + "."
+    v = _ev(test, frame)
+    if v is _MISS:
+        return head
+    return head + (" Yes -> " + yes if v else " No -> " + no)
+
+_CALL_VERBS = {
+    "append": "Add {a} to the end of {b}",
+    "add": "Add {a} to the set {b}",
+    "appendleft": "Add {a} to the LEFT end of {b}",
+    "insert": "Insert into {b}",
+    "remove": "Remove {a} from {b}",
+    "extend": "Extend {b} with {a}",
+    "pop": "Remove an item from {b}",
+    "popleft": "Take the leftmost item off {b}",
+    "sort": "Sort {b} in place",
+    "reverse": "Reverse {b} in place",
+    "update": "Update {b} with {a}",
+}
+
+def _narrate(frame):
+    node = _stmts.get(frame.f_lineno)
+    if node is None:
+        return None
+    if isinstance(node, ast.Assign) and len(node.targets) == 1:
+        t = node.targets[0]
+        if isinstance(t, ast.Subscript):
+            return ("Store " + _with_val(node.value, frame) + " under key "
+                    + _with_val(t.slice, frame) + " in " + _seg(t.value) + ".")
+        if isinstance(t, (ast.Tuple, ast.List)):
+            return "Unpack " + _with_val(node.value, frame) + " into " + _seg(t) + "."
+        return "Set " + _seg(t) + " to " + _with_val(node.value, frame) + "."
+    if isinstance(node, ast.AugAssign):
+        sym = _OPS.get(type(node.op), "?")
+        msg = ("Update " + _seg(node.target) + " with " + sym + " "
+               + _with_val(node.value, frame))
+        if isinstance(node.target, ast.Name):
+            cur = _ev(ast.Name(id=node.target.id, ctx=ast.Load()), frame)
+            if cur is not _MISS:
+                msg += " (it was " + _short(cur) + ")"
+        return msg + "."
+    if isinstance(node, ast.If):
+        return _cond_text(node.test, frame, "take this branch.", "skip it.")
+    if isinstance(node, ast.While):
+        return _cond_text(node.test, frame, "run the loop body.", "leave the loop.")
+    if isinstance(node, ast.For):
+        return ("Take the next " + _seg(node.target) + " from "
+                + _seg(node.iter) + " (or stop if it's exhausted).")
+    if isinstance(node, ast.Return):
+        if node.value is None:
+            return "Done -- return."
+        return "Return " + _with_val(node.value, frame) + "."
+    if isinstance(node, ast.Expr) and isinstance(node.value, ast.Call):
+        f = node.value.func
+        if isinstance(f, ast.Attribute) and f.attr in _CALL_VERBS:
+            a = _with_val(node.value.args[0], frame) if node.value.args else ""
+            return _CALL_VERBS[f.attr].replace("{a}", a).replace("{b}", _seg(f.value)) + "."
+        return "Run " + _seg(node) + "."
+    return None
+
+_stmts = {}
+try:
+    for _n in ast.walk(ast.parse(user_code)):
+        if isinstance(_n, ast.stmt):
+            _stmts.setdefault(_n.lineno, _n)
+except Exception:
+    _stmts = {}
+
 class _VizLimit(Exception):
     pass
 
@@ -197,9 +327,16 @@ def _tracer(frame, event, arg):
     if event == "line":
         if len(steps) >= MAX_STEPS:
             raise _VizLimit()
+        note = None
+        if not frame.f_code.co_name.startswith("<"):
+            try:
+                note = _narrate(frame)
+            except Exception:
+                note = None
         steps.append({
             "line": frame.f_lineno,
             "func": frame.f_code.co_name,
+            "note": note,
             "locals": {k: _snap(v) for k, v in frame.f_locals.items() if not k.startswith("_")},
         })
     return _tracer

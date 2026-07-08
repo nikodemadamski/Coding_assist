@@ -1460,17 +1460,100 @@ details.hint[open] summary {
 
 /* ── roadmap graph ─────────────────────────────────────────────────────── */
 
-.graph-scroll {
-  overflow-x: auto;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--panel);
-  padding: 10px;
+/* The map scales to fit the available width — the whole tree is always
+   visible, no inner scrollbox. Height is set inline from the scale. */
+.graph-fit {
+  overflow: hidden;
+  width: 100%;
 }
 
 .graph-canvas {
   position: relative;
-  margin: 0 auto;
+}
+
+.map-strip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+}
+.map-strip-line {
+  font-size: 0.95rem;
+  margin-right: auto;
+}
+.map-hint {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  margin: 0 0 10px;
+}
+
+/* topic popup: the category's question list */
+.cat-modal {
+  max-width: min(680px, 100%);
+  display: flex;
+  flex-direction: column;
+  max-height: 84vh;
+}
+.cat-modal-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.cat-modal-head h2 {
+  margin: 0;
+}
+.cat-modal-blurb {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  margin: 4px 0 0;
+}
+.cat-modal-count {
+  margin-left: auto;
+  font-family: var(--font-code);
+  color: var(--jade);
+  white-space: nowrap;
+  padding-top: 6px;
+}
+.cat-modal-list {
+  overflow-y: auto;
+  margin: 14px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cat-q {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.cat-q:hover {
+  border-color: var(--gold);
+}
+.cat-q-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cat-modal-foot {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .graph-edges {
@@ -1738,6 +1821,46 @@ details.hint[open] summary {
   font-family: var(--font-code);
   font-size: 0.8rem;
   align-self: center;
+}
+
+.viz-what {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  line-height: 1.45;
+  margin: 2px 0 10px;
+}
+.viz-plan {
+  background: color-mix(in srgb, var(--gold) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gold) 35%, transparent);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  max-height: 120px;
+  overflow-y: auto;
+}
+.viz-plan-label {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--gold);
+  margin-right: 6px;
+}
+.viz-plan p {
+  display: inline;
+  margin: 0;
+}
+.viz-why {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.viz-src {
+  font-family: var(--font-code);
+  font-size: 0.75rem;
+  color: var(--text-dim);
 }
 
 .viz-caption {

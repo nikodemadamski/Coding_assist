@@ -50,8 +50,8 @@ export default function ProblemView({
   const [viz, setViz] = useState(null); // { code, label } → visualizer open
   const draftTimer = useRef(null);
 
-  const openVisualizer = useCallback((vizCode, vizLabel) => {
-    setViz({ code: vizCode, label: vizLabel });
+  const openVisualizer = useCallback((vizCode, vizLabel, vizNote) => {
+    setViz({ code: vizCode, label: vizLabel, note: vizNote });
   }, []);
 
   const solved = isSolved(progress.solved[question.id]);
@@ -330,6 +330,7 @@ export default function ProblemView({
           question={question}
           code={viz.code}
           label={viz.label}
+          note={viz.note}
           onClose={() => setViz(null)}
         />
       )}

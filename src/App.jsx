@@ -38,6 +38,8 @@ export default function App() {
 
   const currentQuestion =
     view.name === 'problem' ? allQuestions.find((q) => q.id === view.id) : null;
+  // Problems remember which list opened them, so Back returns there.
+  const backTo = view.from === 'browse' ? { name: 'browse' } : { name: 'home' };
 
   const handleSolve = useCallback(
     (questionId, opts) => {
@@ -88,29 +90,33 @@ export default function App() {
       <Header
         progress={progress}
         onHome={() => setView({ name: 'home' })}
-        onRoadmap={() => setView({ name: 'roadmap' })}
+        onBrowse={() => setView({ name: 'browse' })}
         onStats={() => setView({ name: 'stats' })}
         onGuide={() => setView({ name: 'guide' })}
         onSettings={() => setSettingsOpen(true)}
       />
       <main className="app-main">
         {view.name === 'home' && (
+          <RoadmapGraph
+            questions={allQuestions}
+            progress={progress}
+            onOpenQuestion={(id) => setView({ name: 'problem', id, from: 'home' })}
+            onStartPractice={() => setView({ name: 'practice' })}
+            onWarmup={() => setView({ name: 'warmup' })}
+            onDrill={() => setView({ name: 'drill' })}
+            onBrowse={(key) => setView({ name: 'browse', focusCategory: key })}
+          />
+        )}
+        {view.name === 'browse' && (
           <Picker
             questions={allQuestions}
             progress={progress}
             focusCategory={view.focusCategory}
-            onOpen={(id) => setView({ name: 'problem', id })}
+            onOpen={(id) => setView({ name: 'problem', id, from: 'browse' })}
             onPractice={() => setView({ name: 'practice' })}
             onDrill={() => setView({ name: 'drill' })}
             onWarmup={() => setView({ name: 'warmup' })}
             onImport={() => setImportOpen(true)}
-          />
-        )}
-        {view.name === 'roadmap' && (
-          <RoadmapGraph
-            questions={allQuestions}
-            progress={progress}
-            onSelect={(key) => setView({ name: 'home', focusCategory: key })}
           />
         )}
         {view.name === 'warmup' && (
@@ -129,7 +135,7 @@ export default function App() {
             onSolve={handleSolve}
             onFail={handleFail}
             onDraft={handleDraft}
-            onExit={() => setView({ name: 'home' })}
+            onExit={() => setView({ name: 'browse' })}
           />
         )}
         {view.name === 'problem' && currentQuestion && (
@@ -140,7 +146,7 @@ export default function App() {
             onSolve={handleSolve}
             onFail={handleFail}
             onDraft={handleDraft}
-            onBack={() => setView({ name: 'home' })}
+            onBack={() => setView(backTo)}
           />
         )}
         {view.name === 'problem' && !currentQuestion && (

@@ -34,9 +34,9 @@ loud, without bugs.** That is a *trainable* skill, and this dojo is built to tra
 
 ## What to learn, in order
 
-The browse list is laid out as a syllabus — work down it, roughly one category at a time,
-and don't rush ahead until a category feels automatic. The **🗺 Roadmap** page in the header
-shows the same order as a dependency tree with your progress per topic:
+The home-page map lays the whole journey out as a dependency tree — work top to bottom,
+roughly one topic at a time, and don't rush ahead until a topic feels automatic. Click any
+node to open its questions; the **📋 Browse** tab shows the same syllabus as a flat list:
 
 **Arrays & Hashing → Two Pointers → Sliding Window → Stack → Binary Search → Linked List →
 Trees → Heap → Backtracking → Graphs → Dynamic Programming → Greedy → Intervals → Bits.**
