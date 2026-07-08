@@ -26,6 +26,8 @@ const RATINGS = [
   { key: 'easy', label: 'Easy', note: 'wait longer' },
 ];
 
+const MOD = typeof navigator !== 'undefined' && /Mac/.test(navigator.platform) ? '⌘' : 'Ctrl';
+
 export default function ProblemView({
   question,
   progress,
@@ -56,6 +58,22 @@ export default function ProblemView({
 
   const solved = isSolved(progress.solved[question.id]);
 
+  // Keyboard solve loop: Ctrl/⌘+Enter runs, Ctrl/⌘+Shift+Enter submits.
+  // Capture phase so it works while the editor has focus (before CodeMirror).
+  const executeRef = useRef(null);
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        if (document.querySelector('.modal-backdrop')) return; // a modal owns the keys
+        e.preventDefault();
+        e.stopPropagation();
+        executeRef.current?.(e.shiftKey);
+      }
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, []);
+
   const handleChange = useCallback(
     (value) => {
       setCode(value);
@@ -82,6 +100,7 @@ export default function ProblemView({
   }, []);
 
   async function execute(isSubmit) {
+    if (running) return;
     // Flush the pending draft save — the code being run must survive a reload
     // even if the 500ms debounce hasn't fired yet.
     clearTimeout(draftTimer.current);
@@ -121,6 +140,8 @@ export default function ProblemView({
       setStatusText('');
     }
   }
+
+  executeRef.current = execute;
 
   // Rating a correct answer records the solve (with the confidence delta) AND
   // advances the session — onSolve is the practice handler that drops the
@@ -173,11 +194,21 @@ export default function ProblemView({
         </span>
         <span className={`tag track-${question.track}`}>{question.track}</span>
         <span className={`tag diff-${question.difficulty}`}>{question.difficulty}</span>
-        <button className="btn" onClick={() => execute(false)} disabled={running}>
-          {running ? '…' : '▶ Run'}
+        <button
+          className="btn"
+          onClick={() => execute(false)}
+          disabled={running}
+          title={`Run against the tests (${MOD}+Enter)`}
+        >
+          {running ? '…' : '▶ Run'} <kbd className="kbd-hint">{MOD}↩</kbd>
         </button>
-        <button className="btn btn-primary" onClick={() => execute(true)} disabled={running}>
-          Submit
+        <button
+          className="btn btn-primary"
+          onClick={() => execute(true)}
+          disabled={running}
+          title={`Submit — counts the attempt (${MOD}+Shift+Enter)`}
+        >
+          Submit <kbd className="kbd-hint">{MOD}⇧↩</kbd>
         </button>
       </div>
 

@@ -112,6 +112,34 @@ export default function VisualizerModal({ question, code, label, note, onClose }
     codeRef.current?.querySelector('.viz-line.active')?.scrollIntoView({ block: 'nearest' });
   }, [step, trace]);
 
+  // Keyboard player: ←/→ step, Space play/pause, Esc close.
+  useEffect(() => {
+    const onKey = (e) => {
+      const t = e.target;
+      if (t?.tagName === 'INPUT' || t?.tagName === 'SELECT') {
+        if (e.key === 'Escape') onClose();
+        return;
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        setPlaying(false);
+        setStep((s) => Math.min(Math.max(0, total - 1), s + 1));
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        setPlaying(false);
+        setStep((s) => Math.max(0, s - 1));
+      } else if (e.key === ' ') {
+        e.preventDefault();
+        setPlaying((p) => !p);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [total, onClose]);
+
   // Union of variable names, in order of first appearance.
   const varNames = useMemo(() => {
     const names = [];

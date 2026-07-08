@@ -9,6 +9,7 @@ import Guide from './components/Guide.jsx';
 import RoadmapGraph from './components/RoadmapGraph.jsx';
 import Settings from './components/Settings.jsx';
 import ImportModal from './components/ImportModal.jsx';
+import SearchPalette from './components/SearchPalette.jsx';
 import { SEED_QUESTIONS } from './data/questions.js';
 import {
   loadProgress,
@@ -25,11 +26,37 @@ export default function App() {
   const [view, setView] = useState({ name: 'home' });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => saveProgress(progress), [progress]);
   useEffect(() => saveCustomQuestions(customQuestions), [customQuestions]);
   // Stamp attendance once when the app opens today.
   useEffect(() => setProgress((p) => markVisit(p)), []);
+
+  // Global quick-open: Ctrl/⌘+K anywhere, or "/" when not typing.
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSearchOpen((o) => !o);
+        return;
+      }
+      if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const t = e.target;
+        const typing =
+          t?.tagName === 'INPUT' ||
+          t?.tagName === 'TEXTAREA' ||
+          t?.tagName === 'SELECT' ||
+          t?.isContentEditable;
+        if (!typing) {
+          e.preventDefault();
+          setSearchOpen(true);
+        }
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   const allQuestions = useMemo(
     () => [...SEED_QUESTIONS, ...customQuestions.map((q) => ({ ...q, imported: true }))],
@@ -90,6 +117,7 @@ export default function App() {
       <Header
         progress={progress}
         onHome={() => setView({ name: 'home' })}
+        onSearch={() => setSearchOpen(true)}
         onBrowse={() => setView({ name: 'browse' })}
         onStats={() => setView({ name: 'stats' })}
         onGuide={() => setView({ name: 'guide' })}
@@ -173,6 +201,17 @@ export default function App() {
           existingIds={allQuestions.map((q) => q.id)}
           onImported={handleImported}
           onClose={() => setImportOpen(false)}
+        />
+      )}
+      {searchOpen && (
+        <SearchPalette
+          questions={allQuestions}
+          progress={progress}
+          onOpen={(id) => {
+            setSearchOpen(false);
+            setView({ name: 'problem', id, from: view.name === 'browse' ? 'browse' : 'home' });
+          }}
+          onClose={() => setSearchOpen(false)}
         />
       )}
     </div>

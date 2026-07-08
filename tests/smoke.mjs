@@ -92,6 +92,28 @@ try {
   await page.locator('.icon-btn[aria-label="Back to problem list"]').click();
   check((await page.locator('.graph-node').count()) >= 15, 'Back returns to the map it came from');
 
+  // ---- global search palette (Ctrl+K) ----
+  await page.keyboard.press('Control+k');
+  await page.locator('.palette').waitFor({ timeout: 5000 });
+  check(true, 'Ctrl+K opens the search palette');
+  await page.locator('.palette-input').fill('anagram');
+  check(
+    (await page.locator('.palette-row').first().innerText()).toLowerCase().includes('anagram'),
+    'palette fuzzy-matches question titles'
+  );
+  await page.keyboard.press('Enter');
+  check(
+    (await page.locator('.pv-title').innerText()).toLowerCase().includes('anagram'),
+    'Enter in the palette opens the top match'
+  );
+  await page.keyboard.press('Escape'); // palette already closed; no-op safety
+  await page.locator('.icon-btn[aria-label="Back to problem list"]').click();
+  // "/" also opens it, and Escape closes it
+  await page.keyboard.press('/');
+  await page.locator('.palette').waitFor({ timeout: 5000 });
+  await page.keyboard.press('Escape');
+  check((await page.locator('.palette').count()) === 0, 'Escape closes the palette');
+
   // ---- the old home is now the Browse tab ----
   await page.locator('.icon-btn', { hasText: 'Browse' }).click();
   check((await page.locator('.q-card').count()) >= 123, 'Browse tab lists the full seed bank (123+)');
@@ -139,11 +161,11 @@ try {
   );
   await page.locator('.pane-problem details.hint summary', { hasText: 'Show solution' }).click();
 
-  // ---- failure path: wrong answer ----
+  // ---- failure path: wrong answer, run via the Ctrl+Enter shortcut ----
   await setEditor(page, 'def two_sum(nums, target):\n    return [0, 0]');
-  await page.locator('button', { hasText: '▶ Run' }).click();
+  await page.keyboard.press('Control+Enter'); // Run without touching the button
   await page.locator('.result-summary').waitFor({ timeout: 120000 }); // first run loads Pyodide
-  check((await resultText(page)).includes('tests passed'), 'Run executes Python in the browser');
+  check((await resultText(page)).includes('tests passed'), 'Ctrl+Enter runs Python from the editor');
   check(/✗ \d\/5 tests passed/.test(await resultText(page)), 'wrong answer shows failed tests');
   const failText = await resultText(page);
   check(

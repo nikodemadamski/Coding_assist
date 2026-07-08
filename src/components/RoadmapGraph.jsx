@@ -96,6 +96,14 @@ export default function RoadmapGraph({
     return `M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`;
   };
 
+  // Esc closes the topic popup.
+  useEffect(() => {
+    if (!openCat) return;
+    const onKey = (e) => e.key === 'Escape' && setOpenCat(null);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [openCat]);
+
   const openList = openCat ? (byCat.get(openCat) ?? []) : [];
   const openStats = openCat ? (stats[openCat] ?? { total: 0, solved: 0 }) : null;
 

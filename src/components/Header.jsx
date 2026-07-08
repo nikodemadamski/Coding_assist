@@ -1,6 +1,6 @@
 import { beltFor, currentStreak, isSolved } from '../state/progress.js';
 
-export default function Header({ progress, onHome, onBrowse, onStats, onGuide, onSettings }) {
+export default function Header({ progress, onHome, onSearch, onBrowse, onStats, onGuide, onSettings }) {
   const solvedCount = Object.values(progress.solved).filter(isSolved).length;
   const belt = beltFor(solvedCount);
   const streak = currentStreak(progress.streak);
@@ -33,6 +33,9 @@ export default function Header({ progress, onHome, onBrowse, onStats, onGuide, o
           />
         </span>
       </span>
+      <button className="icon-btn btn-search" onClick={onSearch} title="Search questions (Ctrl+K or /)">
+        🔍 <kbd className="kbd-hint">⌘K</kbd>
+      </button>
       <button className="icon-btn" onClick={onBrowse}>
         📋 Browse
       </button>
