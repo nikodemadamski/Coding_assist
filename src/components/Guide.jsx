@@ -23,7 +23,9 @@ loud, without bugs.** That is a *trainable* skill, and this dojo is built to tra
 5. **Understand, don't memorize.** When you pass, read the *approach* walkthrough and the
    reference solution. Ask yourself the reflection prompt: *what does my code do, and what
    would break it?* If you can't explain it in one sentence, you don't own it yet — rate it
-   Hard so it comes back.
+   Hard so it comes back. And when a solution still feels like magic, hit **▶ Visualize** on
+   it — watching it run a real test case line by line, variable by variable, is how "I read
+   the code" becomes "I see why it works."
 6. **Say it out loud.** In the real interview you must narrate. Practice here the same way:
    before you type, say the approach and the complexity. "I'll use a hash map for O(n)
    lookups, O(n) space." Muscle memory for *talking while coding* is half the battle.
@@ -31,7 +33,8 @@ loud, without bugs.** That is a *trainable* skill, and this dojo is built to tra
 ## What to learn, in order
 
 The browse list is laid out as a syllabus — work down it, roughly one category at a time,
-and don't rush ahead until a category feels automatic:
+and don't rush ahead until a category feels automatic. The **🗺 Roadmap** page in the header
+shows the same order as a dependency tree with your progress per topic:
 
 **Arrays & Hashing → Two Pointers → Sliding Window → Stack → Binary Search → Linked List →
 Trees → Heap → Backtracking → Graphs → Dynamic Programming → Greedy → Intervals → Bits.**

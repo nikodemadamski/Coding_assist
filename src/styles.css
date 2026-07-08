@@ -1458,6 +1458,299 @@ details.hint[open] summary {
   margin-bottom: 8px;
 }
 
+/* ── roadmap graph ─────────────────────────────────────────────────────── */
+
+.graph-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  padding: 10px;
+}
+
+.graph-canvas {
+  position: relative;
+  margin: 0 auto;
+}
+
+.graph-edges {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.graph-node {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #4f5bd5;
+  border: 1px solid #6a76e8;
+  border-radius: 10px;
+  color: #fff;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.85rem;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35);
+  padding: 8px 12px;
+}
+
+.graph-node:hover {
+  filter: brightness(1.12);
+}
+
+.graph-node.done {
+  background: #2c8c5e;
+  border-color: #3dd68c;
+}
+
+.graph-node-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.graph-node-bar {
+  width: 82%;
+  height: 7px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.75);
+  overflow: hidden;
+}
+
+.graph-node-fill {
+  display: block;
+  height: 100%;
+  background: var(--jade);
+}
+
+/* ── algorithm visualizer ──────────────────────────────────────────────── */
+
+.btn-viz {
+  border-color: var(--jade);
+  color: var(--jade);
+  background: transparent;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+}
+.btn-viz:hover {
+  background: color-mix(in srgb, var(--jade) 12%, transparent);
+}
+
+.viz-modal {
+  width: min(960px, 100%);
+}
+
+.viz-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.viz-head h2 {
+  font-size: 1.1rem;
+}
+.viz-label {
+  font-family: var(--font-code);
+  font-size: 0.75rem;
+  color: var(--jade);
+  border: 1px solid #2c5a44;
+  border-radius: 5px;
+  padding: 2px 8px;
+  margin-left: 10px;
+  vertical-align: middle;
+}
+
+.viz-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+.viz-input-row label {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+.viz-input-row select {
+  width: auto;
+  max-width: 60%;
+}
+.viz-expected {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+.viz-expected code {
+  color: var(--jade);
+  background: none;
+}
+
+.viz-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 6px 0;
+}
+.viz-step-count {
+  margin-left: auto;
+  font-family: var(--font-code);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.viz-scrub {
+  width: 100%;
+  accent-color: var(--crimson);
+  margin: 4px 0 10px;
+}
+
+.viz-panes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+@media (max-width: 720px) {
+  .viz-panes {
+    grid-template-columns: 1fr;
+  }
+}
+
+.viz-code {
+  background: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-family: var(--font-code);
+  font-size: 0.8rem;
+  max-height: 320px;
+  overflow: auto;
+  padding: 6px 0;
+}
+.viz-line {
+  display: flex;
+  gap: 10px;
+  padding: 1px 10px;
+  white-space: pre;
+}
+.viz-line.active {
+  background: color-mix(in srgb, var(--gold) 18%, transparent);
+  border-left: 3px solid var(--gold);
+  padding-left: 7px;
+}
+.viz-lineno {
+  color: #5c5f70;
+  min-width: 20px;
+  text-align: right;
+  user-select: none;
+}
+
+.viz-vars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.viz-var {
+  background: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.viz-var-name {
+  display: block;
+  font-family: var(--font-code);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  margin-bottom: 5px;
+}
+.viz-var.viz-result {
+  border-color: var(--jade);
+}
+.viz-var.viz-result .viz-var-name {
+  color: var(--jade);
+}
+
+.viz-cells {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.viz-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.viz-cell-v {
+  min-width: 30px;
+  text-align: center;
+  padding: 4px 7px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-family: var(--font-code);
+  font-size: 0.8rem;
+}
+.viz-cells.set .viz-cell-v {
+  border-color: #2c5a44;
+  color: var(--jade);
+}
+.viz-cell-i {
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  margin-top: 2px;
+  font-family: var(--font-code);
+}
+
+.viz-chips {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.viz-chip {
+  font-family: var(--font-code);
+  font-size: 0.76rem;
+  padding: 3px 8px;
+  border: 1px solid #2c4a63;
+  color: #6fb5e8;
+  border-radius: 6px;
+}
+
+.viz-prim {
+  font-family: var(--font-code);
+  font-size: 0.9rem;
+  color: var(--text);
+  background: none;
+}
+.viz-empty {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+.viz-more {
+  color: var(--text-dim);
+  font-family: var(--font-code);
+  font-size: 0.8rem;
+  align-self: center;
+}
+
+.viz-caption {
+  margin-top: 12px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-family: var(--font-code);
+  font-size: 0.82rem;
+  min-height: 38px;
+}
+
 /* screen-reader only */
 .sr-only {
   position: absolute;

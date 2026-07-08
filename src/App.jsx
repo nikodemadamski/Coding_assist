@@ -5,6 +5,7 @@ import ProblemView from './components/ProblemView.jsx';
 import PracticeView from './components/PracticeView.jsx';
 import Stats from './components/Stats.jsx';
 import Guide from './components/Guide.jsx';
+import RoadmapGraph from './components/RoadmapGraph.jsx';
 import Settings from './components/Settings.jsx';
 import ImportModal from './components/ImportModal.jsx';
 import { SEED_QUESTIONS } from './data/questions.js';
@@ -69,6 +70,7 @@ export default function App() {
       <Header
         progress={progress}
         onHome={() => setView({ name: 'home' })}
+        onRoadmap={() => setView({ name: 'roadmap' })}
         onStats={() => setView({ name: 'stats' })}
         onGuide={() => setView({ name: 'guide' })}
         onSettings={() => setSettingsOpen(true)}
@@ -78,10 +80,18 @@ export default function App() {
           <Picker
             questions={allQuestions}
             progress={progress}
+            focusCategory={view.focusCategory}
             onOpen={(id) => setView({ name: 'problem', id })}
             onPractice={() => setView({ name: 'practice' })}
             onDrill={() => setView({ name: 'drill' })}
             onImport={() => setImportOpen(true)}
+          />
+        )}
+        {view.name === 'roadmap' && (
+          <RoadmapGraph
+            questions={allQuestions}
+            progress={progress}
+            onSelect={(key) => setView({ name: 'home', focusCategory: key })}
           />
         )}
         {(view.name === 'practice' || view.name === 'drill') && (

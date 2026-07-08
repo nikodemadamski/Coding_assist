@@ -137,6 +137,112 @@ if outcome["status"] == "ok":
 json.dumps(outcome)
 `;
 
+// ── execution tracer for the algorithm visualizer ───────────────────────
+// Runs ONE test case under sys.settrace, capturing every executed line and a
+// JSON-safe snapshot of the local variables at that moment. Works for any
+// python/pandas question with zero per-question authoring. Protocol:
+//   PAYLOAD_JSON = { code, function_name, test: {args, expected}, track }
+// Final expression is JSON:
+//   { status:'ok', steps:[{line, func, locals}], lines:[...], result,
+//     truncated } | { status:'error', message }
+// Snapshot markers the UI understands: a set becomes {"__set__":[...]},
+// a dict becomes {"__dict__":[[k,v],...]} (order preserved).
+export const PY_TRACE_HARNESS = `
+import sys, json, copy, traceback
+
+payload = json.loads(PAYLOAD_JSON)
+user_code = payload["code"]
+fn_name = payload["function_name"]
+test = payload["test"]
+track = payload["track"]
+
+MAX_STEPS = 400
+steps = []
+
+def _convert_arg(a):
+    if track == "pandas" and isinstance(a, dict) and set(a.keys()) == {"__df__"}:
+        import pandas as pd
+        return pd.DataFrame(a["__df__"])
+    return a
+
+def _snap(v, depth=0):
+    if depth > 3:
+        return repr(v)[:60]
+    if isinstance(v, bool) or v is None or isinstance(v, int):
+        return v
+    if isinstance(v, float):
+        if v != v or v in (float("inf"), float("-inf")):
+            return str(v)
+        return v
+    if isinstance(v, str):
+        return v if len(v) <= 60 else v[:57] + "..."
+    if isinstance(v, (list, tuple)):
+        return [_snap(x, depth + 1) for x in list(v)[:30]]
+    if isinstance(v, set):
+        try:
+            items = sorted(v)
+        except Exception:
+            items = list(v)
+        return {"__set__": [_snap(x, depth + 1) for x in items[:30]]}
+    if isinstance(v, dict):
+        return {"__dict__": [[_snap(k, depth + 1), _snap(x, depth + 1)] for k, x in list(v.items())[:30]]}
+    return repr(v)[:60]
+
+class _VizLimit(Exception):
+    pass
+
+def _tracer(frame, event, arg):
+    if frame.f_code.co_filename != "<viz>":
+        return None
+    if event == "line":
+        if len(steps) >= MAX_STEPS:
+            raise _VizLimit()
+        steps.append({
+            "line": frame.f_lineno,
+            "func": frame.f_code.co_name,
+            "locals": {k: _snap(v) for k, v in frame.f_locals.items() if not k.startswith("_")},
+        })
+    return _tracer
+
+outcome = {"status": "ok"}
+ns = {}
+try:
+    exec(compile(user_code, "<viz>", "exec"), ns)
+    fn = ns.get(fn_name)
+    if not callable(fn):
+        outcome = {"status": "error", "message": "Function '" + fn_name + "' not found."}
+    else:
+        args = [_convert_arg(copy.deepcopy(a)) for a in test["args"]]
+        truncated = False
+        result = None
+        sys.settrace(_tracer)
+        try:
+            result = fn(*args)
+        except _VizLimit:
+            truncated = True
+        finally:
+            sys.settrace(None)
+        outcome["steps"] = steps
+        outcome["truncated"] = truncated
+        outcome["result"] = _snap(result)
+        outcome["lines"] = user_code.split("\\n")
+except SyntaxError:
+    outcome = {"status": "error", "message": traceback.format_exc(limit=0).strip()}
+except Exception:
+    outcome = {"status": "error", "message": traceback.format_exc().splitlines()[-1]}
+
+json.dumps(outcome)
+`;
+
+export function buildTracePayload(question, code, testIndex) {
+  return {
+    code,
+    function_name: question.function_name,
+    test: question.tests[testIndex],
+    track: question.track,
+  };
+}
+
 // Maps a harness outcome to the UI-facing RunReport. Shared by the browser
 // client and the Node test gate.
 export function harnessResultToReport(data) {

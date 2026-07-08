@@ -3,6 +3,7 @@ import Editor from './Editor.jsx';
 import Results from './Results.jsx';
 import Markdown from './Markdown.jsx';
 import Approaches from './Approaches.jsx';
+import VisualizerModal from './VisualizerModal.jsx';
 import { runQuestion } from '../engine/runnerClient.js';
 import { RATING_DELTA, isSolved } from '../state/progress.js';
 import { pathStep } from '../data/roadmap.js';
@@ -46,7 +47,12 @@ export default function ProblemView({
   const [statusText, setStatusText] = useState('');
   const [justSolved, setJustSolved] = useState(false);
   const [outcome, setOutcome] = useState(null); // practice: 'pass' | 'fail' | null
+  const [viz, setViz] = useState(null); // { code, label } → visualizer open
   const draftTimer = useRef(null);
+
+  const openVisualizer = useCallback((vizCode, vizLabel) => {
+    setViz({ code: vizCode, label: vizLabel });
+  }, []);
 
   const solved = isSolved(progress.solved[question.id]);
 
@@ -219,7 +225,7 @@ export default function ProblemView({
                 ? ' — brute force → optimal'
                 : ' (last resort!)'}
             </summary>
-            <Approaches question={question} />
+            <Approaches question={question} onVisualize={openVisualizer} />
           </details>
         </section>
 
@@ -275,7 +281,7 @@ export default function ProblemView({
                     ? 'Solutions — from brute force to optimal'
                     : 'Reference solution — compare with yours'}
                 </h4>
-                <Approaches question={question} />
+                <Approaches question={question} onVisualize={openVisualizer} />
               </div>
               <p className="reflect-q">How well did you know it?</p>
               <div className="rating-row">
@@ -318,6 +324,15 @@ export default function ProblemView({
           )}
         </section>
       </div>
+
+      {viz && (
+        <VisualizerModal
+          question={question}
+          code={viz.code}
+          label={viz.label}
+          onClose={() => setViz(null)}
+        />
+      )}
     </div>
   );
 }

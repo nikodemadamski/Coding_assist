@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   isDue,
   isSolved,
@@ -39,10 +39,25 @@ function QuestionRow({ q, level, due, isNext, onOpen }) {
   );
 }
 
-export default function Picker({ questions, progress, onOpen, onPractice, onDrill, onImport }) {
+export default function Picker({
+  questions,
+  progress,
+  focusCategory,
+  onOpen,
+  onPractice,
+  onDrill,
+  onImport,
+}) {
   const [track, setTrack] = useState('all');
   const [difficulty, setDifficulty] = useState('all');
   const today = todayStr();
+
+  // Arriving from the roadmap graph: scroll to the chosen category section.
+  useEffect(() => {
+    if (focusCategory) {
+      document.getElementById(`cat-${focusCategory}`)?.scrollIntoView({ block: 'start' });
+    }
+  }, [focusCategory]);
 
   const counts = useMemo(() => practiceCounts(progress, questions, today), [progress, questions, today]);
   const solvedCount = useMemo(
@@ -199,7 +214,7 @@ export default function Picker({ questions, progress, onOpen, onPractice, onDril
       </h2>
 
       {groups.map(({ cat, qs }) => (
-        <section key={cat.key} className="pattern-group">
+        <section key={cat.key} id={`cat-${cat.key}`} className="pattern-group">
           <h3 className="pattern-head">
             <span>
               {cat.label}

@@ -82,10 +82,19 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
 
 ### Staying on pace for a Google / Anthropic loop
 
-- **~75 verified questions** across the full NeetCode-150 roadmap: arrays & hashing, two
-  pointers, sliding window, stack, binary search, linked list, trees, heap, backtracking,
-  graphs, dynamic programming, greedy, intervals, and bit manipulation — plus pandas and
-  SQL. The Browse list is ordered as a **syllabus**, foundations first.
+- **120+ verified questions** across the full NeetCode-150 roadmap: arrays & hashing, two
+  pointers, sliding window, stack, binary search, linked list, trees, tries, heap,
+  backtracking, graphs, dynamic programming, greedy, intervals, math & geometry, and bit
+  manipulation — plus pandas and SQL. The Browse list is ordered as a **syllabus**,
+  foundations first.
+- **🗺 Visual roadmap** (header): a NeetCode-style dependency tree of every topic with a
+  progress bar per node — arrows mean "learn this pattern before that one". Click a topic
+  to browse its questions.
+- **▶ Visualize** (on any solution): a step-by-step execution player. It traces the actual
+  solution — brute force or optimal — running on one of the real test cases, highlighting
+  the current line and showing every variable (lists as indexed cells, dicts as key→value
+  chips) as it changes, with play/pause/scrub. Watching *how* the hash map fills up beats
+  re-reading the code.
 - **Attendance calendar + daily goal** (Stats page): a GitHub-style grid of every day you
   showed up, and whether you met the goal (clear your reviews + solve ≥1). Don't break the
   chain.

@@ -1,7 +1,8 @@
 // The learning path must stay in lockstep with the question bank: every seed
 // question exactly once, new-question practice served in path order.
 import { SEED_QUESTIONS } from '../src/data/questions.js';
-import { PATH, pathStep, byPathOrder, nextOnPath } from '../src/data/roadmap.js';
+import { PATH, ROADMAP, pathStep, byPathOrder, nextOnPath } from '../src/data/roadmap.js';
+import { GRAPH_NODES, GRAPH_EDGES, GRAPH_W, GRAPH_H, NODE_W, NODE_H } from '../src/data/roadmapGraph.js';
 import { createSession } from '../src/state/practiceSession.js';
 import { EMPTY_PROGRESS } from '../src/state/storage.js';
 
@@ -84,6 +85,29 @@ console.log('Learning-path tests\n');
     mixed[2].id === 'imported-zzz' && mixed[3].id === 'imported-aaa',
     'imported questions keep their order after the path'
   );
+}
+
+// ---- the visual roadmap graph stays in lockstep with the categories ----
+{
+  const catKeys = new Set(ROADMAP.map((c) => c.key));
+  const nodeKeys = new Set(GRAPH_NODES.map((n) => n.key));
+  check(
+    GRAPH_NODES.length === ROADMAP.length && [...catKeys].every((k) => nodeKeys.has(k)),
+    `graph has a node for every roadmap category (${GRAPH_NODES.length}/${ROADMAP.length})`
+  );
+  check(nodeKeys.size === GRAPH_NODES.length, 'no duplicate graph nodes');
+  const badEdges = GRAPH_EDGES.filter(([a, b]) => !nodeKeys.has(a) || !nodeKeys.has(b));
+  check(badEdges.length === 0, 'every edge connects real nodes', JSON.stringify(badEdges));
+  check(
+    GRAPH_NODES.every((n) => n.x >= 0 && n.y >= 0 && n.x + NODE_W <= GRAPH_W && n.y + NODE_H <= GRAPH_H),
+    'every node fits inside the canvas'
+  );
+  const overlap = GRAPH_NODES.some((a, i) =>
+    GRAPH_NODES.slice(i + 1).some(
+      (b) => Math.abs(a.x - b.x) < NODE_W && Math.abs(a.y - b.y) < NODE_H
+    )
+  );
+  check(!overlap, 'no two nodes overlap');
 }
 
 console.log(failures === 0 ? '\nAll path tests green.' : `\n${failures} FAILURE(S).`);

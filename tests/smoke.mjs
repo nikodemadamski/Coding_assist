@@ -339,6 +339,42 @@ try {
   check(await page.locator('.calendar-block').isVisible(), 'Stats page shows the attendance calendar');
   await page.locator('.header-logo').click();
 
+  // ---- visual roadmap graph ----
+  await page.locator('.icon-btn', { hasText: 'Roadmap' }).click();
+  check((await page.locator('.graph-node').count()) >= 15, 'roadmap graph renders the category nodes');
+  check(
+    (await page.locator('.graph-edges path[marker-end]').count()) >= 10,
+    'roadmap draws "learn this first" arrows between topics'
+  );
+  await page.locator('.graph-node', { hasText: 'Arrays & Hashing' }).click();
+  check(
+    (await page.locator('#cat-arrays-hashing').count()) === 1,
+    'clicking a roadmap node jumps to that category in Browse'
+  );
+
+  // ---- algorithm visualizer: replays a real traced execution ----
+  await page.locator('.q-card', { hasText: 'Two Sum' }).first().click();
+  await page.locator('.pane-problem details.hint summary', { hasText: 'Show solution' }).click();
+  await page.locator('.btn-viz').first().click();
+  await page.locator('.viz-modal').waitFor({ timeout: 60000 });
+  await page.locator('.viz-line.active').waitFor({ timeout: 120000 });
+  check(true, 'visualizer traces the solution and highlights the current line');
+  const stepBefore = await page.locator('.viz-step-count').innerText();
+  check(/Step 1 \/ \d+/.test(stepBefore), `visualizer starts at step 1 of N (${stepBefore.trim()})`);
+  await page.locator('button[aria-label="Next step"]').click();
+  check(
+    (await page.locator('.viz-step-count').innerText()) !== stepBefore,
+    'stepping forward advances the trace'
+  );
+  check((await page.locator('.viz-var').count()) >= 2, 'variable panel shows the local variables');
+  check(
+    (await page.locator('.viz-caption').innerText()).includes('Line'),
+    'caption narrates the current line'
+  );
+  await page.locator('.icon-btn[aria-label="Close visualizer"]').click();
+  check((await page.locator('.viz-modal').count()) === 0, 'visualizer closes');
+  await page.locator('.icon-btn[aria-label="Back to problem list"]').click();
+
   check(pageErrors.length === 0, `no uncaught page errors${pageErrors.length ? `: ${pageErrors[0]}` : ''}`);
   await page.close();
 
