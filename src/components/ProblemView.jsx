@@ -2,9 +2,16 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Editor from './Editor.jsx';
 import Results from './Results.jsx';
 import Markdown from './Markdown.jsx';
+import Approaches from './Approaches.jsx';
 import { runQuestion } from '../engine/runnerClient.js';
 import { RATING_DELTA, isSolved } from '../state/progress.js';
 import { pathStep } from '../data/roadmap.js';
+
+const LANG_LABEL = {
+  python: '🐍 Python 3',
+  pandas: '🐼 Python + pandas',
+  sql: '🗄 SQL (SQLite)',
+};
 
 const TABS = [
   { id: 'problem', label: 'Problem' },
@@ -206,13 +213,24 @@ export default function ProblemView({
             </details>
           )}
           <details className="hint">
-            <summary>Show solution (last resort!)</summary>
-            <pre className="solution-pre">{question.solution}</pre>
+            <summary>
+              Show solution
+              {question.approaches?.length > 1
+                ? ' — brute force → optimal'
+                : ' (last resort!)'}
+            </summary>
+            <Approaches question={question} />
           </details>
         </section>
 
         <section className={`pv-pane pane-code ${tab === 'code' ? 'visible' : ''}`}>
           <div className="editor-bar">
+            <span
+              className={`lang-badge lang-${question.track}`}
+              title="Each problem targets one runtime. Filter Browse by track to practice another language."
+            >
+              {LANG_LABEL[question.track]}
+            </span>
             <button className="btn" onClick={handleReset}>
               Reset to starter
             </button>
@@ -252,8 +270,12 @@ export default function ProblemView({
                 </div>
               )}
               <div className="reflect-block">
-                <h4>Reference solution — compare with yours</h4>
-                <pre className="solution-pre">{question.solution}</pre>
+                <h4>
+                  {question.approaches?.length > 1
+                    ? 'Solutions — from brute force to optimal'
+                    : 'Reference solution — compare with yours'}
+                </h4>
+                <Approaches question={question} />
               </div>
               <p className="reflect-q">How well did you know it?</p>
               <div className="rating-row">

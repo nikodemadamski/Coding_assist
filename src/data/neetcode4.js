@@ -177,6 +177,20 @@ export const NEETCODE_4 = [
     hint: 'Running sum: at each element, either extend (add it) or restart from it — whichever is larger. Track the best running sum ever seen.',
     approach:
       "Kadane's algorithm. Keep a running best-ending-here: at each element decide to **extend** the previous subarray (`running + n`) or **restart** fresh (`n`) — whichever is larger. The global answer is the max running value ever seen.\n\nO(n), O(1). The all-negatives case is why you seed with the first element (not 0) and take max, not a floor of zero. Kadane generalizes to Maximum Product Subarray (track both max and min, since a negative flips them) and to the circular variant.",
+    approaches: [
+      {
+        name: 'Brute force',
+        complexity: 'O(n²) time',
+        note: 'Sum every subarray, keep the biggest. Correct starting point before Kadane clicks.',
+        code: 'def max_subarray(nums):\n    best = nums[0]\n    for i in range(len(nums)):\n        total = 0\n        for j in range(i, len(nums)):\n            total += nums[j]\n            best = max(best, total)\n    return best\n',
+      },
+      {
+        name: "Kadane's algorithm",
+        complexity: 'O(n) time, O(1) space',
+        note: 'At each step, extend the running sum or restart from here — whichever is larger.',
+        code: 'def max_subarray(nums):\n    best = running = nums[0]\n    for n in nums[1:]:\n        running = max(n, running + n)\n        best = max(best, running)\n    return best\n',
+      },
+    ],
     solution:
       'def max_subarray(nums):\n    best = running = nums[0]\n    for n in nums[1:]:\n        running = max(n, running + n)\n        best = max(best, running)\n    return best\n',
   },

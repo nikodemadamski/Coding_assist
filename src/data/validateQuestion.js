@@ -27,6 +27,24 @@ export function validateQuestion(q, { existingIds = [], minTests = 1 } = {}) {
   // approach is optional, but if present it must be a string
   need(q.approach === undefined || typeof q.approach === 'string', 'approach must be a string if present');
 
+  // approaches is optional: an ordered list of solutions from brute-force to
+  // optimal, each { name, complexity, code, note? }. Every code must actually
+  // solve the question (verified by the test gate).
+  if (q.approaches !== undefined) {
+    if (!Array.isArray(q.approaches) || q.approaches.length === 0) {
+      errors.push('approaches must be a non-empty array if present');
+    } else {
+      q.approaches.forEach((a, i) => {
+        need(a && typeof a.name === 'string' && a.name.trim(), `approach ${i + 1} needs a name`);
+        need(a && typeof a.code === 'string' && a.code.trim(), `approach ${i + 1} needs code`);
+        need(
+          a && typeof a.complexity === 'string' && a.complexity.trim(),
+          `approach ${i + 1} needs a complexity string`
+        );
+      });
+    }
+  }
+
   if (q.track === 'sql') {
     need(
       typeof q.sql_setup === 'string' && /create\s+table/i.test(q.sql_setup || ''),

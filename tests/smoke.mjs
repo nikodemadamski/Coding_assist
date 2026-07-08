@@ -86,6 +86,31 @@ try {
   await page.locator('.icon-btn[aria-label="Back to problem list"]').click();
 
   await page.locator('.q-card', { hasText: 'Two Sum' }).first().click();
+  check(
+    (await page.locator('.lang-badge').innerText()).includes('Python 3'),
+    'editor shows the language/runtime badge'
+  );
+
+  // ---- multi-approach solution viewer (brute force → optimal) ----
+  await page.locator('.pane-problem details.hint summary', { hasText: 'Show solution' }).click();
+  check(
+    await page.locator('.approach-tab', { hasText: 'Brute force' }).isVisible(),
+    'solution shows a Brute force approach tab'
+  );
+  check(
+    await page.locator('.approach-tab', { hasText: 'Hash map' }).isVisible(),
+    'solution shows the optimal Hash map approach tab'
+  );
+  check(
+    (await page.locator('.approach-complexity').first().innerText()).includes('O(n'),
+    'approach shows its complexity'
+  );
+  await page.locator('.approach-tab', { hasText: 'Hash map' }).click();
+  check(
+    (await page.locator('.approaches .solution-pre').innerText()).includes('seen'),
+    'switching approach tab swaps the shown code'
+  );
+  await page.locator('.pane-problem details.hint summary', { hasText: 'Show solution' }).click();
 
   // ---- failure path: wrong answer ----
   await setEditor(page, 'def two_sum(nums, target):\n    return [0, 0]');

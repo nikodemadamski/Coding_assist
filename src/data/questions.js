@@ -203,6 +203,26 @@ const PYTHON_QUESTIONS = [
     hint: 'A set drops duplicates. If the set is smaller than the list, something repeated.',
     approach:
       "Build a `set` from the list and compare lengths: `len(set(nums)) != len(nums)`. Converting to a set removes duplicates, so if the set is shorter, at least one value appeared more than once. This is O(n) time and O(n) space.\n\nThe manual version — loop with a `seen` set, return `True` the moment you re-encounter a value — is worth writing once too, because that early-exit `seen` set is the exact move behind Two Sum and Valid Anagram.",
+    approaches: [
+      {
+        name: 'Brute force',
+        complexity: 'O(n²) time, O(1) space',
+        note: 'Compare every pair. Works, but slow — this is the version to move past.',
+        code: 'def contains_duplicate(nums):\n    for i in range(len(nums)):\n        for j in range(i + 1, len(nums)):\n            if nums[i] == nums[j]:\n                return True\n    return False\n',
+      },
+      {
+        name: 'Sort first',
+        complexity: 'O(n log n) time, O(1) extra',
+        note: 'After sorting, duplicates are neighbours — one pass finds them.',
+        code: 'def contains_duplicate(nums):\n    nums = sorted(nums)\n    for i in range(1, len(nums)):\n        if nums[i] == nums[i - 1]:\n            return True\n    return False\n',
+      },
+      {
+        name: 'Hash set',
+        complexity: 'O(n) time, O(n) space',
+        note: 'A set drops duplicates; if it ends up shorter than the list, something repeated.',
+        code: 'def contains_duplicate(nums):\n    return len(set(nums)) != len(nums)\n',
+      },
+    ],
     solution: 'def contains_duplicate(nums):\n    return len(set(nums)) != len(nums)\n',
   },
   {
@@ -227,6 +247,20 @@ const PYTHON_QUESTIONS = [
     hint: 'Walk the list once. For each value, check whether `target - value` is already in a dict of seen values; if so you have your pair. Otherwise store `value -> index`.',
     approach:
       'Keep a dict mapping each value you have seen to its index. For each `n`, the number that would complete the pair is `target - n` (its *complement*). If that complement is already in the dict, you have found the answer and return `[seen[complement], i]`. Otherwise record `seen[n] = i` and move on.\n\nOne pass, O(n) time, O(n) space. The naive double loop is O(n²) — the dict trades space to remove the inner loop. Note you check the dict *before* inserting the current value, so an element is never paired with itself.',
+    approaches: [
+      {
+        name: 'Brute force',
+        complexity: 'O(n²) time, O(1) space',
+        note: 'Check every pair. Correct, and the honest first instinct — but the nested loop is too slow for a big list.',
+        code: 'def two_sum(nums, target):\n    for i in range(len(nums)):\n        for j in range(i + 1, len(nums)):\n            if nums[i] + nums[j] == target:\n                return [i, j]\n',
+      },
+      {
+        name: 'Hash map',
+        complexity: 'O(n) time, O(n) space',
+        note: 'Remember each value → index as you go, and look up the complement in one pass.',
+        code: 'def two_sum(nums, target):\n    seen = {}\n    for i, n in enumerate(nums):\n        if target - n in seen:\n            return [seen[target - n], i]\n        seen[n] = i\n',
+      },
+    ],
     solution:
       'def two_sum(nums, target):\n    seen = {}\n    for i, n in enumerate(nums):\n        if target - n in seen:\n            return [seen[target - n], i]\n        seen[n] = i\n',
   },
@@ -251,6 +285,20 @@ const PYTHON_QUESTIONS = [
     hint: 'Shortest: `sorted(s) == sorted(t)`. Interview-grade: compare two frequency dicts.',
     approach:
       'Two strings are anagrams iff they contain the same characters with the same counts. The one-liner `sorted(s) == sorted(t)` sorts both into the same canonical order — O(n log n).\n\nThe O(n) interview answer builds a frequency dict for each string (or one dict, incrementing for `s` and decrementing for `t`) and checks they match. Same counting move as Contains Duplicate and Group Anagrams.',
+    approaches: [
+      {
+        name: 'Sort both',
+        complexity: 'O(n log n) time',
+        note: 'Anagrams share the same sorted form. Shortest to write.',
+        code: 'def is_anagram(s, t):\n    return sorted(s) == sorted(t)\n',
+      },
+      {
+        name: 'Count characters',
+        complexity: 'O(n) time, O(1) space (26 letters)',
+        note: 'The interview answer: tally one string up, the other down, and check nothing went negative.',
+        code: 'def is_anagram(s, t):\n    if len(s) != len(t):\n        return False\n    counts = {}\n    for c in s:\n        counts[c] = counts.get(c, 0) + 1\n    for c in t:\n        if counts.get(c, 0) == 0:\n            return False\n        counts[c] -= 1\n    return True\n',
+      },
+    ],
     solution: 'def is_anagram(s, t):\n    return sorted(s) == sorted(t)\n',
   },
   {
@@ -328,6 +376,20 @@ const PYTHON_QUESTIONS = [
       { args: [[2, 4, 1, 8]], expected: 7 },
     ],
     hint: 'For each price: first update `lowest = min(lowest, price)`, then `best = max(best, price - lowest)`.',
+    approaches: [
+      {
+        name: 'Brute force',
+        complexity: 'O(n²) time',
+        note: 'Try every buy day against every later sell day. Correct but quadratic.',
+        code: 'def max_profit(prices):\n    best = 0\n    for i in range(len(prices)):\n        for j in range(i + 1, len(prices)):\n            best = max(best, prices[j] - prices[i])\n    return best\n',
+      },
+      {
+        name: 'One pass',
+        complexity: 'O(n) time, O(1) space',
+        note: 'Track the lowest price so far; the best sell is always today minus that minimum.',
+        code: 'def max_profit(prices):\n    best = 0\n    lowest = float("inf")\n    for p in prices:\n        lowest = min(lowest, p)\n        best = max(best, p - lowest)\n    return best\n',
+      },
+    ],
     solution:
       'def max_profit(prices):\n    best = 0\n    lowest = float("inf")\n    for p in prices:\n        lowest = min(lowest, p)\n        best = max(best, p - lowest)\n    return best\n',
   },

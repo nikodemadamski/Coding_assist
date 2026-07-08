@@ -596,6 +596,28 @@ details.hint[open] summary {
   margin-left: auto;
 }
 
+.lang-badge {
+  font-family: var(--font-code);
+  font-size: 0.78rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  white-space: nowrap;
+  cursor: default;
+}
+.lang-badge.lang-python {
+  color: #6fb5e8;
+  border-color: #2c4a63;
+}
+.lang-badge.lang-pandas {
+  color: #b78ee8;
+  border-color: #4a3963;
+}
+.lang-badge.lang-sql {
+  color: var(--gold);
+  border-color: #63512c;
+}
+
 /* ── results ───────────────────────────────────────────────────────────── */
 
 .result-summary {
@@ -1375,6 +1397,65 @@ details.hint[open] summary {
   margin: 0;
   font-size: 0.95rem;
   line-height: 1.6;
+}
+
+/* ── multi-approach solution viewer ────────────────────────────────────── */
+
+.approach-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 8px;
+}
+
+.approach-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-dim);
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.approach-tab.active {
+  color: var(--text);
+  border-bottom-color: var(--jade);
+}
+
+.approach-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.approach-complexity {
+  font-family: var(--font-code);
+  font-size: 0.8rem;
+  color: var(--gold);
+  border: 1px solid #63512c;
+  border-radius: 5px;
+  padding: 2px 8px;
+}
+
+.approach-hint-note {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+.approach-hint-note.optimal {
+  color: var(--jade);
+}
+
+.approach-note {
+  font-size: 0.88rem;
+  color: var(--text);
+  background: var(--panel);
+  border-left: 2px solid var(--line);
+  padding: 2px 12px;
+  margin-bottom: 8px;
 }
 
 /* screen-reader only */

@@ -25,6 +25,20 @@ export const NEETCODE_1 = [
     hint: 'Count with a dict, then sort the keys with `key=lambda n: (-counts[n], n)`.',
     approach:
       'Count frequencies in one pass with a dict, then sort the distinct values by `(-count, value)` and slice the first `k`. Counting is O(n); the sort is O(u log u) over the distinct values.\n\nThe interview upgrade is **bucket sort**: an array of buckets indexed by count (a value appearing `c` times goes in bucket `c`), read from the highest bucket down — O(n) total, no sort. Mention it even if you write the sorted() version first.',
+    approaches: [
+      {
+        name: 'Count + sort',
+        complexity: 'O(u log u) time',
+        note: 'Tally frequencies, then sort the distinct values by (-count, value). Clear and correct.',
+        code: 'def top_k_frequent(nums, k):\n    counts = {}\n    for n in nums:\n        counts[n] = counts.get(n, 0) + 1\n    ordered = sorted(counts, key=lambda n: (-counts[n], n))\n    return ordered[:k]\n',
+      },
+      {
+        name: 'Bucket sort',
+        complexity: 'O(n) time',
+        note: 'Index buckets by frequency and read from the top down — no comparison sort needed.',
+        code: 'def top_k_frequent(nums, k):\n    counts = {}\n    for n in nums:\n        counts[n] = counts.get(n, 0) + 1\n    buckets = [[] for _ in range(len(nums) + 1)]\n    for val, c in counts.items():\n        buckets[c].append(val)\n    res = []\n    for c in range(len(buckets) - 1, 0, -1):\n        for val in sorted(buckets[c]):\n            res.append(val)\n            if len(res) == k:\n                return res\n    return res\n',
+      },
+    ],
     solution:
       'def top_k_frequent(nums, k):\n    counts = {}\n    for n in nums:\n        counts[n] = counts.get(n, 0) + 1\n    ordered = sorted(counts, key=lambda n: (-counts[n], n))\n    return ordered[:k]\n',
   },
@@ -50,6 +64,20 @@ export const NEETCODE_1 = [
     hint: 'answer[i] = (product of everything left of i) × (product of everything right of i). Two sweeps.',
     approach:
       'Sweep left-to-right writing the running **prefix product** into the answer (each slot gets the product of everything before it), then sweep right-to-left multiplying in the running **suffix product**. Each element ends up with left-product × right-product — everything except itself.\n\nO(n) time, O(1) extra space beyond the output. Zeros fall out naturally, which is exactly why the division "shortcut" is a trap.',
+    approaches: [
+      {
+        name: 'Brute force',
+        complexity: 'O(n²) time',
+        note: 'For each index, multiply all the others. No division, but quadratic.',
+        code: 'def product_except_self(nums):\n    n = len(nums)\n    res = []\n    for i in range(n):\n        p = 1\n        for j in range(n):\n            if j != i:\n                p *= nums[j]\n        res.append(p)\n    return res\n',
+      },
+      {
+        name: 'Prefix × suffix',
+        complexity: 'O(n) time, O(1) extra',
+        note: 'Two sweeps: bake in the product of everything to the left, then everything to the right.',
+        code: 'def product_except_self(nums):\n    n = len(nums)\n    res = [1] * n\n    prefix = 1\n    for i in range(n):\n        res[i] = prefix\n        prefix *= nums[i]\n    suffix = 1\n    for i in range(n - 1, -1, -1):\n        res[i] *= suffix\n        suffix *= nums[i]\n    return res\n',
+      },
+    ],
     solution:
       'def product_except_self(nums):\n    n = len(nums)\n    res = [1] * n\n    prefix = 1\n    for i in range(n):\n        res[i] = prefix\n        prefix *= nums[i]\n    suffix = 1\n    for i in range(n - 1, -1, -1):\n        res[i] *= suffix\n        suffix *= nums[i]\n    return res\n',
   },
@@ -124,6 +152,20 @@ export const NEETCODE_1 = [
     hint: 'Sort first. Fix the smallest element with a loop, then run the Two Sum II two-pointer scan on the rest. Skip duplicates at every level.',
     approach:
       'Sort the array, then for each index `i` treat `nums[i]` as the fixed smallest element and run the sorted two-pointer scan on the remainder looking for `-nums[i]`. Skip a fixed element equal to the previous one, and after recording a hit keep advancing the left pointer past duplicates — that is what makes triplets unique without a set.\n\nO(n²) time after the O(n log n) sort. 3Sum is Two Sum II wearing a for-loop.',
+    approaches: [
+      {
+        name: 'Brute force',
+        complexity: 'O(n³) time',
+        note: 'Every triple, deduped via a set of sorted tuples. Slow, but proves the answer shape.',
+        code: 'def three_sum(nums):\n    n = len(nums)\n    found = set()\n    for i in range(n):\n        for j in range(i + 1, n):\n            for k in range(j + 1, n):\n                if nums[i] + nums[j] + nums[k] == 0:\n                    found.add(tuple(sorted((nums[i], nums[j], nums[k]))))\n    return sorted([list(t) for t in found])\n',
+      },
+      {
+        name: 'Sort + two pointers',
+        complexity: 'O(n²) time',
+        note: 'Fix the smallest element, then run the two-pointer Two-Sum scan on the rest. Skip duplicates.',
+        code: 'def three_sum(nums):\n    nums = sorted(nums)\n    res = []\n    for i in range(len(nums) - 2):\n        if i and nums[i] == nums[i - 1]:\n            continue\n        lo, hi = i + 1, len(nums) - 1\n        while lo < hi:\n            s = nums[i] + nums[lo] + nums[hi]\n            if s < 0:\n                lo += 1\n            elif s > 0:\n                hi -= 1\n            else:\n                res.append([nums[i], nums[lo], nums[hi]])\n                lo += 1\n                while lo < hi and nums[lo] == nums[lo - 1]:\n                    lo += 1\n    return res\n',
+      },
+    ],
     solution:
       'def three_sum(nums):\n    nums = sorted(nums)\n    res = []\n    for i in range(len(nums) - 2):\n        if i and nums[i] == nums[i - 1]:\n            continue\n        lo, hi = i + 1, len(nums) - 1\n        while lo < hi:\n            s = nums[i] + nums[lo] + nums[hi]\n            if s < 0:\n                lo += 1\n            elif s > 0:\n                hi -= 1\n            else:\n                res.append([nums[i], nums[lo], nums[hi]])\n                lo += 1\n                while lo < hi and nums[lo] == nums[lo - 1]:\n                    lo += 1\n    return res\n',
   },
@@ -147,6 +189,20 @@ export const NEETCODE_1 = [
     hint: 'Start with the widest container (both ends). Only moving the shorter wall inward can possibly help.',
     approach:
       'Start at maximum width with pointers at both ends. The area is limited by the **shorter** wall — moving the taller one inward can only shrink or keep the area (width drops, height still capped by the same short wall). So always move the shorter pointer inward, tracking the best area seen. O(n).\n\nThe interview skill here is the *argument*: be ready to explain why discarding the shorter wall never throws away the optimum.',
+    approaches: [
+      {
+        name: 'Brute force',
+        complexity: 'O(n²) time',
+        note: 'Try every pair of walls. Correct, and a fine way to confirm your area formula before optimizing.',
+        code: 'def max_area(heights):\n    best = 0\n    for i in range(len(heights)):\n        for j in range(i + 1, len(heights)):\n            best = max(best, (j - i) * min(heights[i], heights[j]))\n    return best\n',
+      },
+      {
+        name: 'Two pointers',
+        complexity: 'O(n) time, O(1) space',
+        note: 'Start widest; always move the shorter wall inward — moving the taller one can never help.',
+        code: 'def max_area(heights):\n    lo, hi = 0, len(heights) - 1\n    best = 0\n    while lo < hi:\n        best = max(best, (hi - lo) * min(heights[lo], heights[hi]))\n        if heights[lo] < heights[hi]:\n            lo += 1\n        else:\n            hi -= 1\n    return best\n',
+      },
+    ],
     solution:
       'def max_area(heights):\n    lo, hi = 0, len(heights) - 1\n    best = 0\n    while lo < hi:\n        best = max(best, (hi - lo) * min(heights[lo], heights[hi]))\n        if heights[lo] < heights[hi]:\n            lo += 1\n        else:\n            hi -= 1\n    return best\n',
   },
@@ -174,6 +230,20 @@ export const NEETCODE_1 = [
     hint: 'Keep a dict of each char → last index seen. When you re-see a char inside the window, jump the window start past its previous position.',
     approach:
       'Slide a window `[start, i]` that always contains unique characters. Track each character\'s last-seen index in a dict; when the current character was already seen **at or after** `start`, move `start` to just past that occurrence. Record the window length at every step.\n\nO(n) — each index enters and leaves the window once. The `seen[ch] >= start` check (not just `ch in seen`) is the classic off-by-one that "dvdf" catches.',
+    approaches: [
+      {
+        name: 'Check every substring',
+        complexity: 'O(n²) time',
+        note: 'From each start, extend until a repeat. Correct and easy to reason about.',
+        code: 'def length_of_longest_substring(s):\n    best = 0\n    for i in range(len(s)):\n        seen = set()\n        for j in range(i, len(s)):\n            if s[j] in seen:\n                break\n            seen.add(s[j])\n            best = max(best, j - i + 1)\n    return best\n',
+      },
+      {
+        name: 'Sliding window',
+        complexity: 'O(n) time',
+        note: 'Remember each char\'s last index; when you re-see one inside the window, jump the start past it.',
+        code: 'def length_of_longest_substring(s):\n    seen = {}\n    start = 0\n    best = 0\n    for i, ch in enumerate(s):\n        if ch in seen and seen[ch] >= start:\n            start = seen[ch] + 1\n        seen[ch] = i\n        best = max(best, i - start + 1)\n    return best\n',
+      },
+    ],
     solution:
       'def length_of_longest_substring(s):\n    seen = {}\n    start = 0\n    best = 0\n    for i, ch in enumerate(s):\n        if ch in seen and seen[ch] >= start:\n            start = seen[ch] + 1\n        seen[ch] = i\n        best = max(best, i - start + 1)\n    return best\n',
   },
