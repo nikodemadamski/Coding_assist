@@ -56,7 +56,9 @@ Trees → Heap → Backtracking → Graphs → Dynamic Programming → Greedy �
 - **Weeks 7–8:** Heap, Backtracking, Graphs. This is the difficulty jump — expect to drill.
 - **Weeks 9–10:** Dynamic Programming + Greedy + Intervals. Slow and steady.
 - **Weeks 11–12:** Mixed random review only. No new patterns — just prove retention under
-  time pressure, and start doing **timed mock interviews** with a friend or out loud to a rubber duck.
+  time pressure. Run a **🎤 Mock interview** (home screen) most days: one problem, a real
+  clock, hints locked, and a debrief that makes you state your Big-O and grade your own
+  communication before the solution appears. That is the single best rehearsal for the loop.
 
 If your review queue is empty and you've solved everything, **ask Claude to forge you more**
 (＋ Import questions) targeting your weakest category — check the "Where you slip" list on
@@ -73,6 +75,10 @@ the Stats page to find it.
   edge cases so you build the instinct.
 - **Recover gracefully.** You *will* get stuck in a real interview. The drill loop trains the
   most important reflex: a wrong answer isn't failure, it's the next rep.
+- **Rehearse under the clock.** Reading solutions builds recognition; the **🎤 Mock interview**
+  builds performance. It withholds every hint, times you, and forces the out-loud complexity
+  statement — the gap between "I could solve this at home" and "I solved it in the room" is
+  exactly what it trains. Watch your *clean pass* rate on the Stats page climb.
 
 ## Does this platform have what it takes?
 

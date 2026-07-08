@@ -2130,6 +2130,231 @@ details.hint[open] summary {
   flex-wrap: wrap;
 }
 
+/* ── mock interview ─────────────────────────────────────────────────────── */
+
+.btn-mock {
+  background: transparent;
+  border-color: var(--crimson);
+  color: var(--crimson);
+}
+.btn-mock:hover {
+  background: color-mix(in srgb, var(--crimson) 12%, transparent);
+}
+
+.mock .mock-intro,
+.mock .mock-grade-intro {
+  color: var(--text-dim);
+  max-width: 680px;
+  margin: 6px 0 16px;
+}
+.mock-formats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+  max-width: 860px;
+}
+.mock-format-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 10px;
+  align-items: center;
+  text-align: left;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px;
+  cursor: pointer;
+  color: var(--text);
+  font: inherit;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.mock-format-card:hover {
+  border-color: var(--crimson);
+  transform: translateY(-2px);
+}
+.mock-format-name {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.mock-format-time {
+  font-family: var(--font-code);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+.mock-format-blurb {
+  grid-column: 1 / -1;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+/* live timer in the problem toolbar during a mock */
+.mock-timer {
+  font-family: var(--font-code);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--jade);
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-right: auto;
+}
+.mock-timer.low {
+  color: var(--crimson);
+  border-color: var(--crimson);
+  animation: mock-pulse 1s ease-in-out infinite;
+}
+@keyframes mock-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.mock-reminder {
+  background: color-mix(in srgb, var(--crimson) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--crimson) 35%, transparent);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-top: 8px;
+}
+.mock-reminder ol {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+/* debrief */
+.mock-verdict {
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 8px 0 4px;
+  font-weight: 600;
+  max-width: 720px;
+}
+.mock-verdict.pass {
+  background: color-mix(in srgb, var(--jade) 12%, transparent);
+  border: 1px solid var(--jade);
+}
+.mock-verdict.fail {
+  background: color-mix(in srgb, var(--crimson) 10%, transparent);
+  border: 1px solid var(--crimson-dim, var(--crimson));
+}
+.mock-rubric {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 720px;
+  margin: 10px 0 18px;
+}
+.mock-q label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.92rem;
+}
+.mock-input {
+  width: 100%;
+  font-family: var(--font-code);
+  font-size: 0.95rem;
+  padding: 9px 12px;
+  background: var(--ink);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.mock-input:focus {
+  outline: none;
+  border-color: var(--crimson);
+}
+.mock-actual {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin: 8px 0 0;
+}
+.seg {
+  display: inline-flex;
+  gap: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.seg-btn {
+  background: var(--panel);
+  border: none;
+  border-right: 1px solid var(--line);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 8px 16px;
+  cursor: pointer;
+  text-transform: capitalize;
+}
+.seg-btn:last-child {
+  border-right: none;
+}
+.seg-btn.active {
+  background: var(--crimson);
+  color: #fff;
+}
+.mock-solution {
+  max-width: 720px;
+  margin-bottom: 18px;
+}
+.mock-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.mock-hint-text {
+  color: var(--text-dim);
+  font-size: 0.82rem;
+  margin-top: 8px;
+}
+
+/* mock log on the Stats page */
+.mock-log {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 12px;
+  max-width: 720px;
+}
+.mock-log-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.mock-log-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.mock-log-dot.pass {
+  background: var(--jade);
+}
+.mock-log-dot.fail {
+  background: var(--crimson);
+}
+.mock-log-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mock-log-meta {
+  font-family: var(--font-code);
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
 /* ── keyboard hints ─────────────────────────────────────────────────────── */
 
 kbd,

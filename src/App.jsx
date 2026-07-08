@@ -4,6 +4,7 @@ import Picker from './components/Picker.jsx';
 import ProblemView from './components/ProblemView.jsx';
 import PracticeView from './components/PracticeView.jsx';
 import WarmupView from './components/WarmupView.jsx';
+import MockInterview from './components/MockInterview.jsx';
 import Stats from './components/Stats.jsx';
 import Guide from './components/Guide.jsx';
 import RoadmapGraph from './components/RoadmapGraph.jsx';
@@ -103,6 +104,10 @@ export default function App() {
     });
   }, []);
 
+  const handleMockRecord = useCallback((record) => {
+    setProgress((p) => ({ ...p, mock: [...(p.mock || []), record] }));
+  }, []);
+
   const handleImported = useCallback((questions) => {
     setCustomQuestions((qs) => [...qs, ...questions]);
   }, []);
@@ -131,6 +136,7 @@ export default function App() {
             onOpenQuestion={(id) => setView({ name: 'problem', id, from: 'home' })}
             onStartPractice={() => setView({ name: 'practice' })}
             onWarmup={() => setView({ name: 'warmup' })}
+            onMock={() => setView({ name: 'mock' })}
             onDrill={() => setView({ name: 'drill' })}
             onBrowse={(key) => setView({ name: 'browse', focusCategory: key })}
           />
@@ -151,6 +157,16 @@ export default function App() {
           <WarmupView
             progress={progress}
             onResult={handleWarmupResult}
+            onExit={() => setView({ name: 'home' })}
+          />
+        )}
+        {view.name === 'mock' && (
+          <MockInterview
+            questions={allQuestions}
+            progress={progress}
+            onRecordMock={handleMockRecord}
+            onSolve={handleSolve}
+            onFail={handleFail}
             onExit={() => setView({ name: 'home' })}
           />
         )}

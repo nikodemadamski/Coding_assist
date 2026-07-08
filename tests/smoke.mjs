@@ -481,6 +481,40 @@ try {
   );
   await page.locator('button', { hasText: '← Back to the dojo' }).click();
 
+  // ---- mock interview: timed, hints locked, debrief ----
+  await page.locator('.btn-mock').click();
+  check((await page.locator('.mock-format-card').count()) >= 3, 'mock offers multiple interview rounds');
+  await page.locator('.mock-format-card', { hasText: 'Warm-up round' }).click();
+  await page.locator('.mock-timer').waitFor({ timeout: 10000 });
+  check(await page.locator('.mock-timer').isVisible(), 'mock coding view shows a live countdown');
+  check(await page.locator('.mock-reminder').isVisible(), 'mock shows the think-out-loud checklist');
+  check(
+    (await page.locator('.pane-problem .hint').count()) === 0,
+    'hints and solution are locked during the interview'
+  );
+  // End the interview → debrief
+  await page.locator('.icon-btn[aria-label="End interview"]').click();
+  await page.locator('.mock-verdict').waitFor({ timeout: 5000 });
+  check(await page.locator('.mock-rubric').isVisible(), 'debrief asks the interviewer-graded rubric');
+  await page.locator('.mock-q', { hasText: 'clarify' }).locator('.seg-btn', { hasText: 'yes' }).click();
+  await page.fill('.mock-input', 'O(n) time, O(n) space');
+  check(
+    await page.locator('.mock-actual').isVisible(),
+    'stating your Big-O prompts a comparison against the model'
+  );
+  await page.locator('.mock-q', { hasText: 'talk through' }).locator('.seg-btn', { hasText: 'Clear' }).click();
+  await page.locator('button', { hasText: 'Reveal the model solution' }).click();
+  check(await page.locator('.mock-solution .solution-pre').first().isVisible(), 'model solution revealed in the debrief');
+  await page.locator('button', { hasText: 'Record & finish' }).click();
+  check((await page.locator('.graph-node').count()) >= 15, 'finishing a mock returns to the dojo');
+  // the mock is logged on the Stats page
+  await page.locator('.icon-btn', { hasText: 'Stats' }).click();
+  check(
+    (await page.locator('.mock-log-row').count()) >= 1,
+    'the completed interview is recorded on the Stats page'
+  );
+  await page.locator('.header-logo').click();
+
   check(pageErrors.length === 0, `no uncaught page errors${pageErrors.length ? `: ${pageErrors[0]}` : ''}`);
   await page.close();
 

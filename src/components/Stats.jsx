@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { beltFor, currentStreak, dueQuestionIds, isSolved, masteryLevel } from '../state/progress.js';
+import { summarizeMocks, formatDuration } from '../state/mockSession.js';
 import Calendar from './Calendar.jsx';
 
 function BarChart({ rows }) {
@@ -58,6 +59,10 @@ export default function Stats({ questions, progress }) {
     return Object.values(rows).sort((a, b) => b.solved - a.solved || b.total - a.total);
   }, [questions, progress]);
 
+  const mockHistory = useMemo(() => progress.mock || [], [progress.mock]);
+  const mockStats = useMemo(() => summarizeMocks(mockHistory), [mockHistory]);
+  const recentMocks = useMemo(() => [...mockHistory].reverse().slice(0, 6), [mockHistory]);
+
   // Questions you get wrong most — "what mistakes do I make?"
   const troublesome = useMemo(() => {
     return questions
@@ -101,6 +106,51 @@ export default function Stats({ questions, progress }) {
         <span className="pill pill-reviewing">{mastery.reviewing} reviewing</span>
         <span className="pill pill-mastered">{mastery.mastered} mastered</span>
       </div>
+
+      <h2 style={{ margin: '22px 0 8px' }}>
+        Mock interviews <span className="count">timed, no hints — the real test</span>
+      </h2>
+      {mockStats.count === 0 ? (
+        <p style={{ color: 'var(--text-dim)' }}>
+          No mock interviews yet. Run one from the home screen — it&apos;s the closest this app
+          gets to the real thing, and the fastest way to find out if you&apos;re ready.
+        </p>
+      ) : (
+        <>
+          <div className="stat-grid">
+            <div className="stat-tile">
+              <div className="v">{mockStats.count}</div>
+              <div className="l">interviews taken</div>
+            </div>
+            <div className="stat-tile">
+              <div className="v">{Math.round(mockStats.passRate * 100)}%</div>
+              <div className="l">solved in time</div>
+            </div>
+            <div className="stat-tile">
+              <div className="v">{mockStats.cleanPasses}</div>
+              <div className="l">clean passes</div>
+            </div>
+            <div className="stat-tile">
+              <div className="v">{mockStats.avgTimeMs ? formatDuration(mockStats.avgTimeMs) : '—'}</div>
+              <div className="l">avg time used</div>
+            </div>
+          </div>
+          <div className="mock-log">
+            {recentMocks.map((m, i) => (
+              <div className="mock-log-row" key={i}>
+                <span className={`mock-log-dot ${m.passed ? 'pass' : 'fail'}`} aria-hidden="true" />
+                <span className="mock-log-title">{m.title}</span>
+                <span className={`tag diff-${m.difficulty}`}>{m.difficulty}</span>
+                <span className="mock-log-meta">
+                  {m.passed ? (m.ranOutOfTime ? 'solved (over time)' : 'solved') : m.ranOutOfTime ? 'time up' : 'ended'}
+                  {' · '}
+                  {formatDuration(m.timeMs)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       <h2 style={{ margin: '22px 0 8px' }}>Solves per track</h2>
       <BarChart rows={byTrack} />

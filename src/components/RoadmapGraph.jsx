@@ -22,6 +22,7 @@ export default function RoadmapGraph({
   onOpenQuestion,
   onStartPractice,
   onWarmup,
+  onMock,
   onDrill,
   onBrowse,
 }) {
@@ -150,6 +151,9 @@ export default function RoadmapGraph({
         )}
         <button className="btn btn-warmup" onClick={onWarmup}>
           ⚡ Warm-up
+        </button>
+        <button className="btn btn-mock" onClick={onMock} title="Timed, no hints — simulate the real interview">
+          🎤 Mock interview
         </button>
       </div>
 

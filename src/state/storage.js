@@ -11,6 +11,7 @@ export const EMPTY_PROGRESS = {
   streak: { count: 0, lastActiveDate: null },
   activity: {}, // 'YYYY-MM-DD' -> { visited, solves, fails, missed: [id], goalMet }
   warmup: {}, // level -> { best, runs, lastRunAt }
+  mock: [], // [{ id, title, difficulty, date, format, timeMs, passed, ... }]
 };
 
 function safeParse(raw, fallback) {

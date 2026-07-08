@@ -39,6 +39,10 @@ export default function ProblemView({
   practiceMode = false,
   practiceInfo = null,
   onNext,
+  // mock-interview props (optional): lock help, show a timer, report result
+  mockMode = false,
+  headerExtra = null,
+  onSubmitReport = null,
 }) {
   const [code, setCode] = useState(
     () => progress.drafts[question.id] ?? question.starter_code ?? ''
@@ -114,7 +118,11 @@ export default function ProblemView({
       const rep = await runQuestion(question, code, handleStatus);
       setReport(rep);
       if (isSubmit) {
-        if (rep.allPassed) {
+        if (mockMode) {
+          // The mock owns the outcome — hand it the report and let it run the
+          // debrief. No solved banner, no practice reflect here.
+          onSubmitReport?.(rep);
+        } else if (rep.allPassed) {
           if (practiceMode) {
             // Wait for a confidence rating before scheduling — the rating tunes
             // the next review interval.
@@ -172,13 +180,20 @@ export default function ProblemView({
         <button
           className="icon-btn"
           onClick={onBack}
-          aria-label={practiceMode ? 'End practice session' : 'Back to problem list'}
+          aria-label={
+            mockMode
+              ? 'End interview'
+              : practiceMode
+                ? 'End practice session'
+                : 'Back to problem list'
+          }
         >
-          {practiceMode ? '✕ End' : '←'}
+          {mockMode ? '✕ End interview' : practiceMode ? '✕ End' : '←'}
         </button>
         {practiceMode && phaseLabel && (
           <span className={`phase-pill ${practiceInfo.phase}`}>{phaseLabel}</span>
         )}
+        {headerExtra}
         <span className="pv-title">
           {solved && !practiceMode && (
             <span style={{ color: 'var(--jade)' }} title="Solved">
@@ -239,25 +254,39 @@ export default function ProblemView({
               ))}
             </>
           )}
-          <details className="hint">
-            <summary>Show hint</summary>
-            <Markdown text={question.hint} />
-          </details>
-          {question.approach && (
-            <details className="hint">
-              <summary>Approach — how the solution works</summary>
-              <Markdown text={question.approach} />
-            </details>
+          {mockMode ? (
+            <div className="mock-reminder">
+              <strong>Interview mode — no hints, no solution.</strong>
+              <ol>
+                <li>Clarify: restate the problem, ask about input size and edge cases.</li>
+                <li>Plan out loud: name your approach and its time/space complexity before coding.</li>
+                <li>Code it, then walk a example through by hand.</li>
+                <li>Submit when ready — you&apos;ll compare against the model solution after.</li>
+              </ol>
+            </div>
+          ) : (
+            <>
+              <details className="hint">
+                <summary>Show hint</summary>
+                <Markdown text={question.hint} />
+              </details>
+              {question.approach && (
+                <details className="hint">
+                  <summary>Approach — how the solution works</summary>
+                  <Markdown text={question.approach} />
+                </details>
+              )}
+              <details className="hint">
+                <summary>
+                  Show solution
+                  {question.approaches?.length > 1
+                    ? ' — brute force → optimal'
+                    : ' (last resort!)'}
+                </summary>
+                <Approaches question={question} onVisualize={openVisualizer} />
+              </details>
+            </>
           )}
-          <details className="hint">
-            <summary>
-              Show solution
-              {question.approaches?.length > 1
-                ? ' — brute force → optimal'
-                : ' (last resort!)'}
-            </summary>
-            <Approaches question={question} onVisualize={openVisualizer} />
-          </details>
         </section>
 
         <section className={`pv-pane pane-code ${tab === 'code' ? 'visible' : ''}`}>

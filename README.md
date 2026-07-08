@@ -87,6 +87,16 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
   backtracking, graphs, dynamic programming, greedy, intervals, math & geometry, and bit
   manipulation — plus pandas and SQL. The Browse list is ordered as a **syllabus**,
   foundations first.
+- **🎤 Mock interview** (home screen): the closest this app gets to the real thing, and the
+  feature that turns practice into preparation. Pick a round — Warm-up (easy, 20 min),
+  Standard (medium, 35), Onsite (hard, 45) or Surprise — and get one problem, a live
+  countdown, and **no hints or solution** until you're done. When you submit or the clock
+  stops, a debrief grades the things a real interviewer grades: did you clarify the problem,
+  can you state your solution's time/space complexity (typed and compared against the
+  model), and how clearly did you talk through it — *before* the model solution is revealed.
+  Every round is logged; the Stats page tracks your pass rate and **clean-pass** count
+  (solved *and* in time). A mock pass counts toward your streak and spaced-repetition
+  schedule like any solve.
 - **⚡ Warm-up** (home screen): like stretching before the gym — rapid-fire "type the
   Python" one-liners (*create an empty list called nums* → `nums = []`) against a
   per-question countdown. 50 questions each at Beginner, Intermediate and Hard; the run
