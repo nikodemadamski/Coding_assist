@@ -1071,4 +1071,17 @@ const SQL_QUESTIONS = [
   },
 ];
 
-export const SEED_QUESTIONS = [...PYTHON_QUESTIONS, ...PANDAS_QUESTIONS, ...SQL_QUESTIONS];
+import { NEETCODE_1 } from './neetcode1.js';
+import { NEETCODE_2 } from './neetcode2.js';
+import { NEETCODE_3 } from './neetcode3.js';
+import { NEETCODE_4 } from './neetcode4.js';
+
+export const SEED_QUESTIONS = [
+  ...PYTHON_QUESTIONS,
+  ...PANDAS_QUESTIONS,
+  ...SQL_QUESTIONS,
+  ...NEETCODE_1,
+  ...NEETCODE_2,
+  ...NEETCODE_3,
+  ...NEETCODE_4,
+];
