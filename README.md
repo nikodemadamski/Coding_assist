@@ -109,13 +109,19 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
   scales to fit any screen, phone included. Clicking a topic pops up its question list;
   click any question to open it. The daily loop (reviews due, Continue the path, Warm-up,
   Drill) sits right on top. The classic list view lives in the **📋 Browse** tab.
-- **▶ Visualize** (on any solution): a step-by-step execution player. It traces the actual
-  solution — brute force or optimal — running on one of the real test cases, highlighting
-  the current line and showing every variable (lists as indexed cells, dicts as key→value
-  chips) as it changes, with play/pause/scrub. Every step is narrated in plain English with
-  the live values plugged in — *"Is target - n (= 7) in seen (= {2: 0})? No → skip it."* —
-  and the approach's core idea is shown up top, so you see not just what the code does but
-  why each line runs.
+- **🧗 Stuck ladder** (on every problem): the answer to "I'm stuck, do I go to YouTube?" —
+  no. Climb one rung at a time instead: *which pattern is this?* (recognise the technique and
+  what to reach for) → *a nudge* → *the plan in plain English* → *the code* (brute force →
+  optimal). Each rung reveals only when you ask, so you get exactly as much help as you need
+  and no more. A YouTube search link waits at the very bottom for when you truly want to hear
+  someone explain it.
+- **▶ Visualize** (on any solution): a step-by-step execution player, built to be *followed*.
+  It traces the actual solution — brute force or optimal — on a real test case, and every
+  step leads with one plain-English **hero sentence** with the live values plugged in
+  (*"Is target - n (= 7) in seen (= {2: 0})? No → skip it."*). The variable that just
+  **changed** is highlighted and shown as *before → after*, so there's one thing to watch per
+  step instead of a wall of state. Play/pause/scrub, step with ← →, and the approach's core
+  idea sits up top.
 - **Attendance calendar + daily goal** (Stats page): a GitHub-style grid of every day you
   showed up, and whether you met the goal (clear your reviews + solve ≥1). Don't break the
   chain.

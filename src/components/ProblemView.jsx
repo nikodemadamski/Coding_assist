@@ -3,6 +3,7 @@ import Editor from './Editor.jsx';
 import Results from './Results.jsx';
 import Markdown from './Markdown.jsx';
 import Approaches from './Approaches.jsx';
+import StuckLadder from './StuckLadder.jsx';
 import VisualizerModal from './VisualizerModal.jsx';
 import { runQuestion } from '../engine/runnerClient.js';
 import { RATING_DELTA, isSolved } from '../state/progress.js';
@@ -265,27 +266,7 @@ export default function ProblemView({
               </ol>
             </div>
           ) : (
-            <>
-              <details className="hint">
-                <summary>Show hint</summary>
-                <Markdown text={question.hint} />
-              </details>
-              {question.approach && (
-                <details className="hint">
-                  <summary>Approach — how the solution works</summary>
-                  <Markdown text={question.approach} />
-                </details>
-              )}
-              <details className="hint">
-                <summary>
-                  Show solution
-                  {question.approaches?.length > 1
-                    ? ' — brute force → optimal'
-                    : ' (last resort!)'}
-                </summary>
-                <Approaches question={question} onVisualize={openVisualizer} />
-              </details>
-            </>
+            <StuckLadder question={question} onVisualize={openVisualizer} />
           )}
         </section>
 

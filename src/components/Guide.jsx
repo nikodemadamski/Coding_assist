@@ -28,6 +28,11 @@ loud, without bugs.** That is a *trainable* skill, and this dojo is built to tra
    Hard so it comes back. And when a solution still feels like magic, hit **▶ Visualize** on
    it — watching it run a real test case line by line, variable by variable, is how "I read
    the code" becomes "I see why it works."
+6. **When you're stuck, climb — don't bolt.** Every problem has a **🧗 Stuck ladder**: one
+   rung at a time tells you *which pattern* this is, then *a nudge*, then *the plan in plain
+   English*, and only last, *the code*. Take one rung, go try again — the point is to need
+   less help each time, not to read the answer. (A YouTube link waits at the very bottom for
+   when you genuinely want to hear someone talk it through.)
 6. **Say it out loud.** In the real interview you must narrate. Practice here the same way:
    before you type, say the approach and the complexity. "I'll use a hash map for O(n)
    lookups, O(n) space." Muscle memory for *talking while coding* is half the battle.

@@ -3,6 +3,7 @@
 import { SEED_QUESTIONS } from '../src/data/questions.js';
 import { PATH, ROADMAP, pathStep, byPathOrder, nextOnPath } from '../src/data/roadmap.js';
 import { GRAPH_NODES, GRAPH_EDGES, GRAPH_W, GRAPH_H, NODE_W, NODE_H } from '../src/data/roadmapGraph.js';
+import { patternHint } from '../src/data/patternHints.js';
 import { createSession } from '../src/state/practiceSession.js';
 import { EMPTY_PROGRESS } from '../src/state/storage.js';
 
@@ -108,6 +109,22 @@ console.log('Learning-path tests\n');
     )
   );
   check(!overlap, 'no two nodes overlap');
+}
+
+// ---- the stuck-ladder's first rung has a nudge for every real question ----
+{
+  const missing = SEED_QUESTIONS.filter((q) => {
+    const h = patternHint(q);
+    return !h || !h.tell || !h.reach;
+  });
+  check(missing.length === 0, 'every question resolves to a pattern nudge (tell + reach)', missing.map((q) => q.pattern).join(', '));
+  // The nudge is technique-level, not the literal answer — a cheap guard that
+  // it isn't accidentally echoing the solution code.
+  const leaks = SEED_QUESTIONS.filter((q) => {
+    const h = patternHint(q);
+    return h.reach.includes('def ') || h.tell.includes('def ');
+  });
+  check(leaks.length === 0, 'pattern nudges never contain solution code');
 }
 
 console.log(failures === 0 ? '\nAll path tests green.' : `\n${failures} FAILURE(S).`);

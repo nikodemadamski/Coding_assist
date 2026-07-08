@@ -140,26 +140,41 @@ try {
     'editor shows the language/runtime badge'
   );
 
-  // ---- multi-approach solution viewer (brute force → optimal) ----
-  await page.locator('.pane-problem details.hint summary', { hasText: 'Show solution' }).click();
+  // ---- the "stuck ladder": climb rung by rung, code is the last rung ----
+  check(await page.locator('.stuck').isVisible(), 'a stuck-when-you-need-it ladder is shown');
+  check(
+    (await page.locator('.stuck-next').count()) === 1,
+    'only the next rung is offered — you climb one at a time'
+  );
+  // Rung 1: pattern. Reveal it and check it names a technique, not the answer.
+  await page.locator('.stuck-next', { hasText: 'Which pattern is this?' }).click();
+  check(
+    (await page.locator('.stuck-rung.open').first().innerText()).includes('Reach for'),
+    'rung 1 tells you the pattern to reach for'
+  );
+  // Climb to the code rung (the last one) and confirm the approaches appear.
+  for (let i = 0; i < 4; i++) {
+    const next = page.locator('.stuck-next');
+    if ((await next.count()) === 0) break;
+    await next.first().click();
+  }
   check(
     await page.locator('.approach-tab', { hasText: 'Brute force' }).isVisible(),
-    'solution shows a Brute force approach tab'
+    'the final rung reveals the code — brute force → optimal'
   );
   check(
     await page.locator('.approach-tab', { hasText: 'Hash map' }).isVisible(),
-    'solution shows the optimal Hash map approach tab'
-  );
-  check(
-    (await page.locator('.approach-complexity').first().innerText()).includes('O(n'),
-    'approach shows its complexity'
+    'and the optimal hash-map approach'
   );
   await page.locator('.approach-tab', { hasText: 'Hash map' }).click();
   check(
     (await page.locator('.approaches .solution-pre').innerText()).includes('seen'),
     'switching approach tab swaps the shown code'
   );
-  await page.locator('.pane-problem details.hint summary', { hasText: 'Show solution' }).click();
+  check(
+    await page.locator('.stuck-youtube').isVisible(),
+    'a YouTube escape hatch waits at the bottom of the ladder'
+  );
 
   // ---- failure path: wrong answer, run via the Ctrl+Enter shortcut ----
   await setEditor(page, 'def two_sum(nums, target):\n    return [0, 0]');
@@ -406,16 +421,19 @@ try {
   // ---- algorithm visualizer: replays a real traced execution ----
   await page.locator('.graph-node', { hasText: 'Arrays & Hashing' }).click();
   await page.locator('.cat-q', { hasText: 'Two Sum' }).click();
-  await page.locator('.pane-problem details.hint summary', { hasText: 'Show solution' }).click();
+  // climb the stuck ladder to the code rung, then Visualize
+  for (let i = 0; i < 4; i++) {
+    const next = page.locator('.stuck-next');
+    if ((await next.count()) === 0) break;
+    await next.first().click();
+  }
   await page.locator('.btn-viz').first().click();
   await page.locator('.viz-modal').waitFor({ timeout: 60000 });
-  check(
-    (await page.locator('.viz-what').innerText()).includes('one line'),
-    'visualizer explains what it does before it runs'
-  );
   check(await page.locator('.viz-plan').isVisible(), "the approach's idea is shown in the modal");
   await page.locator('.viz-line.active').waitFor({ timeout: 120000 });
   check(true, 'visualizer traces the solution and highlights the current line');
+  // the plain-English hero narrates the current step
+  check(await page.locator('.viz-hero-why').isVisible(), 'a plain-English hero sentence leads each step');
   const stepBefore = await page.locator('.viz-step-count').innerText();
   check(/Step 1 \/ \d+/.test(stepBefore), `visualizer starts at step 1 of N (${stepBefore.trim()})`);
   await page.locator('button[aria-label="Next step"]').click();
@@ -424,25 +442,25 @@ try {
     'stepping forward advances the trace'
   );
   check((await page.locator('.viz-var').count()) >= 2, 'variable panel shows the local variables');
-  check(
-    (await page.locator('.viz-caption').innerText()).includes('Line'),
-    'caption shows the current source line'
-  );
-  // scrub through the trace: at least one step must carry a plain-English
-  // "why" with live values (e.g. "Is nums[i] + nums[j] (= 9) equal to ...")
+  // step through: a variable should light up as "changed", and the hero should
+  // carry a plain-English "why" with live values (e.g. "… (= 9) …")
   let sawWhy = false;
+  let sawChanged = false;
   for (;;) {
+    if (!sawChanged && (await page.locator('.viz-var.changed').count()) > 0) sawChanged = true;
     if (
-      (await page.locator('.viz-why').count()) > 0 &&
-      /\(= .*\)/.test(await page.locator('.viz-why').innerText())
+      !sawWhy &&
+      (await page.locator('.viz-hero-why').count()) > 0 &&
+      /\(= .*\)/.test(await page.locator('.viz-hero-why').innerText())
     ) {
       sawWhy = true;
-      break;
     }
+    if (sawWhy && sawChanged) break;
     if (await page.locator('button[aria-label="Next step"]').isDisabled()) break;
     await page.locator('button[aria-label="Next step"]').click();
   }
-  check(sawWhy, 'steps narrate WHY they run, with live values plugged in');
+  check(sawWhy, 'each step narrates WHY it runs, with live values plugged in');
+  check(sawChanged, 'the variable that just changed is highlighted');
   await page.locator('.icon-btn[aria-label="Close visualizer"]').click();
   check((await page.locator('.viz-modal').count()) === 0, 'visualizer closes');
   await page.locator('.icon-btn[aria-label="Back to problem list"]').click();

@@ -152,8 +152,25 @@ export default function VisualizerModal({ question, code, label, note, onClose }
   }, [steps]);
 
   const cur = steps[step];
+  const prev = step > 0 ? steps[step - 1] : null;
   const test = question.tests[testIndex];
   const atEnd = total > 0 && step === total - 1;
+
+  // What changed since the previous step — the one thing to actually watch.
+  // Maps a changed var name to its previous value, or the '__new__' marker if
+  // it just came into scope.
+  const changed = useMemo(() => {
+    const out = {};
+    if (!cur) return out;
+    for (const k of Object.keys(cur.locals)) {
+      const now = JSON.stringify(cur.locals[k]);
+      const had = prev && k in prev.locals;
+      const before = had ? JSON.stringify(prev.locals[k]) : undefined;
+      if (before !== now) out[k] = had ? prev.locals[k] : '__new__';
+    }
+    return out;
+  }, [cur, prev]);
+  const changedNames = Object.keys(changed);
 
   return (
     <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -169,10 +186,9 @@ export default function VisualizerModal({ question, code, label, note, onClose }
         </div>
 
         <p className="viz-what">
-          This runs the <strong>{label}</strong> code for real on the test case below, one line
-          at a time. The left pane highlights the line being executed, the right pane shows
-          every variable at that moment, and the sentence underneath explains <em>why</em> that
-          line runs — with the actual values plugged in.
+          Watch the <strong>{label}</strong> run for real, one line at a time. Read the{' '}
+          <strong>big sentence</strong> for what&apos;s happening; the highlighted variable on the
+          right is the one that just <strong>changed</strong>. Step with ← → or press play.
         </p>
         {note && (
           <div className="viz-plan">
@@ -259,6 +275,14 @@ export default function VisualizerModal({ question, code, label, note, onClose }
               aria-label="Scrub through steps"
             />
 
+            {/* One plain-English sentence per step — the thing to actually read. */}
+            <div className="viz-hero" role="status">
+              <span className="viz-hero-step">Step {total ? step + 1 : 0}</span>
+              <span className="viz-hero-why">
+                {cur?.note || (atEnd ? 'Done — the function returns its answer.' : 'Getting started…')}
+              </span>
+            </div>
+
             <div className="viz-panes">
               <div className="viz-code" ref={codeRef}>
                 {trace.lines.map((lineText, i) => (
@@ -272,16 +296,47 @@ export default function VisualizerModal({ question, code, label, note, onClose }
                 ))}
               </div>
               <div className="viz-vars">
-                {varNames.map((name) => (
-                  <div className="viz-var" key={name}>
-                    <span className="viz-var-name">{name}</span>
-                    {cur && name in cur.locals ? (
-                      <VarValue value={cur.locals[name]} />
-                    ) : (
-                      <span className="viz-empty">—</span>
-                    )}
-                  </div>
-                ))}
+                <div className="viz-vars-head">
+                  Variables
+                  {changedNames.length > 0 && (
+                    <span className="viz-changed-flag">
+                      {changedNames.join(', ')} changed
+                    </span>
+                  )}
+                </div>
+                {varNames.map((name) => {
+                  const inScope = cur && name in cur.locals;
+                  const didChange = name in changed;
+                  const wasNew = changed[name] === '__new__';
+                  return (
+                    <div
+                      className={`viz-var ${didChange ? 'changed' : ''} ${inScope ? '' : 'out'}`}
+                      key={name}
+                    >
+                      <span className="viz-var-name">
+                        {name}
+                        {didChange && (
+                          <span className="viz-var-tag">{wasNew ? 'new' : 'changed'}</span>
+                        )}
+                      </span>
+                      {inScope ? (
+                        <span className="viz-var-vals">
+                          {didChange && !wasNew && (
+                            <>
+                              <span className="viz-var-was">
+                                <VarValue value={changed[name]} />
+                              </span>
+                              <span className="viz-arrow">→</span>
+                            </>
+                          )}
+                          <VarValue value={cur.locals[name]} />
+                        </span>
+                      ) : (
+                        <span className="viz-empty">— not in scope yet</span>
+                      )}
+                    </div>
+                  );
+                })}
                 {atEnd && (
                   <div className="viz-var viz-result">
                     <span className="viz-var-name">returned</span>
@@ -291,16 +346,13 @@ export default function VisualizerModal({ question, code, label, note, onClose }
               </div>
             </div>
 
-            <div className="viz-caption" role="status">
+            <div className="viz-caption">
               {cur ? (
-                <>
-                  {cur.note && <div className="viz-why">{cur.note}</div>}
-                  <div className="viz-src">
-                    Line {cur.line}
-                    {cur.func && cur.func !== question.function_name ? ` · in ${cur.func}()` : ''}
-                    : <code>{(trace.lines[cur.line - 1] || '').trim()}</code>
-                  </div>
-                </>
+                <div className="viz-src">
+                  Running line {cur.line}
+                  {cur.func && cur.func !== question.function_name ? ` · in ${cur.func}()` : ''}:{' '}
+                  <code>{(trace.lines[cur.line - 1] || '').trim()}</code>
+                </div>
               ) : (
                 'No steps captured.'
               )}
