@@ -55,6 +55,7 @@ export default function ProblemView({
   const [report, setReport] = useState(null);
   const [running, setRunning] = useState(false);
   const [statusText, setStatusText] = useState('');
+  const [loadPct, setLoadPct] = useState(null); // 0-100 while Pyodide loads
   const [justSolved, setJustSolved] = useState(false);
   const [outcome, setOutcome] = useState(null); // practice: 'pass' | 'fail' | null
   const [viz, setViz] = useState(null); // { code, label } → visualizer open
@@ -95,13 +96,14 @@ export default function ProblemView({
 
   const handleStatus = useCallback((status) => {
     if (status.phase === 'loading-pyodide') {
-      setStatusText(
-        `Loading Python runtime${status.progress != null ? ` — ${status.progress}%` : ''}… (first time only)`
-      );
+      setLoadPct(status.progress ?? null);
+      setStatusText('Booting Python — first run only, a few seconds…');
     } else if (status.phase === 'loading-pandas') {
+      setLoadPct(null);
       setStatusText('Loading pandas (~15s first time)…');
     } else if (status.phase === 'running') {
-      setStatusText('Running…');
+      setLoadPct(null);
+      setStatusText('Running your code…');
     } else {
       setStatusText('');
     }
@@ -391,9 +393,15 @@ export default function ProblemView({
           )}
 
           {running ? (
-            <div className="loader">
-              <div className="spinner" aria-hidden="true" />
-              <span>{statusText || 'Running…'}</span>
+            <div className="loader" role="status">
+              {loadPct != null ? (
+                <div className="loader-bar">
+                  <div className="loader-bar-fill" style={{ width: `${loadPct}%` }} />
+                </div>
+              ) : (
+                <div className="spinner" aria-hidden="true" />
+              )}
+              <span>{statusText || 'Running your code…'}</span>
             </div>
           ) : (
             !outcome && <Results report={report} question={question} />

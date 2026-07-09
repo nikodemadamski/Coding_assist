@@ -235,6 +235,67 @@ button {
   color: var(--gold);
 }
 
+/* ── interaction polish ────────────────────────────────────────────────── */
+
+.btn,
+.icon-btn,
+.chip {
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.08s ease,
+    box-shadow 0.15s ease;
+}
+.btn:active:not(:disabled),
+.icon-btn:active,
+.chip:active {
+  transform: translateY(1px);
+}
+
+/* one consistent, visible keyboard-focus ring everywhere */
+:where(
+    .btn,
+    .icon-btn,
+    .chip,
+    .q-card,
+    .cat-q,
+    .graph-node,
+    .data-track-card,
+    .pattern-card-head,
+    .quiz-option,
+    .palette-row,
+    .seg-btn,
+    a
+  ):focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* cards feel alive on hover */
+.q-card,
+.stat-tile {
+  transition:
+    border-color 0.15s ease,
+    transform 0.12s ease,
+    box-shadow 0.15s ease;
+}
+.stat-tile:hover {
+  border-color: color-mix(in srgb, var(--gold) 40%, var(--line));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
 /* ── picker (home) ─────────────────────────────────────────────────────── */
 
 .picker {
