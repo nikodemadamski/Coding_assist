@@ -473,15 +473,32 @@ try {
     (await page.locator('.pv-title').innerText()).includes('Two Sum'),
     'a drill link opens the problem'
   );
-  // and the stuck ladder links back to the pattern template
-  for (let i = 0; i < 1; i++) {
-    await page.locator('.stuck-next', { hasText: 'Which pattern' }).click();
-  }
+  // the stuck ladder links back to the pattern template (still on the problem)
+  await page.locator('.stuck-next', { hasText: 'Which pattern' }).click();
   await page.locator('.rung-link').click();
   check(
     (await page.locator('.pattern-card.open').count()) >= 1,
     'the stuck ladder jumps straight to this problem\'s pattern template'
   );
+
+  // ---- pattern-recognition quiz ----
+  await page.locator('.patterns-quiz-btn').click();
+  await page.locator('.quiz-options').waitFor({ timeout: 5000 });
+  check((await page.locator('.quiz-option').count()) === 4, 'quiz offers four pattern options');
+  check((await page.locator('.quiz-count').innerText()).includes('/ 10'), 'quiz runs a 10-question round');
+  await page.locator('.quiz-option').first().click();
+  check(
+    (await page.locator('.quiz-option.correct').count()) === 1,
+    'answering reveals the correct pattern'
+  );
+  check(await page.locator('.quiz-feedback').isVisible(), 'quiz explains when to reach for the pattern');
+  await page.locator('.quiz-next').click();
+  check(
+    (await page.locator('.quiz-count').innerText()).includes('2 / 10'),
+    'Next advances the quiz'
+  );
+  await page.locator('.quiz-bar .icon-btn[aria-label="Quit quiz"]').click();
+  check(await page.locator('.patterns-quiz-btn').isVisible(), 'quitting returns to Patterns');
   await page.locator('.header-logo').click();
 
   // ---- Sensei guide + attendance calendar ----

@@ -8,6 +8,7 @@ import MockInterview from './components/MockInterview.jsx';
 import Stats from './components/Stats.jsx';
 import Guide from './components/Guide.jsx';
 import Patterns from './components/Patterns.jsx';
+import PatternQuiz from './components/PatternQuiz.jsx';
 import RoadmapGraph from './components/RoadmapGraph.jsx';
 import Settings from './components/Settings.jsx';
 import ImportModal from './components/ImportModal.jsx';
@@ -232,7 +233,11 @@ export default function App() {
             progress={progress}
             focusKey={view.focusKey}
             onOpenQuestion={(id) => setView({ name: 'problem', id, from: 'patterns' })}
+            onQuiz={() => setView({ name: 'quiz' })}
           />
+        )}
+        {view.name === 'quiz' && (
+          <PatternQuiz questions={allQuestions} onExit={() => setView({ name: 'patterns' })} />
         )}
         {view.name === 'stats' && <Stats questions={allQuestions} progress={progress} />}
         {view.name === 'guide' && <Guide />}

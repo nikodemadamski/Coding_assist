@@ -244,4 +244,19 @@ while n:
     n &= n - 1
     count += 1`,
   },
+  {
+    key: 'math-geometry',
+    name: 'Math & in-place grids',
+    when: 'The trick is a numeric property, or moving values around a matrix in place.',
+    cues: ['rotate / spiral a matrix', 'digit carry (plus one)', 'in-place with O(1) space', 'fast exponentiation'],
+    complexity: 'O(n) or O(n²) for a grid, O(1) extra space',
+    template: `# Rotate an n x n matrix 90° clockwise in place: transpose, then reverse rows
+n = len(matrix)
+for r in range(n):
+    for c in range(r + 1, n):
+        matrix[r][c], matrix[c][r] = matrix[c][r], matrix[r][c]
+for row in matrix:
+    row.reverse()
+# the general move: find the index formula, then shuffle values in place`,
+  },
 ];

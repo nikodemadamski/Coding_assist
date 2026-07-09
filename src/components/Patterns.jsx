@@ -6,7 +6,7 @@ import { isSolved } from '../state/progress.js';
 // The "templates you must know" reference. One card per algorithm pattern:
 // when to reach for it, the recognition cues, the reusable code skeleton, its
 // complexity, and the problems in your bank that drill it.
-export default function Patterns({ questions, progress, onOpenQuestion, focusKey }) {
+export default function Patterns({ questions, progress, onOpenQuestion, onQuiz, focusKey }) {
   const [open, setOpen] = useState(focusKey || null);
 
   const byPattern = useMemo(() => {
@@ -27,6 +27,11 @@ export default function Patterns({ questions, progress, onOpenQuestion, focusKey
         is, and the code skeleton comes almost for free. Skim them, then drill the linked problems
         until the shape is automatic.
       </p>
+      {onQuiz && (
+        <button className="btn btn-primary patterns-quiz-btn" onClick={onQuiz}>
+          🎯 Quiz me — name the pattern
+        </button>
+      )}
 
       <div className="pattern-cards">
         {PATTERN_GUIDE.map((p) => {
