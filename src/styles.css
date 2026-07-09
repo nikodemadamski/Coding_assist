@@ -11,6 +11,7 @@
   --crimson-dim: #a33236;
   --jade: #3dd68c;
   --gold: #e8b04b;
+  --sky: #4b9de8;
   --edge: #e9e7de; /* roadmap graph arrows */
   --font-display: 'Zilla Slab', serif;
   --font-body: 'IBM Plex Sans', system-ui, sans-serif;
@@ -32,6 +33,7 @@
   --crimson-dim: #b0343a;
   --jade: #12915a;
   --gold: #9c6b12;
+  --sky: #2f7fc4;
   --edge: #b3b0a6;
   color-scheme: light;
 }
@@ -1042,6 +1044,178 @@ details.hint[open] summary {
 .stat-tile .l {
   color: var(--text-dim);
   font-size: 0.8rem;
+}
+
+/* ── journey hero ───────────────────────────────────────────────────────── */
+.journey-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px;
+  margin: 16px 0;
+}
+.journey-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.journey-count {
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.journey-of {
+  color: var(--text-dim);
+  font-size: 1.4rem;
+}
+.journey-sub {
+  display: block;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+.journey-belt {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.journey-belt .belt-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+.journey-belt .belt-strip {
+  width: 140px;
+  height: 6px;
+  background: var(--panel-2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.journey-belt .belt-strip-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+}
+.journey-belt-next {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.journey-bar {
+  display: flex;
+  height: 16px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--panel-2);
+}
+.journey-seg {
+  height: 100%;
+  transition: width 0.4s ease;
+}
+.seg-mastered {
+  background: var(--jade);
+}
+.seg-reviewing {
+  background: var(--sky);
+}
+.seg-learning {
+  background: var(--gold);
+}
+.seg-new {
+  background: color-mix(in srgb, var(--text-dim) 35%, transparent);
+}
+.journey-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+.journey-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.journey-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+/* ── progress-by-topic rows ─────────────────────────────────────────────── */
+.prog-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.prog-row {
+  display: grid;
+  grid-template-columns: 150px 1fr 52px;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+}
+.prog-label {
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.prog-track {
+  background: var(--panel-2);
+  border-radius: 4px;
+  height: 10px;
+  overflow: hidden;
+}
+.prog-fill {
+  display: block;
+  height: 100%;
+  background: var(--sky);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+.prog-fill.done {
+  background: var(--jade);
+}
+.prog-n {
+  font-family: var(--font-code);
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+/* ── where-you-slip list ────────────────────────────────────────────────── */
+.slip-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.slip-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--crimson);
+  border-radius: 8px;
+  font-size: 0.88rem;
+}
+.slip-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.slip-n {
+  font-family: var(--font-code);
+  color: var(--crimson);
+  white-space: nowrap;
 }
 
 .bar-row {

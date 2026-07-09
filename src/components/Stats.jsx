@@ -1,29 +1,55 @@
 import { useMemo } from 'react';
 import { beltFor, currentStreak, dueQuestionIds, isSolved, masteryLevel } from '../state/progress.js';
 import { summarizeMocks, formatDuration } from '../state/mockSession.js';
+import { ROADMAP, categoryKeyOf } from '../data/roadmap.js';
 import Calendar from './Calendar.jsx';
 
-function BarChart({ rows }) {
+const MASTERY_ORDER = ['mastered', 'reviewing', 'learning', 'new'];
+const MASTERY_LABEL = { mastered: 'mastered', reviewing: 'reviewing', learning: 'learning', new: 'not started' };
+
+// A stacked bar showing the whole bank split by how well you know it.
+function JourneyBar({ mastery, total }) {
+  return (
+    <div className="journey-bar" role="img" aria-label="Mastery breakdown of the question bank">
+      {MASTERY_ORDER.map((k) =>
+        mastery[k] > 0 ? (
+          <span
+            key={k}
+            className={`journey-seg seg-${k}`}
+            style={{ width: `${(mastery[k] / total) * 100}%` }}
+            title={`${mastery[k]} ${MASTERY_LABEL[k]}`}
+          />
+        ) : null
+      )}
+    </div>
+  );
+}
+
+function ProgressRows({ rows }) {
   const max = Math.max(1, ...rows.map((r) => r.total));
   return (
-    <div>
-      {rows.map((r) => (
-        <div className="bar-row" key={r.label}>
-          <span className="bar-label">{r.label}</span>
-          <span className="bar-track">
-            <span className="bar-fill" style={{ width: `${(r.solved / max) * 100}%` }} />
-          </span>
-          <span className="bar-n">
-            {r.solved}/{r.total}
-          </span>
-        </div>
-      ))}
+    <div className="prog-rows">
+      {rows.map((r) => {
+        const done = r.total > 0 && r.solved === r.total;
+        return (
+          <div className="prog-row" key={r.label}>
+            <span className="prog-label">{r.label}</span>
+            <span className="prog-track" style={{ maxWidth: `${(r.total / max) * 100}%` }}>
+              <span className={`prog-fill ${done ? 'done' : ''}`} style={{ width: `${(r.solved / r.total) * 100}%` }} />
+            </span>
+            <span className="prog-n">
+              {r.solved}/{r.total}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
 
 export default function Stats({ questions, progress }) {
   const solvedCount = Object.values(progress.solved).filter(isSolved).length;
+  const total = questions.length;
   const belt = beltFor(solvedCount);
   const streak = currentStreak(progress.streak);
   const dueCount = dueQuestionIds(progress, new Set(questions.map((q) => q.id))).length;
@@ -39,31 +65,25 @@ export default function Stats({ questions, progress }) {
     [progress]
   );
 
-  const byTrack = useMemo(() => {
+  // Solves per topic (roadmap category), most-complete first.
+  const byTopic = useMemo(() => {
     const rows = {};
     for (const q of questions) {
-      rows[q.track] = rows[q.track] || { label: q.track, total: 0, solved: 0 };
-      rows[q.track].total++;
-      if (isSolved(progress.solved[q.id])) rows[q.track].solved++;
+      const key = categoryKeyOf(q.pattern);
+      rows[key] = rows[key] || { key, total: 0, solved: 0 };
+      rows[key].total++;
+      if (isSolved(progress.solved[q.id])) rows[key].solved++;
     }
-    return Object.values(rows);
-  }, [questions, progress]);
-
-  const byPattern = useMemo(() => {
-    const rows = {};
-    for (const q of questions) {
-      rows[q.pattern] = rows[q.pattern] || { label: q.pattern, total: 0, solved: 0 };
-      rows[q.pattern].total++;
-      if (isSolved(progress.solved[q.id])) rows[q.pattern].solved++;
-    }
-    return Object.values(rows).sort((a, b) => b.solved - a.solved || b.total - a.total);
+    const labelOf = (key) => ROADMAP.find((c) => c.key === key)?.label.replace(/^\d+ · /, '') ?? key;
+    return Object.values(rows)
+      .map((r) => ({ ...r, label: labelOf(r.key) }))
+      .sort((a, b) => b.solved / b.total - a.solved / a.total || b.total - a.total);
   }, [questions, progress]);
 
   const mockHistory = useMemo(() => progress.mock || [], [progress.mock]);
   const mockStats = useMemo(() => summarizeMocks(mockHistory), [mockHistory]);
   const recentMocks = useMemo(() => [...mockHistory].reverse().slice(0, 6), [mockHistory]);
 
-  // Questions you get wrong most — "what mistakes do I make?"
   const troublesome = useMemo(() => {
     return questions
       .map((q) => ({ q, mistakes: progress.solved[q.id]?.mistakes || 0 }))
@@ -72,40 +92,70 @@ export default function Stats({ questions, progress }) {
       .slice(0, 8);
   }, [questions, progress]);
 
+  const pct = total ? Math.round((solvedCount / total) * 100) : 0;
+
   return (
     <div className="stats">
       <h1>Training record</h1>
-      <div className="stat-grid">
-        <div className="stat-tile">
-          <div className="v">{solvedCount}</div>
-          <div className="l">problems solved</div>
+
+      {/* Journey hero — the whole path at a glance */}
+      <section className="journey-card">
+        <div className="journey-top">
+          <div className="journey-headline">
+            <span className="journey-count">
+              {solvedCount}
+              <span className="journey-of"> / {total}</span>
+            </span>
+            <span className="journey-sub">problems solved · {pct}% of the path</span>
+          </div>
+          <div className="journey-belt">
+            <span className="belt-name" style={{ color: belt.color }}>
+              {belt.name} belt
+            </span>
+            <span className="belt-strip" role="img" aria-label="Belt progress">
+              <span className="belt-strip-fill" style={{ width: `${belt.progress * 100}%`, background: belt.color }} />
+            </span>
+            <span className="journey-belt-next">
+              {belt.next ? `${belt.next.threshold - solvedCount} to ${belt.next.name}` : 'max rank'}
+            </span>
+          </div>
         </div>
+
+        <JourneyBar mastery={mastery} total={total} />
+        <div className="journey-legend">
+          {MASTERY_ORDER.map((k) => (
+            <span className="journey-legend-item" key={k}>
+              <span className={`journey-dot seg-${k}`} aria-hidden="true" />
+              {mastery[k]} {MASTERY_LABEL[k]}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      <div className="stat-grid">
         <div className="stat-tile">
           <div className="v">🔥 {streak}</div>
           <div className="l">day streak</div>
         </div>
         <div className="stat-tile">
-          <div className="v" style={{ color: belt.color }}>
-            {belt.name}
-          </div>
-          <div className="l">belt rank</div>
+          <div className="v">{mastery.mastered}</div>
+          <div className="l">mastered</div>
         </div>
         <div className="stat-tile">
           <div className="v">{dueCount}</div>
           <div className="l">reviews due</div>
         </div>
+        <div className="stat-tile">
+          <div className="v">{mockStats.count}</div>
+          <div className="l">mock interviews</div>
+        </div>
       </div>
 
-      <h2 style={{ margin: '20px 0 8px' }}>Attendance</h2>
+      <h2 style={{ margin: '22px 0 8px' }}>Attendance</h2>
       <Calendar progress={progress} />
 
-      <h2 style={{ margin: '22px 0 8px' }}>Mastery</h2>
-      <div className="mastery-row">
-        <span className="pill pill-new">{mastery.new} new</span>
-        <span className="pill pill-learning">{mastery.learning} learning</span>
-        <span className="pill pill-reviewing">{mastery.reviewing} reviewing</span>
-        <span className="pill pill-mastered">{mastery.mastered} mastered</span>
-      </div>
+      <h2 style={{ margin: '22px 0 8px' }}>Progress by topic</h2>
+      <ProgressRows rows={byTopic} />
 
       <h2 style={{ margin: '22px 0 8px' }}>
         Mock interviews <span className="count">timed, no hints — the real test</span>
@@ -152,27 +202,17 @@ export default function Stats({ questions, progress }) {
         </>
       )}
 
-      <h2 style={{ margin: '22px 0 8px' }}>Solves per track</h2>
-      <BarChart rows={byTrack} />
-
-      <h2 style={{ margin: '22px 0 8px' }}>Solves per pattern</h2>
-      <BarChart rows={byPattern} />
-
       <h2 style={{ margin: '22px 0 8px' }}>
         Where you slip <span className="count">{totalMistakes} wrong submits total</span>
       </h2>
       {troublesome.length === 0 ? (
         <p style={{ color: 'var(--text-dim)' }}>No mistakes logged yet — they&apos;ll show here.</p>
       ) : (
-        <div>
+        <div className="slip-list">
           {troublesome.map(({ q, mistakes }) => (
-            <div className="bar-row" key={q.id}>
-              <span className="bar-label" style={{ width: 200 }}>
-                {q.title}
-              </span>
-              <span className="bar-n" style={{ color: 'var(--crimson)' }}>
-                ✗ {mistakes}
-              </span>
+            <div className="slip-row" key={q.id}>
+              <span className="slip-title">{q.title}</span>
+              <span className="slip-n">✗ {mistakes}</span>
             </div>
           ))}
         </div>
