@@ -46,6 +46,10 @@ node to open its questions; the **📋 Browse** tab shows the same syllabus as a
 **Arrays & Hashing → Two Pointers → Sliding Window → Stack → Binary Search → Linked List →
 Trees → Heap → Backtracking → Graphs → Dynamic Programming → Greedy → Intervals → Bits.**
 
+Keep the **🧩 Patterns** page (in the header) open beside you — it holds the reusable code
+template for each of these, plus how to recognise which one a problem needs. Interviews are
+pattern recognition; memorise the templates so the recognition is all that's left.
+
 - The first four categories are ~60% of what you'll actually be asked. Over-learn them.
 - **Trees and Graphs** are the heart of a Google onsite — DFS, BFS, and "is there a cycle."
 - **Dynamic Programming** is the scariest but most learnable: every DP is "define the state,

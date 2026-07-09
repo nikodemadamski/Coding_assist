@@ -66,6 +66,16 @@ try {
   page.on('pageerror', (err) => pageErrors.push(String(err)));
 
   await page.goto(BASE);
+
+  // ---- first-run onboarding: shown once, then remembered ----
+  await page.locator('.onboard').waitFor({ timeout: 5000 });
+  check((await page.locator('.onboard-dot').count()) >= 3, 'first run shows a multi-step onboarding');
+  await page.locator('.onboard .btn-primary').click(); // Next
+  await page.locator('.onboard-skip').click(); // skip the rest
+  check((await page.locator('.onboard').count()) === 0, 'onboarding can be dismissed');
+  await page.reload();
+  check((await page.locator('.onboard').count()) === 0, 'onboarding does not reappear after dismissal');
+
   check(await page.locator('.header-logo').isVisible(), 'app loads with header');
 
   // ---- the home page IS the roadmap now ----
@@ -442,6 +452,38 @@ try {
   check(true, 'drill completes after re-clearing the miss');
   await page.locator('.session-done button', { hasText: 'Back to the dojo' }).click();
 
+  // ---- Patterns reference (templates you must know) ----
+  await page.locator('.icon-btn', { hasText: 'Patterns' }).click();
+  check((await page.locator('.pattern-card').count()) >= 12, 'Patterns page lists the core patterns');
+  await page.locator('.pattern-card-head', { hasText: 'Hashing' }).click();
+  check(
+    (await page.locator('.pattern-template').first().innerText()).includes('seen'),
+    'expanding a pattern shows its code template'
+  );
+  check(
+    (await page.locator('.pattern-complexity').first().innerText()).includes('O('),
+    'the template shows its complexity'
+  );
+  check(
+    (await page.locator('.pattern-cue').count()) >= 2,
+    'the pattern shows recognition cues'
+  );
+  await page.locator('.pattern-drill-q', { hasText: 'Two Sum' }).first().click();
+  check(
+    (await page.locator('.pv-title').innerText()).includes('Two Sum'),
+    'a drill link opens the problem'
+  );
+  // and the stuck ladder links back to the pattern template
+  for (let i = 0; i < 1; i++) {
+    await page.locator('.stuck-next', { hasText: 'Which pattern' }).click();
+  }
+  await page.locator('.rung-link').click();
+  check(
+    (await page.locator('.pattern-card.open').count()) >= 1,
+    'the stuck ladder jumps straight to this problem\'s pattern template'
+  );
+  await page.locator('.header-logo').click();
+
   // ---- Sensei guide + attendance calendar ----
   await page.locator('.icon-btn', { hasText: 'Sensei' }).click();
   check(await page.locator('.guide-page h1').isVisible(), 'Sensei guide page renders');
@@ -576,6 +618,9 @@ try {
   // ================= mobile (375px) =================
   const mobile = await browser.newPage({ viewport: { width: 375, height: 667 } });
   await mobile.goto(BASE);
+  // dismiss the first-run onboarding (fresh context => it shows again)
+  const mobileSkip = mobile.locator('.onboard-skip');
+  if (await mobileSkip.isVisible().catch(() => false)) await mobileSkip.click();
   const noHScrollMap = await mobile.evaluate(
     () => document.documentElement.scrollWidth <= window.innerWidth
   );

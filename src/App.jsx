@@ -7,10 +7,12 @@ import WarmupView from './components/WarmupView.jsx';
 import MockInterview from './components/MockInterview.jsx';
 import Stats from './components/Stats.jsx';
 import Guide from './components/Guide.jsx';
+import Patterns from './components/Patterns.jsx';
 import RoadmapGraph from './components/RoadmapGraph.jsx';
 import Settings from './components/Settings.jsx';
 import ImportModal from './components/ImportModal.jsx';
 import SearchPalette from './components/SearchPalette.jsx';
+import Onboarding from './components/Onboarding.jsx';
 import { SEED_QUESTIONS } from './data/questions.js';
 import {
   loadProgress,
@@ -28,6 +30,22 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  // First-run orientation: show once, then remember we did.
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    try {
+      return !localStorage.getItem('zoro.onboarded.v1');
+    } catch {
+      return false;
+    }
+  });
+  const dismissOnboarding = useCallback(() => {
+    try {
+      localStorage.setItem('zoro.onboarded.v1', '1');
+    } catch {
+      /* ignore */
+    }
+    setShowOnboarding(false);
+  }, []);
 
   useEffect(() => saveProgress(progress), [progress]);
   useEffect(() => saveCustomQuestions(customQuestions), [customQuestions]);
@@ -67,7 +85,12 @@ export default function App() {
   const currentQuestion =
     view.name === 'problem' ? allQuestions.find((q) => q.id === view.id) : null;
   // Problems remember which list opened them, so Back returns there.
-  const backTo = view.from === 'browse' ? { name: 'browse' } : { name: 'home' };
+  const backTo =
+    view.from === 'browse'
+      ? { name: 'browse' }
+      : view.from === 'patterns'
+        ? { name: 'patterns' }
+        : { name: 'home' };
 
   const handleSolve = useCallback(
     (questionId, opts) => {
@@ -124,6 +147,7 @@ export default function App() {
         onHome={() => setView({ name: 'home' })}
         onSearch={() => setSearchOpen(true)}
         onBrowse={() => setView({ name: 'browse' })}
+        onPatterns={() => setView({ name: 'patterns' })}
         onStats={() => setView({ name: 'stats' })}
         onGuide={() => setView({ name: 'guide' })}
         onSettings={() => setSettingsOpen(true)}
@@ -191,6 +215,7 @@ export default function App() {
             onFail={handleFail}
             onDraft={handleDraft}
             onBack={() => setView(backTo)}
+            onSeePattern={(key) => setView({ name: 'patterns', focusKey: key })}
           />
         )}
         {view.name === 'problem' && !currentQuestion && (
@@ -200,6 +225,14 @@ export default function App() {
               Back to the dojo
             </button>
           </div>
+        )}
+        {view.name === 'patterns' && (
+          <Patterns
+            questions={allQuestions}
+            progress={progress}
+            focusKey={view.focusKey}
+            onOpenQuestion={(id) => setView({ name: 'problem', id, from: 'patterns' })}
+          />
         )}
         {view.name === 'stats' && <Stats questions={allQuestions} progress={progress} />}
         {view.name === 'guide' && <Guide />}
@@ -230,6 +263,7 @@ export default function App() {
           onClose={() => setSearchOpen(false)}
         />
       )}
+      {showOnboarding && <Onboarding onDone={dismissOnboarding} />}
     </div>
   );
 }

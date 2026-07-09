@@ -117,6 +117,14 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
   scales to fit any screen, phone included. Clicking a topic pops up its question list;
   click any question to open it. The daily loop (reviews due, Continue the path, Warm-up,
   Drill) sits right on top. The classic list view lives in the **📋 Browse** tab.
+- **🧩 Patterns reference** (header): the "templates you must know" cheat-sheet. One card per
+  algorithm pattern — how to *recognise* it, the recognition cues, the reusable code skeleton,
+  its complexity, and links to the problems in your bank that drill it. Every template is
+  machine-checked to be valid Python syntax. The Stuck ladder's "which pattern is this?" rung
+  links straight here.
+- **First-run onboarding**: a brand-new user gets a short, skippable four-card orientation —
+  this is the map, follow "Your next step", here's what to do when stuck, and the tools for
+  when you're ready to be tested — then it gets out of the way (shown once).
 - **🧗 Stuck ladder** (on every problem): the answer to "I'm stuck, do I go to YouTube?" —
   no. Climb one rung at a time instead: *which pattern is this?* (recognise the technique and
   what to reach for) → *a nudge* → *the plan in plain English* → *the code* (brute force →

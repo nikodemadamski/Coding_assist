@@ -44,6 +44,8 @@ export default function ProblemView({
   mockMode = false,
   headerExtra = null,
   onSubmitReport = null,
+  // jump to the Patterns reference for this problem's pattern (optional)
+  onSeePattern = null,
 }) {
   const [code, setCode] = useState(
     () => progress.drafts[question.id] ?? question.starter_code ?? ''
@@ -282,7 +284,7 @@ export default function ProblemView({
               </ol>
             </div>
           ) : (
-            <StuckLadder question={question} onVisualize={openVisualizer} />
+            <StuckLadder question={question} onVisualize={openVisualizer} onSeePattern={onSeePattern} />
           )}
           {!mockMode && question.insight && (
             <details className="go-deeper">

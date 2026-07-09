@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Markdown from './Markdown.jsx';
 import Approaches from './Approaches.jsx';
 import { patternHint } from '../data/patternHints.js';
+import { categoryKeyOf } from '../data/roadmap.js';
 
 // The "I'm stuck" ladder. Instead of one hint and then the whole solution
 // spoiler, you climb one rung at a time — each reveals a little more, so you
@@ -9,7 +10,7 @@ import { patternHint } from '../data/patternHints.js';
 //   1. which pattern is this?   2. a nudge   3. the plan   4. the code
 // A YouTube search link waits at the very bottom, for when you truly want to
 // hear someone else explain it.
-export default function StuckLadder({ question, onVisualize }) {
+export default function StuckLadder({ question, onVisualize, onSeePattern }) {
   const hint = patternHint(question);
 
   const rungs = [
@@ -26,6 +27,14 @@ export default function StuckLadder({ question, onVisualize }) {
           <p>
             <strong>Reach for:</strong> {hint.reach}
           </p>
+          {onSeePattern && (
+            <button
+              className="rung-link"
+              onClick={() => onSeePattern(categoryKeyOf(question.pattern))}
+            >
+              🧩 See the full pattern template →
+            </button>
+          )}
         </div>
       ),
     },

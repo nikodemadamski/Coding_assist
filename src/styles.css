@@ -2267,6 +2267,223 @@ details.hint[open] summary {
   flex-wrap: wrap;
 }
 
+/* ── first-run onboarding ───────────────────────────────────────────────── */
+
+.onboard-backdrop {
+  z-index: 50;
+}
+.onboard {
+  position: relative;
+  width: min(460px, 92vw);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
+  padding: 30px 28px 22px;
+  text-align: center;
+  animation: onboard-in 0.2s ease-out;
+}
+@keyframes onboard-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+.onboard-skip {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.onboard-skip:hover {
+  color: var(--text);
+}
+.onboard-icon {
+  font-size: 2.6rem;
+  margin-bottom: 8px;
+}
+.onboard-title {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  margin: 0 0 10px;
+}
+.onboard-body {
+  color: var(--text-dim);
+  line-height: 1.55;
+  margin: 0 0 20px;
+  font-size: 0.95rem;
+}
+.onboard-dots {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  margin-bottom: 18px;
+}
+.onboard-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--line);
+  transition: background 0.15s, transform 0.15s;
+}
+.onboard-dot.active {
+  background: var(--gold);
+  transform: scale(1.25);
+}
+.onboard-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* ── patterns reference ─────────────────────────────────────────────────── */
+
+.patterns .patterns-intro {
+  color: var(--text-dim);
+  max-width: 720px;
+  margin: 6px 0 18px;
+  line-height: 1.55;
+}
+.pattern-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 860px;
+}
+.pattern-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  overflow: hidden;
+}
+.pattern-card.open {
+  border-color: color-mix(in srgb, var(--gold) 45%, var(--line));
+}
+.pattern-card-head {
+  display: grid;
+  grid-template-columns: minmax(140px, auto) 1fr auto;
+  gap: 4px 14px;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font: inherit;
+  padding: 14px 16px;
+  cursor: pointer;
+}
+.pattern-card-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.08rem;
+}
+.pattern-card-when {
+  color: var(--text-dim);
+  font-size: 0.86rem;
+}
+.pattern-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.pattern-card-count {
+  font-family: var(--font-code);
+  font-size: 0.78rem;
+  color: var(--jade);
+}
+.pattern-card-toggle {
+  font-family: var(--font-code);
+  font-size: 1.2rem;
+  color: var(--gold);
+  width: 16px;
+  text-align: center;
+}
+.pattern-card-body {
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--line);
+}
+.pattern-cues {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0;
+}
+.pattern-cues-label,
+.pattern-drill-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-dim);
+  margin-right: 4px;
+}
+.pattern-cue {
+  font-size: 0.78rem;
+  padding: 3px 9px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  color: var(--text-dim);
+}
+.pattern-template-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-dim);
+}
+.pattern-complexity {
+  font-family: var(--font-code);
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--gold);
+}
+.pattern-template {
+  background: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-family: var(--font-code);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  white-space: pre;
+  overflow-x: auto;
+  margin: 0;
+}
+.pattern-drill {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+.pattern-drill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pattern-drill-q {
+  font-size: 0.82rem;
+  padding: 5px 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--text);
+  font-family: inherit;
+  cursor: pointer;
+}
+.pattern-drill-q:hover {
+  border-color: var(--gold);
+}
+
 /* ── guided learning layer: why card, constraints, go-deeper ────────────── */
 
 .why-card {
@@ -2507,6 +2724,21 @@ details.hint[open] summary {
 }
 .rung-body p:last-child {
   margin-bottom: 0;
+}
+.rung-link {
+  display: inline-block;
+  margin-top: 6px;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--gold);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-align: left;
+}
+.rung-link:hover {
+  text-decoration: underline;
 }
 .stuck-youtube {
   display: block;
