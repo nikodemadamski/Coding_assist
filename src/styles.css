@@ -428,6 +428,11 @@ button {
   padding: 16px;
   overflow-y: auto;
 }
+/* The problem pane is a flex column; without this its children (examples,
+   cards) get shrunk to fit and clip. Let them keep their height and scroll. */
+.pane-problem > * {
+  flex-shrink: 0;
+}
 
 .pane-code {
   display: flex;
@@ -557,8 +562,11 @@ button {
   margin: 8px 0;
   font-family: var(--font-code);
   font-size: 0.83rem;
+  line-height: 1.55;
+  /* Wrap long example lines instead of becoming a scroll container — a scroll
+     container in a flex column gets vertically squished and clips its text. */
   white-space: pre-wrap;
-  overflow-x: auto;
+  overflow-wrap: anywhere;
 }
 
 details.hint {

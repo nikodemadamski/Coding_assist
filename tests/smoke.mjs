@@ -109,6 +109,9 @@ try {
   );
 
   // ---- premium learning layer on the problem ----
+  check((await page.locator('.example-block').count()) >= 2, 'problem shows multiple worked examples');
+  const exampleHeight = await page.locator('.example-block').first().evaluate((el) => el.clientHeight);
+  check(exampleHeight >= 24, `examples are not squished/clipped (${exampleHeight}px tall)`);
   check(await page.locator('.why-card').isVisible(), 'problem shows a guided "why this one" card');
   check(
     (await page.locator('.constraints li').count()) >= 2,
