@@ -1151,8 +1151,28 @@ const RAW_QUESTIONS = [
   ...NEETCODE_5,
 ];
 
-// Merge the premium learning layer (why / constraints / insight) onto each
-// question by id. Questions without a LEARN entry are passed through untouched.
-export const SEED_QUESTIONS = RAW_QUESTIONS.map((q) =>
-  LEARN[q.id] ? { ...q, ...LEARN[q.id] } : q
-);
+// Questions whose result order is not significant, so a correct answer in a
+// different order still passes:
+//   "deep"  = order is irrelevant at every level (groups, subsets, triplets)
+//   "outer" = a set of items, but each item keeps its own order (permutations,
+//             coordinate pairs, generated strings, "any order" answers)
+const UNORDERED = {
+  'py-group-anagrams': 'deep',
+  'py-three-sum': 'deep',
+  'py-subsets': 'deep',
+  'py-subsets-ii': 'deep',
+  'py-combination-sum': 'deep',
+  'py-permutations': 'outer',
+  'py-palindrome-partition': 'outer',
+  'py-generate-parens': 'outer',
+  'py-pacific-atlantic': 'outer',
+  'py-top-k-frequent': 'outer',
+};
+
+// Merge the premium learning layer (why / constraints / insight) and the
+// order-sensitivity flag onto each question by id.
+export const SEED_QUESTIONS = RAW_QUESTIONS.map((q) => {
+  let out = LEARN[q.id] ? { ...q, ...LEARN[q.id] } : q;
+  if (UNORDERED[q.id]) out = { ...out, unordered: UNORDERED[q.id] };
+  return out;
+});

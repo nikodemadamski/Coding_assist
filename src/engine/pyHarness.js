@@ -13,15 +13,40 @@
 //   other floats rounded to 9 dp, DataFrame -> records, Series -> list,
 //   numpy scalars -> python scalars. Compared via json.dumps(sort_keys=True).
 
+// Common names pre-loaded into the exec namespace so learners don't have to
+// import the usual suspects (defaultdict, Counter, deque, heapq, List, …) —
+// the same convenience LeetCode gives you. Injected into globals rather than
+// prepended to the source, so user line numbers stay correct for tracebacks
+// and the visualizer.
+const PY_PRELUDE = `
+import collections, heapq, bisect, math, itertools, functools, re, string
+from collections import defaultdict, Counter, deque, OrderedDict
+from functools import lru_cache, reduce
+from itertools import permutations, combinations, combinations_with_replacement, product, accumulate, chain
+from typing import List, Optional, Dict, Tuple, Set
+_PRELUDE = {
+    "collections": collections, "heapq": heapq, "bisect": bisect, "math": math,
+    "itertools": itertools, "functools": functools, "re": re, "string": string,
+    "defaultdict": defaultdict, "Counter": Counter, "deque": deque, "OrderedDict": OrderedDict,
+    "lru_cache": lru_cache, "cache": getattr(functools, "cache", lru_cache), "reduce": reduce,
+    "permutations": permutations, "combinations": combinations,
+    "combinations_with_replacement": combinations_with_replacement,
+    "product": product, "accumulate": accumulate, "chain": chain,
+    "inf": math.inf, "gcd": math.gcd,
+    "List": List, "Optional": Optional, "Dict": Dict, "Tuple": Tuple, "Set": Set,
+}
+`;
+
 export const PY_HARNESS = `
 import json, io, sys, copy, traceback
 from contextlib import redirect_stdout
-
+${PY_PRELUDE}
 payload = json.loads(PAYLOAD_JSON)
 user_code = payload["code"]
 fn_name = payload["function_name"]
 tests = payload["tests"]
 track = payload["track"]
+unordered = payload.get("unordered")
 
 def _convert_arg(a):
     if track == "pandas" and isinstance(a, dict) and set(a.keys()) == {"__df__"}:
@@ -63,8 +88,30 @@ def _normalize(v):
         return round(v, 9)
     return v
 
+def _sort_key(x):
+    return json.dumps(x, sort_keys=True, default=str)
+
+def _deep_sort(v):
+    # Recursively sort every list so order never matters at any depth — for
+    # "group these / return all subsets/combinations" answers where neither the
+    # outer order nor the order inside each group is significant.
+    if isinstance(v, list):
+        return sorted((_deep_sort(x) for x in v), key=_sort_key)
+    if isinstance(v, dict):
+        return {k: _deep_sort(x) for k, x in v.items()}
+    return v
+
 def _canon(v):
-    return json.dumps(_normalize(v), sort_keys=True, default=str)
+    n = _normalize(v)
+    # A question can opt out of order-sensitivity:
+    #   "deep"  -> order is irrelevant at every level (group anagrams, subsets)
+    #   "outer" -> the collection is a set but each item keeps its order
+    #              (permutations, coordinate pairs, generated strings)
+    if unordered in (True, "deep"):
+        n = _deep_sort(n)
+    elif unordered == "outer" and isinstance(n, list):
+        n = sorted(n, key=_sort_key)
+    return json.dumps(n, sort_keys=True, default=str)
 
 def _short_repr(v, limit=70):
     r = repr(v)
@@ -91,7 +138,7 @@ def _user_error():
 
 outcome = {"status": "ok", "results": []}
 
-ns = {}
+ns = dict(_PRELUDE)
 try:
     exec(compile(user_code, "<string>", "exec"), ns)
 except SyntaxError:
@@ -149,7 +196,7 @@ json.dumps(outcome)
 // a dict becomes {"__dict__":[[k,v],...]} (order preserved).
 export const PY_TRACE_HARNESS = `
 import sys, json, copy, traceback, ast
-
+${PY_PRELUDE}
 payload = json.loads(PAYLOAD_JSON)
 user_code = payload["code"]
 fn_name = payload["function_name"]
@@ -342,7 +389,7 @@ def _tracer(frame, event, arg):
     return _tracer
 
 outcome = {"status": "ok"}
-ns = {}
+ns = dict(_PRELUDE)
 try:
     exec(compile(user_code, "<viz>", "exec"), ns)
     fn = ns.get(fn_name)
@@ -410,5 +457,6 @@ export function buildPayload(question, code) {
     function_name: question.function_name,
     tests: question.tests,
     track: question.track,
+    unordered: question.unordered,
   };
 }

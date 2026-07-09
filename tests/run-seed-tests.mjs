@@ -77,6 +77,34 @@ console.log('\nSabotage checks (a broken solution must NOT pass):');
   say(r2.errorType === 'sql', 'sql error surfaced', r2.message);
 }
 
+// ---- order-insensitive answers + default imports ----
+console.log('\nOrder-insensitive answers & default imports:');
+{
+  // Group anagrams keyed by letter-count tuple: groups AND members come out in
+  // a different order than the reference — must still pass (and defaultdict
+  // needs no import).
+  const q = SEED_QUESTIONS.find((x) => x.id === 'py-group-anagrams');
+  const reordered =
+    'def group_anagrams(strs):\n    res = defaultdict(list)\n    for s in strs:\n        count = [0] * 26\n        for c in s:\n            count[ord(c) - ord("a")] += 1\n        res[tuple(count)].append(s)\n    return list(res.values())';
+  const r = await runPy(q, reordered);
+  say(r.allPassed, 'group anagrams in any order accepted (and defaultdict needs no import)', r.allPassed ? '' : reportDetail(r));
+  const rw = await runPy(q, 'def group_anagrams(strs):\n    return [strs]');
+  say(!rw.allPassed, '  ↳ but a wrong grouping is still rejected');
+}
+{
+  // Counter / heapq available without an import line.
+  const q = SEED_QUESTIONS.find((x) => x.id === 'py-valid-anagram');
+  const r = await runPy(q, 'def is_anagram(s, t):\n    return Counter(s) == Counter(t)');
+  say(r.allPassed, 'Counter is available without importing it', r.allPassed ? '' : reportDetail(r));
+}
+{
+  // "outer" mode must NOT collapse distinct permutations into one.
+  const q = SEED_QUESTIONS.find((x) => x.id === 'py-permutations');
+  const dup = 'def permutations(nums):\n    return [nums[:] for _ in range(6)]';
+  const r = await runPy(q, dup);
+  say(!r.allPassed, 'permutations still needs the correct DISTINCT set (outer, not deep)');
+}
+
 console.log(
   failures === 0
     ? `\nAll green — ${SEED_QUESTIONS.length} questions verified.`

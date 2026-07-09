@@ -36,6 +36,12 @@ export function validateQuestion(q, { existingIds = [], minTests = 1 } = {}) {
       (Array.isArray(q.constraints) && q.constraints.every((c) => typeof c === 'string')),
     'constraints must be an array of strings if present'
   );
+  // unordered relaxes result-order sensitivity: true/"deep" (order irrelevant
+  // at every level) or "outer" (a set of items that each keep their order).
+  need(
+    q.unordered === undefined || q.unordered === true || q.unordered === 'deep' || q.unordered === 'outer',
+    'unordered must be true, "deep", or "outer" if present'
+  );
 
   // approaches is optional: an ordered list of solutions from brute-force to
   // optimal, each { name, complexity, code, note? }. Every code must actually
