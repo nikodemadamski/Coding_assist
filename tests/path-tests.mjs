@@ -2,8 +2,18 @@
 // question exactly once, new-question practice served in path order.
 import { SEED_QUESTIONS } from '../src/data/questions.js';
 import { PATH, ROADMAP, pathStep, byPathOrder, nextOnPath } from '../src/data/roadmap.js';
-import { GRAPH_NODES, GRAPH_EDGES, GRAPH_W, GRAPH_H, NODE_W, NODE_H } from '../src/data/roadmapGraph.js';
+import {
+  GRAPH_NODES,
+  GRAPH_EDGES,
+  GRAPH_W,
+  GRAPH_H,
+  NODE_W,
+  NODE_H,
+  OFF_MAP_CATEGORIES,
+} from '../src/data/roadmapGraph.js';
 import { patternHint } from '../src/data/patternHints.js';
+import { LEARN } from '../src/data/learn.js';
+import { validateQuestion } from '../src/data/validateQuestion.js';
 import { createSession } from '../src/state/practiceSession.js';
 import { EMPTY_PROGRESS } from '../src/state/storage.js';
 
@@ -88,13 +98,18 @@ console.log('Learning-path tests\n');
   );
 }
 
-// ---- the visual roadmap graph stays in lockstep with the categories ----
+// ---- the visual roadmap graph stays in lockstep with the ALGORITHM categories ----
+// pandas/sql/other live off the map now (separate data tracks + imports).
 {
-  const catKeys = new Set(ROADMAP.map((c) => c.key));
+  const algoKeys = ROADMAP.map((c) => c.key).filter((k) => !OFF_MAP_CATEGORIES.includes(k));
   const nodeKeys = new Set(GRAPH_NODES.map((n) => n.key));
   check(
-    GRAPH_NODES.length === ROADMAP.length && [...catKeys].every((k) => nodeKeys.has(k)),
-    `graph has a node for every roadmap category (${GRAPH_NODES.length}/${ROADMAP.length})`
+    GRAPH_NODES.length === algoKeys.length && algoKeys.every((k) => nodeKeys.has(k)),
+    `graph has a node for every algorithm category (${GRAPH_NODES.length}/${algoKeys.length})`
+  );
+  check(
+    OFF_MAP_CATEGORIES.every((k) => !nodeKeys.has(k)),
+    'pandas / sql / other are NOT on the algorithm map'
   );
   check(nodeKeys.size === GRAPH_NODES.length, 'no duplicate graph nodes');
   const badEdges = GRAPH_EDGES.filter(([a, b]) => !nodeKeys.has(a) || !nodeKeys.has(b));
@@ -125,6 +140,23 @@ console.log('Learning-path tests\n');
     return h.reach.includes('def ') || h.tell.includes('def ');
   });
   check(leaks.length === 0, 'pattern nudges never contain solution code');
+}
+
+// ---- the premium learning layer merges cleanly onto real questions ----
+{
+  const ids = new Set(SEED_QUESTIONS.map((q) => q.id));
+  const orphans = Object.keys(LEARN).filter((id) => !ids.has(id));
+  check(orphans.length === 0, 'every LEARN entry targets a real question', orphans.join(', '));
+
+  // the merged fields actually land on the question objects
+  const twoSum = SEED_QUESTIONS.find((q) => q.id === 'py-two-sum');
+  check(!!twoSum.why && !!twoSum.insight && Array.isArray(twoSum.constraints), 'why/insight/constraints merge onto Two Sum');
+
+  // and every enriched question still passes the schema (existing ids allowed)
+  const bad = SEED_QUESTIONS.filter((q) => LEARN[q.id]).flatMap((q) =>
+    validateQuestion(q, { existingIds: [], minTests: 1 }).map((e) => `${q.id}: ${e}`)
+  );
+  check(bad.length === 0, 'enriched questions still pass validation', bad.slice(0, 3).join(' | '));
 }
 
 console.log(failures === 0 ? '\nAll path tests green.' : `\n${failures} FAILURE(S).`);

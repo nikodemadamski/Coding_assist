@@ -27,6 +27,16 @@ export function validateQuestion(q, { existingIds = [], minTests = 1 } = {}) {
   // approach is optional, but if present it must be a string
   need(q.approach === undefined || typeof q.approach === 'string', 'approach must be a string if present');
 
+  // Optional premium-learning fields: why (guided "why this matters"), an
+  // insight (unlockable "go deeper"), and constraints (a list of strings).
+  need(q.why === undefined || typeof q.why === 'string', 'why must be a string if present');
+  need(q.insight === undefined || typeof q.insight === 'string', 'insight must be a string if present');
+  need(
+    q.constraints === undefined ||
+      (Array.isArray(q.constraints) && q.constraints.every((c) => typeof c === 'string')),
+    'constraints must be an array of strings if present'
+  );
+
   // approaches is optional: an ordered list of solutions from brute-force to
   // optimal, each { name, complexity, code, note? }. Every code must actually
   // solve the question (verified by the test gate).

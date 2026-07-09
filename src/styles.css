@@ -1492,6 +1492,52 @@ details.hint[open] summary {
   margin: 0 0 10px;
 }
 
+/* data tracks — pandas & SQL, kept separate from the algorithm map */
+.data-tracks {
+  margin-top: 18px;
+}
+.data-tracks-label {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+.data-tracks-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.data-track-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 18px;
+  cursor: pointer;
+  color: var(--text);
+  font: inherit;
+  transition: border-color 0.15s, transform 0.1s;
+}
+.data-track-card:hover {
+  border-color: var(--gold);
+  transform: translateY(-1px);
+}
+.data-track-icon {
+  font-size: 1.4rem;
+}
+.data-track-name {
+  font-weight: 600;
+}
+.data-track-count {
+  font-family: var(--font-code);
+  font-size: 0.8rem;
+  color: var(--jade);
+}
+
 /* topic popup: the category's question list */
 .cat-modal {
   max-width: min(680px, 100%);
@@ -2211,6 +2257,125 @@ details.hint[open] summary {
   gap: 10px;
   margin-top: 20px;
   flex-wrap: wrap;
+}
+
+/* ── guided learning layer: why card, constraints, go-deeper ────────────── */
+
+.why-card {
+  margin: 14px 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--jade) 35%, transparent);
+  background: color-mix(in srgb, var(--jade) 8%, transparent);
+}
+.why-card-label {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--jade);
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+}
+.why-card p {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.constraints {
+  margin-top: 16px;
+}
+.constraints h3 {
+  margin-bottom: 6px;
+}
+.constraints ul {
+  margin: 0;
+  padding-left: 20px;
+}
+.constraints li {
+  font-family: var(--font-code);
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  line-height: 1.7;
+}
+
+.go-deeper {
+  margin-top: 14px;
+  border: 1px solid color-mix(in srgb, var(--gold) 30%, var(--line));
+  border-radius: 10px;
+  padding: 4px 14px;
+  background: color-mix(in srgb, var(--gold) 5%, transparent);
+}
+.go-deeper > summary {
+  cursor: pointer;
+  padding: 8px 0;
+  font-weight: 600;
+  color: var(--gold);
+  list-style: none;
+}
+.go-deeper > summary::-webkit-details-marker {
+  display: none;
+}
+.go-deeper-body {
+  padding-bottom: 10px;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+/* guided next-step card on the map home */
+.next-step-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--jade);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  color: var(--text);
+  font: inherit;
+  transition: border-color 0.15s, transform 0.1s;
+}
+.next-step-card:hover {
+  border-color: var(--jade);
+  transform: translateY(-1px);
+}
+.next-step-head {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.next-step-kicker {
+  font-family: var(--font-code);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--jade);
+}
+.next-step-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.next-step-why {
+  grid-column: 1 / -1;
+  color: var(--text-dim);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+.next-step-cue {
+  font-family: var(--font-code);
+  font-size: 0.8rem;
+  color: var(--jade);
+  white-space: nowrap;
 }
 
 /* ── stuck ladder ───────────────────────────────────────────────────────── */

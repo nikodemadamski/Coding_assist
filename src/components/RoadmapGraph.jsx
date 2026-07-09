@@ -157,6 +157,21 @@ export default function RoadmapGraph({
         </button>
       </div>
 
+      {/* Guided next step: what to do next, and why it's worth doing */}
+      {nextUp && (
+        <button className="next-step-card" onClick={() => onOpenQuestion(nextUp.id)}>
+          <span className="next-step-head">
+            <span className="next-step-kicker">Your next step</span>
+            <span className="next-step-title">
+              {pathStep(nextUp.id) && <span className="step-num">{pathStep(nextUp.id)}</span>}
+              {nextUp.title}
+            </span>
+          </span>
+          {nextUp.why && <span className="next-step-why">{nextUp.why}</span>}
+          <span className="next-step-cue">Open →</span>
+        </button>
+      )}
+
       <p className="map-hint">
         Learn top to bottom — arrows mean &ldquo;learn this pattern first.&rdquo; Click a topic
         to open its questions.
@@ -223,6 +238,31 @@ export default function RoadmapGraph({
                 <span className="graph-node-label">{label(n.key)}</span>
                 <span className="graph-node-bar">
                   <span className="graph-node-fill" style={{ width: `${pct}%` }} />
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Data tracks — separate entities, not woven into the algorithm map */}
+      <div className="data-tracks">
+        <span className="data-tracks-label">Data tracks — practised on their own, off the algorithm path</span>
+        <div className="data-tracks-row">
+          {[
+            { key: 'pandas', icon: '🐼', name: 'pandas' },
+            { key: 'sql', icon: '🗄', name: 'SQL' },
+          ].map((t) => {
+            const st = stats[t.key] || { total: 0, solved: 0 };
+            if (st.total === 0) return null;
+            return (
+              <button key={t.key} className="data-track-card" onClick={() => onBrowse(t.key)}>
+                <span className="data-track-icon" aria-hidden="true">
+                  {t.icon}
+                </span>
+                <span className="data-track-name">{t.name}</span>
+                <span className="data-track-count">
+                  {st.solved}/{st.total}
                 </span>
               </button>
             );

@@ -104,8 +104,16 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
   you nailed, what you typed vs. the right answer, and your slowest answers to drill.
   Answer checking is forgiving about spacing and quote style, and every answer in the bank
   is machine-verified to compile as real Python. Best streaks are saved per level.
-- **🗺 Visual roadmap — the home page**: a NeetCode-style dependency tree of every topic
-  with a progress bar per node — arrows mean "learn this pattern before that one". The map
+- **Guided, premium problem pages**: every foundational problem carries a **🎯 Why this one**
+  card (what you learn and why it matters), a proper **Constraints** list, and an unlockable
+  **💎 Go deeper** insight — the transferable idea, why interviewers use it, and where else it
+  shows up — so you understand *why* a technique works, not just that it does. The home screen
+  leads with a guided **"Your next step"** card that names the next question and why it's worth
+  doing. (All wording is original — no problem text is copied from LeetCode/NeetCode.)
+- **🗺 Visual roadmap — the home page**: a NeetCode-style dependency tree of the **algorithm**
+  path (pandas and SQL are separate **data tracks**, surfaced beside the map rather than woven
+  into it). Every topic node has a progress bar — arrows mean "learn this pattern before that
+  one". The map
   scales to fit any screen, phone included. Clicking a topic pops up its question list;
   click any question to open it. The daily loop (reviews due, Continue the path, Warm-up,
   Drill) sits right on top. The classic list view lives in the **📋 Browse** tab.

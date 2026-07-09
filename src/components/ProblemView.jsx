@@ -245,6 +245,12 @@ export default function ProblemView({
       <div className="pv-body">
         <section className={`pv-pane pane-problem ${tab === 'problem' ? 'visible' : ''}`}>
           <Markdown text={question.description} />
+          {!mockMode && question.why && (
+            <div className="why-card">
+              <span className="why-card-label">🎯 Why this one</span>
+              <Markdown text={question.why} />
+            </div>
+          )}
           {question.examples?.length > 0 && (
             <>
               <h3 style={{ marginTop: 16 }}>Examples</h3>
@@ -254,6 +260,16 @@ export default function ProblemView({
                 </div>
               ))}
             </>
+          )}
+          {question.constraints?.length > 0 && (
+            <div className="constraints">
+              <h3>Constraints</h3>
+              <ul>
+                {question.constraints.map((c, i) => (
+                  <li key={i}>{c}</li>
+                ))}
+              </ul>
+            </div>
           )}
           {mockMode ? (
             <div className="mock-reminder">
@@ -267,6 +283,14 @@ export default function ProblemView({
             </div>
           ) : (
             <StuckLadder question={question} onVisualize={openVisualizer} />
+          )}
+          {!mockMode && question.insight && (
+            <details className="go-deeper">
+              <summary>💎 Go deeper — why this works &amp; why it&apos;s worth knowing</summary>
+              <div className="go-deeper-body">
+                <Markdown text={question.insight} />
+              </div>
+            </details>
           )}
         </section>
 

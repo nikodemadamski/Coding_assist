@@ -80,6 +80,24 @@ try {
   );
   check(fitsViewport, 'the whole map fits the viewport width (scaled, no scroll box)');
 
+  // pandas & SQL are OFF the algorithm map — separate data tracks below it
+  check(
+    (await page.locator('.graph-node', { hasText: 'pandas' }).count()) === 0 &&
+      (await page.locator('.graph-node', { hasText: 'SQL' }).count()) === 0,
+    'pandas and SQL are not nodes on the algorithm map'
+  );
+  check(
+    (await page.locator('.data-track-card').count()) >= 2,
+    'pandas and SQL appear as separate data-track cards'
+  );
+
+  // guided next step: what's next AND why it's worth doing
+  check(await page.locator('.next-step-card').isVisible(), 'a guided "your next step" card is shown');
+  check(
+    (await page.locator('.next-step-why').innerText()).length > 20,
+    'the next-step card explains why the question matters'
+  );
+
   // clicking a topic opens its question list as a popup
   await page.locator('.graph-node', { hasText: 'Arrays & Hashing' }).click();
   await page.locator('.cat-modal').waitFor({ timeout: 5000 });
@@ -88,6 +106,22 @@ try {
   check(
     (await page.locator('.pv-title').innerText()).includes('Two Sum'),
     'clicking a question in the popup opens it'
+  );
+
+  // ---- premium learning layer on the problem ----
+  check(await page.locator('.why-card').isVisible(), 'problem shows a guided "why this one" card');
+  check(
+    (await page.locator('.constraints li').count()) >= 2,
+    'problem shows a proper Constraints list'
+  );
+  check(
+    (await page.locator('.go-deeper').count()) === 1,
+    'an unlockable "go deeper" insight is offered'
+  );
+  await page.locator('.go-deeper > summary').click();
+  check(
+    (await page.locator('.go-deeper-body').innerText()).toLowerCase().includes('hash'),
+    'go-deeper reveals the transferable insight'
   );
   await page.locator('.icon-btn[aria-label="Back to problem list"]').click();
   check((await page.locator('.graph-node').count()) >= 15, 'Back returns to the map it came from');

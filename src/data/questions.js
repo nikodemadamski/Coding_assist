@@ -1138,8 +1138,9 @@ import { NEETCODE_2 } from './neetcode2.js';
 import { NEETCODE_3 } from './neetcode3.js';
 import { NEETCODE_4 } from './neetcode4.js';
 import { NEETCODE_5 } from './neetcode5.js';
+import { LEARN } from './learn.js';
 
-export const SEED_QUESTIONS = [
+const RAW_QUESTIONS = [
   ...PYTHON_QUESTIONS,
   ...PANDAS_QUESTIONS,
   ...SQL_QUESTIONS,
@@ -1149,3 +1150,9 @@ export const SEED_QUESTIONS = [
   ...NEETCODE_4,
   ...NEETCODE_5,
 ];
+
+// Merge the premium learning layer (why / constraints / insight) onto each
+// question by id. Questions without a LEARN entry are passed through untouched.
+export const SEED_QUESTIONS = RAW_QUESTIONS.map((q) =>
+  LEARN[q.id] ? { ...q, ...LEARN[q.id] } : q
+);
