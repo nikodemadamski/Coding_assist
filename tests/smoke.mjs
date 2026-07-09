@@ -201,6 +201,13 @@ try {
     'editor shows the language/runtime badge'
   );
 
+  // ---- focus mode: hide the problem, widen the editor (desktop) ----
+  check(await page.locator('.pane-problem').isVisible(), 'problem pane visible by default');
+  await page.locator('.pv-focus-toggle').click();
+  check(!(await page.locator('.pane-problem').isVisible()), 'Focus hides the problem pane');
+  await page.locator('.pv-focus-toggle').click();
+  check(await page.locator('.pane-problem').isVisible(), 'toggling Focus brings the problem back');
+
   // ---- the "stuck ladder": climb rung by rung, code is the last rung ----
   check(await page.locator('.stuck').isVisible(), 'a stuck-when-you-need-it ladder is shown');
   check(

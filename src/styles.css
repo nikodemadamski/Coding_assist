@@ -497,6 +497,31 @@ button {
     overflow-y: auto;
     overscroll-behavior: contain;
   }
+
+  /* Focus mode: hide the problem, give the editor + results the full width. */
+  .problem-view.focus-code .pv-body {
+    grid-template-columns: 1fr;
+  }
+  .problem-view.focus-code .pane-problem {
+    display: none;
+  }
+  .problem-view.focus-code .pane-code {
+    grid-column: 1;
+  }
+  .problem-view.focus-code .pane-result {
+    grid-column: 1;
+  }
+}
+
+/* the Focus toggle only makes sense on the desktop split layout */
+.pv-focus-toggle {
+  display: none;
+}
+@media (min-width: 900px) {
+  .pv-focus-toggle {
+    display: inline-flex;
+    align-items: center;
+  }
 }
 
 /* problem prose */
@@ -628,10 +653,13 @@ details.hint[open] summary {
 
 /* ── results ───────────────────────────────────────────────────────────── */
 
+.result-head {
+  margin-bottom: 12px;
+}
 .result-summary {
   font-family: var(--font-display);
   font-size: 1.05rem;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .result-summary.pass {
@@ -646,57 +674,126 @@ details.hint[open] summary {
   color: var(--gold);
 }
 
+/* pass-count meter */
+.result-meter {
+  height: 6px;
+  border-radius: 4px;
+  background: var(--panel-2);
+  overflow: hidden;
+}
+.result-meter-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+.result-meter-fill.pass {
+  background: var(--jade);
+}
+.result-meter-fill.fail {
+  background: var(--gold);
+}
+
+/* glanceable per-test dots */
+.test-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+.test-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+.test-dot.pass {
+  background: var(--jade);
+}
+.test-dot.fail {
+  background: var(--crimson);
+}
+
+.result-cheer {
+  color: var(--jade);
+  font-size: 0.88rem;
+  margin-bottom: 12px;
+}
+
 .test-row {
   border: 1px solid var(--line);
   border-radius: 8px;
   margin-bottom: 8px;
   overflow: hidden;
 }
+.test-row.fail {
+  border-color: color-mix(in srgb, var(--crimson) 45%, var(--line));
+}
 
 .test-row-head {
   display: flex;
   gap: 10px;
   align-items: baseline;
-  padding: 7px 12px;
+  padding: 8px 12px;
   font-family: var(--font-code);
   font-size: 0.83rem;
 }
-
+.test-row-mark {
+  font-weight: 700;
+}
+.test-row-n {
+  white-space: nowrap;
+}
+.test-row-call {
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .test-row.pass .test-row-head {
   color: var(--jade);
 }
-
 .test-row.fail .test-row-head {
   color: var(--crimson);
 }
 
 .test-row-detail {
   border-top: 1px solid var(--line);
-  padding: 8px 12px;
+  padding: 10px 12px;
   font-family: var(--font-code);
   font-size: 0.8rem;
   background: var(--ink);
-  overflow-x: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .test-row-detail .lbl {
   color: var(--text-dim);
   display: inline-block;
   min-width: 92px;
+  flex-shrink: 0;
 }
 
 .io-line {
-  margin: 3px 0;
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
 }
 .io-line code {
   background: none;
   padding: 0;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 .io-expected {
   color: var(--jade);
 }
 .io-got {
   color: var(--crimson);
+}
+.io-error code {
+  color: var(--crimson);
+  white-space: pre-wrap;
 }
 
 .stdout-block {

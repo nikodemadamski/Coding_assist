@@ -51,6 +51,7 @@ export default function ProblemView({
     () => progress.drafts[question.id] ?? question.starter_code ?? ''
   );
   const [tab, setTab] = useState('problem');
+  const [focusCode, setFocusCode] = useState(false); // desktop: hide problem, widen editor
   const [report, setReport] = useState(null);
   const [running, setRunning] = useState(false);
   const [statusText, setStatusText] = useState('');
@@ -178,7 +179,7 @@ export default function ProblemView({
           : '';
 
   return (
-    <div className="problem-view">
+    <div className={`problem-view ${focusCode ? 'focus-code' : ''}`}>
       <div className="pv-toolbar">
         <button
           className="icon-btn"
@@ -212,6 +213,14 @@ export default function ProblemView({
         </span>
         <span className={`tag track-${question.track}`}>{question.track}</span>
         <span className={`tag diff-${question.difficulty}`}>{question.difficulty}</span>
+        <button
+          className="icon-btn pv-focus-toggle"
+          onClick={() => setFocusCode((f) => !f)}
+          aria-pressed={focusCode}
+          title={focusCode ? 'Show the problem again' : 'Focus the editor (hide the problem)'}
+        >
+          {focusCode ? '❐ Show problem' : '⛶ Focus'}
+        </button>
         <button
           className="btn"
           onClick={() => execute(false)}

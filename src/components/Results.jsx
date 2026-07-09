@@ -1,41 +1,55 @@
 import SqlResultTable from './SqlResultTable.jsx';
 
+function TestDetail({ result, call }) {
+  return (
+    <div className="test-row-detail">
+      <div className="io-line">
+        <span className="lbl">Input</span>
+        <code>{call}</code>
+      </div>
+      {result.error ? (
+        <div className="io-line io-error">
+          <span className="lbl">Error</span>
+          <code>{result.error}</code>
+        </div>
+      ) : (
+        <>
+          <div className="io-line">
+            <span className="lbl">Expected</span>
+            <code className="io-expected">{result.expectedRepr}</code>
+          </div>
+          <div className="io-line">
+            <span className="lbl">Your output</span>
+            <code className="io-got">{result.gotRepr}</code>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function PyTestRow({ result, index, functionName }) {
   const call = functionName ? `${functionName}(${result.argsRepr})` : result.argsRepr;
   return (
     <div className={`test-row ${result.pass ? 'pass' : 'fail'}`}>
       <div className="test-row-head">
-        <span>{result.pass ? '✓' : '✗'}</span>
-        <span>Test {index + 1}</span>
-        <span style={{ color: 'var(--text-dim)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {call}
-        </span>
+        <span className="test-row-mark">{result.pass ? '✓' : '✗'}</span>
+        <span className="test-row-n">Test {index + 1}</span>
+        <span className="test-row-call">{call}</span>
       </div>
-      {!result.pass && (
-        <div className="test-row-detail">
-          <div className="io-line">
-            <span className="lbl">Input </span>
-            <code>{call}</code>
-          </div>
-          {result.error ? (
-            <div style={{ whiteSpace: 'pre-wrap', marginTop: 6 }}>
-              <span className="lbl">Error </span>
-              {result.error}
-            </div>
-          ) : (
-            <>
-              <div className="io-line">
-                <span className="lbl">Expected </span>
-                <code className="io-expected">{result.expectedRepr}</code>
-              </div>
-              <div className="io-line">
-                <span className="lbl">Your output </span>
-                <code className="io-got">{result.gotRepr}</code>
-              </div>
-            </>
-          )}
-        </div>
-      )}
+      {!result.pass && <TestDetail result={result} call={call} />}
+    </div>
+  );
+}
+
+// A glanceable strip: one dot per test, green pass / red fail.
+function TestDots({ results }) {
+  if (results.length <= 1) return null;
+  return (
+    <div className="test-dots" aria-hidden="true">
+      {results.map((r, i) => (
+        <span key={i} className={`test-dot ${r.pass ? 'pass' : 'fail'}`} title={`Test ${i + 1}`} />
+      ))}
     </div>
   );
 }
@@ -59,7 +73,9 @@ export default function Results({ report, question }) {
     };
     return (
       <div>
-        <div className="result-summary fail">{titles[report.errorType] || 'Error'}</div>
+        <div className="result-head">
+          <div className="result-summary fail">{titles[report.errorType] || 'Error'}</div>
+        </div>
         <div className="error-box">{report.message}</div>
       </div>
     );
@@ -95,19 +111,40 @@ export default function Results({ report, question }) {
   // python / pandas per-test results
   const results = report.results || [];
   const passed = results.filter((r) => r.pass).length;
+  const total = results.length;
+  const allPass = total > 0 && passed === total;
+  const pct = total ? (passed / total) * 100 : 0;
   const stdout = results
     .map((r, i) => (r.stdout ? `— test ${i + 1} —\n${r.stdout}` : ''))
     .filter(Boolean)
     .join('\n');
 
+  // Failing tests first (that's where the learning is), then the passing ones.
+  const ordered = [...results.map((r, i) => ({ r, i }))].sort(
+    (a, b) => Number(a.r.pass) - Number(b.r.pass)
+  );
+
   return (
-    <div>
-      <div className={`result-summary ${passed === results.length ? 'pass' : 'fail'}`}>
-        {passed === results.length ? '✓' : '✗'} {passed}/{results.length} tests passed
+    <div className={`results ${allPass ? 'all-pass' : ''}`}>
+      <div className="result-head">
+        <div className={`result-summary ${allPass ? 'pass' : 'fail'}`}>
+          {allPass ? '✓' : '✗'} {passed}/{total} tests passed
+        </div>
+        <div className="result-meter" role="img" aria-label={`${passed} of ${total} tests passing`}>
+          <div className={`result-meter-fill ${allPass ? 'pass' : 'fail'}`} style={{ width: `${pct}%` }} />
+        </div>
       </div>
-      {results.map((r, i) => (
+
+      <TestDots results={results} />
+
+      {allPass && (
+        <div className="result-cheer">All tests green — nicely done. Hit Submit to lock it in.</div>
+      )}
+
+      {ordered.map(({ r, i }) => (
         <PyTestRow key={i} result={r} index={i} functionName={question.function_name} />
       ))}
+
       {stdout && (
         <div className="stdout-block">
           <h4>your print() output</h4>
