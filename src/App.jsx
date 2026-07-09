@@ -24,6 +24,7 @@ import {
 } from './state/storage.js';
 import { recordSolve, recordFail } from './state/progress.js';
 import { markVisit, recordDaySolve, recordDayFail } from './state/activity.js';
+import { getInitialTheme, applyTheme } from './state/theme.js';
 
 export default function App() {
   const [progress, setProgress] = useState(loadProgress);
@@ -32,6 +33,18 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [theme, setThemeState] = useState(() => {
+    const t = getInitialTheme();
+    document.documentElement.dataset.theme = t; // set before first paint (no flash)
+    return t;
+  });
+  const toggleTheme = useCallback(() => {
+    setThemeState((cur) => {
+      const next = cur === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      return next;
+    });
+  }, []);
   // First-run orientation: show once, then remember we did.
   const [showOnboarding, setShowOnboarding] = useState(() => {
     try {
@@ -153,6 +166,8 @@ export default function App() {
         onStats={() => setView({ name: 'stats' })}
         onGuide={() => setView({ name: 'guide' })}
         onSettings={() => setSettingsOpen(true)}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
       <main className="app-main">
         {view.name === 'home' && (

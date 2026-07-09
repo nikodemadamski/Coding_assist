@@ -78,6 +78,23 @@ try {
 
   check(await page.locator('.header-logo').isVisible(), 'app loads with header');
 
+  // ---- light / dark theme toggle (persists across reload) ----
+  check(
+    (await page.evaluate(() => document.documentElement.dataset.theme)) === 'dark',
+    'starts in the dark theme'
+  );
+  await page.locator('.icon-btn[aria-label="Switch to light theme"]').click();
+  check(
+    (await page.evaluate(() => document.documentElement.dataset.theme)) === 'light',
+    'toggle switches to the light theme'
+  );
+  await page.reload();
+  check(
+    (await page.evaluate(() => document.documentElement.dataset.theme)) === 'light',
+    'the theme choice survives a reload'
+  );
+  await page.locator('.icon-btn[aria-label="Switch to dark theme"]').click(); // back to dark for the rest
+
   // ---- the home page IS the roadmap now ----
   check((await page.locator('.graph-node').count()) >= 15, 'home page shows the roadmap graph');
   check(await page.locator('.welcome-card').isVisible(), 'first visit shows the welcome/purpose card');

@@ -9,6 +9,8 @@ export default function Header({
   onStats,
   onGuide,
   onSettings,
+  theme,
+  onToggleTheme,
 }) {
   const solvedCount = Object.values(progress.solved).filter(isSolved).length;
   const belt = beltFor(solvedCount);
@@ -56,6 +58,14 @@ export default function Header({
       </button>
       <button className="icon-btn" onClick={onStats}>
         Stats
+      </button>
+      <button
+        className="icon-btn"
+        onClick={onToggleTheme}
+        aria-label={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
+        title={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
+      >
+        {theme === 'light' ? '🌙' : '☀️'}
       </button>
       <button className="icon-btn" onClick={onSettings} aria-label="Settings">
         ⚙ Settings

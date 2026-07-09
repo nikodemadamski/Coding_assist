@@ -11,10 +11,29 @@
   --crimson-dim: #a33236;
   --jade: #3dd68c;
   --gold: #e8b04b;
+  --edge: #e9e7de; /* roadmap graph arrows */
   --font-display: 'Zilla Slab', serif;
   --font-body: 'IBM Plex Sans', system-ui, sans-serif;
   --font-code: 'IBM Plex Mono', ui-monospace, monospace;
   --radius: 10px;
+  color-scheme: dark;
+}
+
+/* Light theme — a warm, paper-like day mode. Same semantic variables so every
+   component adapts; accents are darkened for contrast on a light background. */
+:root[data-theme='light'] {
+  --ink: #f5f3ee;
+  --panel: #ffffff;
+  --panel-2: #ece9e1;
+  --line: #dcd9d0;
+  --text: #262330;
+  --text-dim: #6a675f;
+  --crimson: #cf3a40;
+  --crimson-dim: #b0343a;
+  --jade: #12915a;
+  --gold: #9c6b12;
+  --edge: #b3b0a6;
+  color-scheme: light;
 }
 
 * {
@@ -1722,6 +1741,15 @@ details.hint[open] summary {
   position: absolute;
   inset: 0;
   pointer-events: none;
+}
+/* CSS wins over the inline stroke/fill attributes, so the arrows follow the
+   theme (light lines on dark, darker lines on light). */
+.graph-edges path {
+  stroke: var(--edge);
+}
+.graph-edges marker path {
+  fill: var(--edge);
+  stroke: none;
 }
 
 .graph-node {

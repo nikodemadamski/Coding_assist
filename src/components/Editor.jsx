@@ -3,8 +3,9 @@ import { python } from '@codemirror/lang-python';
 import { sql, SQLite } from '@codemirror/lang-sql';
 import { EditorView } from '@codemirror/view';
 import { useMemo } from 'react';
+import { useTheme } from '../state/theme.js';
 
-const dojoTheme = EditorView.theme(
+const darkTheme = EditorView.theme(
   {
     '&': {
       backgroundColor: '#12141d',
@@ -29,10 +30,37 @@ const dojoTheme = EditorView.theme(
   { dark: true }
 );
 
+const lightTheme = EditorView.theme(
+  {
+    '&': {
+      backgroundColor: '#ffffff',
+      color: '#262330',
+      fontSize: '14px',
+      height: '100%',
+    },
+    '.cm-content': { fontFamily: "'IBM Plex Mono', monospace", caretColor: '#cf3a40' },
+    '.cm-cursor': { borderLeftColor: '#cf3a40' },
+    '.cm-gutters': {
+      backgroundColor: '#f5f3ee',
+      color: '#9a978f',
+      border: 'none',
+      borderRight: '1px solid #dcd9d0',
+    },
+    '.cm-activeLine': { backgroundColor: '#0000000a' },
+    '.cm-activeLineGutter': { backgroundColor: '#eceae2' },
+    '&.cm-focused .cm-selectionBackground, .cm-selectionBackground': {
+      backgroundColor: '#c9d4ff88',
+    },
+  },
+  { dark: false }
+);
+
 export default function Editor({ track, value, onChange }) {
+  const theme = useTheme();
+  const isLight = theme === 'light';
   const extensions = useMemo(
-    () => [track === 'sql' ? sql({ dialect: SQLite }) : python(), dojoTheme],
-    [track]
+    () => [track === 'sql' ? sql({ dialect: SQLite }) : python(), isLight ? lightTheme : darkTheme],
+    [track, isLight]
   );
 
   return (
@@ -40,7 +68,7 @@ export default function Editor({ track, value, onChange }) {
       value={value}
       onChange={onChange}
       extensions={extensions}
-      theme="dark"
+      theme={isLight ? 'light' : 'dark'}
       height="100%"
       style={{ height: '100%' }}
       basicSetup={{

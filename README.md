@@ -122,6 +122,9 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
   its complexity, and links to the problems in your bank that drill it. Every template is
   machine-checked to be valid Python syntax. The Stuck ladder's "which pattern is this?" rung
   links straight here.
+- **☀️ / 🌙 Light &amp; dark themes** (header): a warm, paper-like day mode alongside the dark
+  dojo, switchable in one click and remembered across sessions. Every screen — including the
+  code editor and the roadmap graph — adapts, with accents darkened for contrast on light.
 - **First-run onboarding**: a brand-new user gets a short, skippable four-card orientation —
   this is the map, follow "Your next step", here's what to do when stuck, and the tools for
   when you're ready to be tested — then it gets out of the way (shown once).
