@@ -24,6 +24,7 @@ export default function RoadmapGraph({
   onWarmup,
   onMock,
   onDrill,
+  onOpenTrack,
   onBrowse,
 }) {
   const [openCat, setOpenCat] = useState(null);
@@ -247,7 +248,7 @@ export default function RoadmapGraph({
 
       {/* Data tracks — separate entities, not woven into the algorithm map */}
       <div className="data-tracks">
-        <span className="data-tracks-label">Data tracks — practised on their own, off the algorithm path</span>
+        <span className="data-tracks-label">Data tracks — their own map, off the algorithm path</span>
         <div className="data-tracks-row">
           {[
             { key: 'pandas', icon: '🐼', name: 'pandas' },
@@ -256,7 +257,11 @@ export default function RoadmapGraph({
             const st = stats[t.key] || { total: 0, solved: 0 };
             if (st.total === 0) return null;
             return (
-              <button key={t.key} className="data-track-card" onClick={() => onBrowse(t.key)}>
+              <button
+                key={t.key}
+                className="data-track-card"
+                onClick={() => (onOpenTrack ? onOpenTrack(t.key) : onBrowse(t.key))}
+              >
                 <span className="data-track-icon" aria-hidden="true">
                   {t.icon}
                 </span>

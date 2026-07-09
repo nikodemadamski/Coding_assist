@@ -14,6 +14,7 @@ import {
 import { patternHint } from '../src/data/patternHints.js';
 import { LEARN } from '../src/data/learn.js';
 import { validateQuestion } from '../src/data/validateQuestion.js';
+import { TRACK_GRAPHS } from '../src/data/trackGraphs.js';
 import { createSession } from '../src/state/practiceSession.js';
 import { EMPTY_PROGRESS } from '../src/state/storage.js';
 
@@ -157,6 +158,27 @@ console.log('Learning-path tests\n');
     validateQuestion(q, { existingIds: [], minTests: 1 }).map((e) => `${q.id}: ${e}`)
   );
   check(bad.length === 0, 'enriched questions still pass validation', bad.slice(0, 3).join(' | '));
+}
+
+// ---- the pandas / SQL track maps cover their questions and fit their canvas ----
+for (const trackKey of Object.keys(TRACK_GRAPHS)) {
+  const g = TRACK_GRAPHS[trackKey];
+  const nodeKeys = new Set(g.nodes.map((n) => n.key));
+  const patterns = new Set(SEED_QUESTIONS.filter((q) => q.track === trackKey).map((q) => q.pattern));
+  const uncovered = [...patterns].filter((p) => !nodeKeys.has(p));
+  check(uncovered.length === 0, `${trackKey} map has a node for every question pattern`, uncovered.join(', '));
+  const emptyNodes = g.nodes.filter((n) => !patterns.has(n.key));
+  check(emptyNodes.length === 0, `${trackKey} map has no empty nodes`, emptyNodes.map((n) => n.key).join(', '));
+  const badEdges = g.edges.filter(([a, b]) => !nodeKeys.has(a) || !nodeKeys.has(b));
+  check(badEdges.length === 0, `${trackKey} edges connect real nodes`, JSON.stringify(badEdges));
+  check(
+    g.nodes.every((n) => n.x >= 0 && n.y >= 0 && n.x + NODE_W <= g.W && n.y + NODE_H <= g.H),
+    `${trackKey} nodes fit the canvas`
+  );
+  const overlap = g.nodes.some((a, i) =>
+    g.nodes.slice(i + 1).some((b) => Math.abs(a.x - b.x) < NODE_W && Math.abs(a.y - b.y) < NODE_H)
+  );
+  check(!overlap, `${trackKey} nodes do not overlap`);
 }
 
 console.log(failures === 0 ? '\nAll path tests green.' : `\n${failures} FAILURE(S).`);

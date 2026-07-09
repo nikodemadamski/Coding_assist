@@ -1500,6 +1500,17 @@ details.hint[open] summary {
   margin: 0 0 10px;
 }
 
+.track-map-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.track-map-head h1 {
+  margin: 0;
+}
+
 /* data tracks — pandas & SQL, kept separate from the algorithm map */
 .data-tracks {
   margin-top: 18px;

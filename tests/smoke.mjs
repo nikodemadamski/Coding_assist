@@ -101,6 +101,20 @@ try {
     'pandas and SQL appear as separate data-track cards'
   );
 
+  // a data-track card opens its own dedicated map tree
+  await page.locator('.data-track-card', { hasText: 'pandas' }).click();
+  check(
+    (await page.locator('.track-map-head h1').innerText()).toLowerCase().includes('pandas'),
+    'the pandas card opens a dedicated pandas track map'
+  );
+  check((await page.locator('.graph-node').count()) >= 4, 'the pandas track map shows its sub-topics');
+  await page.locator('.graph-node').first().click();
+  await page.locator('.cat-modal').waitFor({ timeout: 5000 });
+  check((await page.locator('.cat-q').count()) >= 1, 'a track-map node opens its questions');
+  await page.locator('.cat-modal .icon-btn[aria-label="Close"]').click();
+  await page.locator('.track-map-head .btn', { hasText: 'Back to the map' }).click();
+  check((await page.locator('.graph-node').count()) >= 15, 'back returns to the algorithm map');
+
   // guided next step: what's next AND why it's worth doing
   check(await page.locator('.next-step-card').isVisible(), 'a guided "your next step" card is shown');
   check(

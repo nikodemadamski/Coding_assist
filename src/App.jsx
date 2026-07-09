@@ -10,6 +10,7 @@ import Guide from './components/Guide.jsx';
 import Patterns from './components/Patterns.jsx';
 import PatternQuiz from './components/PatternQuiz.jsx';
 import RoadmapGraph from './components/RoadmapGraph.jsx';
+import TrackMap from './components/TrackMap.jsx';
 import Settings from './components/Settings.jsx';
 import ImportModal from './components/ImportModal.jsx';
 import SearchPalette from './components/SearchPalette.jsx';
@@ -163,7 +164,18 @@ export default function App() {
             onWarmup={() => setView({ name: 'warmup' })}
             onMock={() => setView({ name: 'mock' })}
             onDrill={() => setView({ name: 'drill' })}
+            onOpenTrack={(key) => setView({ name: 'track', trackKey: key })}
             onBrowse={(key) => setView({ name: 'browse', focusCategory: key })}
+          />
+        )}
+        {view.name === 'track' && (
+          <TrackMap
+            trackKey={view.trackKey}
+            questions={allQuestions}
+            progress={progress}
+            onOpenQuestion={(id) => setView({ name: 'problem', id, from: 'home' })}
+            onBrowse={(key) => setView({ name: 'browse', focusCategory: key })}
+            onBack={() => setView({ name: 'home' })}
           />
         )}
         {view.name === 'browse' && (
