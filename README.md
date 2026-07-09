@@ -122,6 +122,9 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
   its complexity, and links to the problems in your bank that drill it. Every template is
   machine-checked to be valid Python syntax. The Stuck ladder's "which pattern is this?" rung
   links straight here.
+- **🎉 Milestone celebrations**: earning a new belt or hitting a streak milestone (3, 7, 14,
+  30… days) pops a satisfying confetti moment — the small payoff that makes the daily habit
+  stick. Fires exactly on the crossing, never on a plain solve or a page reload.
 - **☀️ / 🌙 Light &amp; dark themes** (header): a warm, paper-like day mode alongside the dark
   dojo, switchable in one click and remembered across sessions. Every screen — including the
   code editor and the roadmap graph — adapts, with accents darkened for contrast on light.

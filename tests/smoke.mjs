@@ -667,6 +667,38 @@ try {
   );
   await page.locator('.header-logo').click();
 
+  // ---- celebration: crossing a belt threshold pops a milestone ----
+  await page.evaluate(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const s = { firstSolvedAt: today, attempts: 1, solves: 1, lastSolvedAt: today };
+    // 3 solved => White belt, one solve away from Yellow (threshold 4)
+    localStorage.setItem(
+      'zoro.progress.v1',
+      JSON.stringify({
+        solved: { 'py-reverse-string': { ...s }, 'py-fizzbuzz': { ...s }, 'py-common-elements': { ...s } },
+        drafts: {},
+        srs: {},
+        streak: { count: 1, lastActiveDate: today },
+      })
+    );
+  });
+  await page.reload();
+  await page.locator('.icon-btn', { hasText: 'Browse' }).click();
+  await page.locator('.q-card', { hasText: 'Two Sum' }).first().click();
+  await setEditor(
+    page,
+    'def two_sum(nums, target):\n    seen = {}\n    for i, n in enumerate(nums):\n        if target - n in seen:\n            return [seen[target - n], i]\n        seen[n] = i'
+  );
+  await page.locator('button', { hasText: 'Submit' }).click();
+  await page.locator('.celebration').waitFor({ timeout: 60000 });
+  check(
+    (await page.locator('.celebration').innerText()).includes('Yellow'),
+    'crossing to the 4th solve pops a Yellow-belt celebration'
+  );
+  check(await page.locator('.confetti').isVisible(), 'the celebration has a confetti burst');
+  await page.locator('.celebration button', { hasText: 'Keep going' }).click();
+  check((await page.locator('.celebration').count()) === 0, 'celebration dismisses');
+
   check(pageErrors.length === 0, `no uncaught page errors${pageErrors.length ? `: ${pageErrors[0]}` : ''}`);
   await page.close();
 

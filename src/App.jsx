@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Header from './components/Header.jsx';
 import Picker from './components/Picker.jsx';
 import ProblemView from './components/ProblemView.jsx';
@@ -15,6 +15,7 @@ import Settings from './components/Settings.jsx';
 import ImportModal from './components/ImportModal.jsx';
 import SearchPalette from './components/SearchPalette.jsx';
 import Onboarding from './components/Onboarding.jsx';
+import Celebration from './components/Celebration.jsx';
 import { SEED_QUESTIONS } from './data/questions.js';
 import {
   loadProgress,
@@ -22,9 +23,10 @@ import {
   loadCustomQuestions,
   saveCustomQuestions,
 } from './state/storage.js';
-import { recordSolve, recordFail } from './state/progress.js';
+import { recordSolve, recordFail, isSolved, currentStreak } from './state/progress.js';
 import { markVisit, recordDaySolve, recordDayFail } from './state/activity.js';
 import { getInitialTheme, applyTheme } from './state/theme.js';
+import { nextCelebration } from './state/celebrate.js';
 
 export default function App() {
   const [progress, setProgress] = useState(loadProgress);
@@ -96,6 +98,25 @@ export default function App() {
     () => [...SEED_QUESTIONS, ...customQuestions.map((q) => ({ ...q, imported: true }))],
     [customQuestions]
   );
+
+  // Celebrate belt promotions and streak milestones the moment they happen.
+  const [celebration, setCelebration] = useState(null);
+  const milestoneRef = useRef(null);
+  const solvedCount = useMemo(
+    () => allQuestions.filter((q) => isSolved(progress.solved[q.id])).length,
+    [allQuestions, progress]
+  );
+  const streakVal = currentStreak(progress.streak);
+  useEffect(() => {
+    const cur = { solvedCount, streak: streakVal };
+    if (milestoneRef.current === null) {
+      milestoneRef.current = cur; // first render — establish the baseline, no fanfare
+      return;
+    }
+    const cel = nextCelebration(milestoneRef.current, cur);
+    milestoneRef.current = cur;
+    if (cel) setCelebration(cel);
+  }, [solvedCount, streakVal]);
 
   const currentQuestion =
     view.name === 'problem' ? allQuestions.find((q) => q.id === view.id) : null;
@@ -296,6 +317,7 @@ export default function App() {
         />
       )}
       {showOnboarding && <Onboarding onDone={dismissOnboarding} />}
+      {celebration && <Celebration celebration={celebration} onClose={() => setCelebration(null)} />}
     </div>
   );
 }
