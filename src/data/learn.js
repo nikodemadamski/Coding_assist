@@ -609,4 +609,64 @@ export const LEARN = {
     why: 'Rotate in place with the three-reversal trick: reverse all, then reverse the two parts. A surprising, elegant O(1)-space move.',
     constraints: ['1 ≤ len(nums) ≤ 10⁵', '-2³¹ ≤ nums[i] ≤ 2³¹ − 1', '0 ≤ k ≤ 10⁵'],
   },
+
+  // ── pandas (data track) ─────────────────────────────────────────────────
+  'pd-filter-rows': {
+    why: 'Filtering with a boolean mask is pandas’ answer to SQL’s WHERE — the most-used operation in data work. Learn df[df.col > x] before anything else.',
+    constraints: ['the DataFrame contains the referenced numeric column', '0 ≤ rows ≤ 10⁴'],
+  },
+  'pd-select-columns': {
+    why: 'Selecting and reordering columns with df[[...]] is how you shape data for a report or a model. Know the double-bracket list-selection idiom cold.',
+    constraints: ['the requested columns exist in the DataFrame'],
+  },
+  'pd-value-counts': {
+    why: 'value_counts() answers "how many of each?" in one call — the fastest way to profile a categorical column, and a constant in exploratory analysis.',
+    constraints: ['the column exists and its values are hashable'],
+  },
+  'pd-groupby-agg': {
+    why: 'groupby → aggregate is the heart of pandas and the direct analogue of SQL GROUP BY. Split-apply-combine is the mental model behind most analytics.',
+    constraints: ['the group and value columns exist'],
+  },
+  'pd-merge-frames': {
+    why: 'Merging DataFrames on a key is SQL JOIN for pandas — essential whenever data spans more than one table. Know inner vs left and the on= argument.',
+    constraints: ['both frames share the join-key column'],
+  },
+  'pd-top-n': {
+    why: 'Sort then head is the "top-N" pattern — leaderboards, biggest customers, worst offenders. sort_values(...).head(n) is worth muscle memory.',
+    constraints: ['the sort column exists', '0 ≤ n ≤ number of rows'],
+  },
+  'pd-handle-nan': {
+    why: 'Real data has holes; dropna and fillna are how you decide what a missing value means. Cleaning is half of every data job.',
+    constraints: ['the DataFrame may contain NaN in any column'],
+  },
+  'pd-computed-column': {
+    why: 'Deriving a new column from existing ones (vectorised, no loops) is the everyday transform — revenue = price × qty, ratios, flags. Think in whole columns.',
+    constraints: ['the source columns exist and are numeric'],
+  },
+
+  // ── SQL (data track) ────────────────────────────────────────────────────
+  'sql-select-where': {
+    why: 'SELECT columns FROM table WHERE condition is the foundation every other query builds on. Filtering rows precisely is the first SQL skill interviewers check.',
+  },
+  'sql-order-limit': {
+    why: 'ORDER BY … LIMIT answers "the top few" — the most common analytics ask. Getting the sort direction and ties right is where people slip.',
+  },
+  'sql-count-group': {
+    why: 'COUNT(*) with GROUP BY turns rows into a summary — counts per category, the bread and butter of reporting SQL.',
+  },
+  'sql-having': {
+    why: 'HAVING filters groups after aggregation, which WHERE cannot — the WHERE-vs-HAVING distinction is a classic interview question.',
+  },
+  'sql-inner-join': {
+    why: 'INNER JOIN combines rows across tables on a key — the single most important SQL skill for real schemas. Know the ON clause cold.',
+  },
+  'sql-left-join-null': {
+    why: 'LEFT JOIN … WHERE right IS NULL finds "rows with no match" — customers who never ordered. The anti-join pattern interviewers love.',
+  },
+  'sql-subquery': {
+    why: 'A subquery lets one query feed another — comparing each row against an aggregate (above-average, latest per group). The gateway to advanced SQL.',
+  },
+  'sql-window-top-per-group': {
+    why: 'ROW_NUMBER() OVER (PARTITION BY … ORDER BY …) picks the top row per group with no self-join — the most-asked hard SQL pattern in data-science interviews.',
+  },
 };

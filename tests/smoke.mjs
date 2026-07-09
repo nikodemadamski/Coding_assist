@@ -337,6 +337,11 @@ try {
   // ---- SQL: correct, wrong (visual diff), and syntax error ----
   await page.locator('.icon-btn[aria-label="Back to problem list"]').click();
   await page.locator('.q-card', { hasText: 'Strong swordsmen' }).first().click();
+  // every question — pandas & SQL included — carries the premium learning UI
+  check(
+    (await page.locator('.pane-problem .why-card').innerText()).includes('SELECT'),
+    'SQL questions also show the guided "why this one" card'
+  );
   await setEditor(page, 'SELECT name, power FROM fighters WHERE power >= 80 ORDER BY power DESC;');
   await page.locator('button', { hasText: '▶ Run' }).click();
   await page.locator('.result-summary').first().waitFor({ timeout: 60000 });
