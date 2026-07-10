@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { isSolved, masteryLevel } from '../state/progress.js';
 import { pathStep } from '../data/roadmap.js';
 
-// Global quick-open: Ctrl/⌘+K (or "/", or the header 🔍) from anywhere.
+// Global quick-open: Ctrl/⌘+K (or "/", or the header Search) from anywhere.
 // Type a few letters, arrow through the matches, Enter to jump straight in.
 
 const MAX_RESULTS = 12;

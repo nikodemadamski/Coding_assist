@@ -99,7 +99,7 @@ export default function WarmupView({ progress, onResult, onExit }) {
   if (!level) {
     return (
       <div className="stats warmup">
-        <h1>⚡ Warm-up</h1>
+        <h1>Warm-up</h1>
         <p className="wu-intro">
           Like stretching before the gym: quick one-line Python drills to get the brain juices
           flowing. Type the answer, hit Enter, beat the clock. One mistake — or one expired
@@ -158,16 +158,16 @@ export default function WarmupView({ progress, onResult, onExit }) {
 
     return (
       <div className="stats warmup">
-        <h1>⚡ Warm-up — {levelDef.label}</h1>
+        <h1>Warm-up — {levelDef.label}</h1>
         {result.reason === 'finished' && (
-          <div className="solved-banner">🏆 Perfect run — all {total} answered. Fully warm.</div>
+          <div className="solved-banner">Perfect run — all {total} answered. Fully warm.</div>
         )}
         {result.reason === 'mistake' && (
-          <div className="wu-over">✋ Run over — a mistake at question {got + 1} of {total}.</div>
+          <div className="wu-over">Run over — a mistake at question {got + 1} of {total}.</div>
         )}
         {result.reason === 'timeout' && (
           <div className="wu-over">
-            ⏱ Time&apos;s up at question {got + 1} of {total} — {levelDef.seconds}s per answer.
+            Time&apos;s up at question {got + 1} of {total} — {levelDef.seconds}s per answer.
           </div>
         )}
 
@@ -176,7 +176,7 @@ export default function WarmupView({ progress, onResult, onExit }) {
             <strong>
               {got}/{total}
             </strong>
-            <span>answered {newBest && got > 0 ? '· 🎉 new best!' : `· best ${Math.max(prevBest, got)}`}</span>
+            <span>answered {newBest && got > 0 ? '· new best!' : `· best ${Math.max(prevBest, got)}`}</span>
           </div>
           <div className="wu-stat">
             <strong>{got ? `${(avg / 1000).toFixed(1)}s` : '—'}</strong>
@@ -248,7 +248,7 @@ export default function WarmupView({ progress, onResult, onExit }) {
 
         <div className="wu-actions">
           <button className="btn btn-primary" onClick={() => start(level)}>
-            ⚡ Warm up again
+            Warm up again
           </button>
           <button className="btn" onClick={() => setLevel(null)}>
             Change level
@@ -273,7 +273,7 @@ export default function WarmupView({ progress, onResult, onExit }) {
         <span className="wu-run-count">
           {idx + 1} / {queue.length}
         </span>
-        <span className="wu-run-streak">🔥 {correct.length}</span>
+        <span className="wu-run-streak">{correct.length}</span>
       </div>
       <div
         className={`wu-timerbar ${pct < 30 ? 'low' : ''}`}

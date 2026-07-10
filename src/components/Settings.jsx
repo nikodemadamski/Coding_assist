@@ -48,10 +48,10 @@ export default function Settings({ progress, customQuestions, onImport, onBacked
         </p>
         <div className="modal-actions" style={{ justifyContent: 'flex-start', marginTop: 8 }}>
           <button className="btn" onClick={handleExport}>
-            ⬇ Export progress (JSON)
+            Export progress (JSON)
           </button>
           <button className="btn" onClick={() => fileRef.current?.click()}>
-            ⬆ Import progress
+            Import progress
           </button>
           <input
             ref={fileRef}

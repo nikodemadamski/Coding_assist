@@ -30,7 +30,7 @@ function QuestionRow({ q, level, due, isNext, onOpen }) {
         {isNext && <span className="you-are-here">← you are here</span>}
       </span>
       <span className="q-meta">
-        {due && <span className="tag due-tag">⟳ due</span>}
+        {due && <span className="tag due-tag">due</span>}
         {q.imported && <span className="tag imported">imported</span>}
         <span className={`tag diff-${q.difficulty}`}>{q.difficulty}</span>
         <span className={`pill pill-${level}`}>{MASTERY_LABEL[level]}</span>
@@ -106,7 +106,7 @@ export default function Picker({
       {/* ---- Welcome (first visit, nothing solved yet) ---- */}
       {brandNew && (
         <section className="welcome-card">
-          <h2>Welcome to the dojo 🥋</h2>
+          <h2>Welcome to the dojo</h2>
           <p>
             This is a <strong>{questions.length}-step path</strong> from &ldquo;I barely know
             Python&rdquo; to interview-ready — the same arc as NeetCode: warm-ups first, then
@@ -154,21 +154,21 @@ export default function Picker({
             disabled={counts.due === 0 && counts.fresh === 0}
           >
             {counts.due > 0
-              ? '⟳ Start review'
+              ? 'Start review'
               : brandNew
-                ? '▶ Begin the path'
-                : '▶ Continue the path'}
+                ? 'Begin the path'
+                : 'Continue the path'}
           </button>
           <button
             className="btn btn-warmup"
             onClick={onWarmup}
             title="Rapid-fire Python one-liners against the clock — stretch before the workout"
           >
-            ⚡ Warm-up
+            Warm-up
           </button>
           {missCount > 0 && (
             <button className="btn btn-drill" onClick={onDrill}>
-              🔥 Drill today&apos;s misses ({missCount})
+              Drill today&apos;s misses ({missCount})
             </button>
           )}
           <button className="btn btn-gold" onClick={onImport}>

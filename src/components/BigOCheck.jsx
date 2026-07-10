@@ -22,7 +22,7 @@ export default function BigOCheck({ question, onResult }) {
   return (
     <div className="bigo">
       <span className="bigo-q">
-        ⏱ Interviewer follow-up: what&apos;s the model solution&apos;s time complexity?
+        Interviewer follow-up: what&apos;s the model solution&apos;s time complexity?
       </span>
       {pick === null ? (
         <div className="bigo-options">

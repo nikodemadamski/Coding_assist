@@ -39,16 +39,16 @@ export default function PatternQuiz({ questions, onExit }) {
     const pct = Math.round((score / round.length) * 100);
     return (
       <div className="stats quiz">
-        <h1>🎯 Pattern quiz — results</h1>
+        <h1>Pattern quiz — results</h1>
         <div className={`quiz-result ${pct >= 70 ? 'good' : ''}`}>
           You named <strong>{score}</strong> of {round.length} patterns correctly ({pct}%).
           {pct >= 70
             ? ' Sharp — that recognition is exactly what saves you in the room.'
-            : ' Skim the 🧩 Patterns page and go again — the cues are what to memorise.'}
+            : ' Skim the Patterns page and go again — the cues are what to memorise.'}
         </div>
         <div className="quiz-actions">
           <button className="btn btn-primary" onClick={restart}>
-            🎯 Another round
+            Another round
           </button>
           <button className="btn" onClick={onExit}>
             Back to Patterns

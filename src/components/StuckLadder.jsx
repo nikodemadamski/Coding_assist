@@ -16,7 +16,6 @@ export default function StuckLadder({ question, onVisualize, onSeePattern }) {
   const rungs = [
     {
       key: 'pattern',
-      icon: '🧭',
       label: 'Which pattern is this?',
       teaser: 'Name the technique before you write a line.',
       body: (
@@ -32,7 +31,7 @@ export default function StuckLadder({ question, onVisualize, onSeePattern }) {
               className="rung-link"
               onClick={() => onSeePattern(categoryKeyOf(question.pattern))}
             >
-              🧩 See the full pattern template →
+              See the full pattern template →
             </button>
           )}
         </div>
@@ -40,7 +39,6 @@ export default function StuckLadder({ question, onVisualize, onSeePattern }) {
     },
     question.hint && {
       key: 'nudge',
-      icon: '💡',
       label: 'Give me a nudge',
       teaser: 'One idea to unstick you — then go try again.',
       body: (
@@ -51,7 +49,6 @@ export default function StuckLadder({ question, onVisualize, onSeePattern }) {
     },
     question.approach && {
       key: 'plan',
-      icon: '🪜',
       label: 'Walk me through the plan',
       teaser: 'The whole strategy in plain English — how the solution actually works.',
       body: (
@@ -62,7 +59,6 @@ export default function StuckLadder({ question, onVisualize, onSeePattern }) {
     },
     {
       key: 'code',
-      icon: '💻',
       label:
         question.approaches?.length > 1
           ? 'Show the code — brute force → optimal'
@@ -85,7 +81,7 @@ export default function StuckLadder({ question, onVisualize, onSeePattern }) {
   return (
     <div className="stuck">
       <div className="stuck-head">
-        <span className="stuck-title">🧗 Stuck? Climb one rung at a time.</span>
+        <span className="stuck-title">Stuck? Climb one rung at a time.</span>
         <span className="stuck-sub">
           Each rung tells you a bit more. Try the problem again before you take the next one — the
           struggle is where the learning is.
@@ -97,9 +93,6 @@ export default function StuckLadder({ question, onVisualize, onSeePattern }) {
           return (
             <div className="stuck-rung open" key={r.key}>
               <div className="stuck-rung-top">
-                <span className="stuck-rung-icon" aria-hidden="true">
-                  {r.icon}
-                </span>
                 <span className="stuck-rung-label">
                   <span className="stuck-rung-num">Step {i + 1}</span>
                   {r.label}
@@ -112,9 +105,6 @@ export default function StuckLadder({ question, onVisualize, onSeePattern }) {
         if (i === open) {
           return (
             <button className="stuck-rung stuck-next" key={r.key} onClick={() => setOpen(open + 1)}>
-              <span className="stuck-rung-icon" aria-hidden="true">
-                {r.icon}
-              </span>
               <span className="stuck-rung-label">
                 <span className="stuck-rung-num">Step {i + 1}</span>
                 {r.label}
@@ -129,7 +119,7 @@ export default function StuckLadder({ question, onVisualize, onSeePattern }) {
 
       {open >= rungs.length && (
         <a className="stuck-youtube" href={ytUrl} target="_blank" rel="noopener noreferrer">
-          ▶ Still fuzzy? Hear someone explain &ldquo;{question.title}&rdquo; on YouTube ↗
+          Still fuzzy? Hear someone explain &ldquo;{question.title}&rdquo; on YouTube ↗
         </a>
       )}
     </div>

@@ -28,7 +28,7 @@ export default function Notes({ questionId, note, onSave, heading }) {
   return (
     <details className="notes" open={note ? true : undefined}>
       <summary>
-        📝 {heading || 'My notes on this one'}
+        {heading || 'My notes on this one'}
         {note && <span className="notes-has"> · saved</span>}
       </summary>
       <textarea

@@ -125,7 +125,7 @@ export default function RoadmapGraph({
     <div className="stats roadmap-home">
       {brandNew && (
         <section className="welcome-card">
-          <h2>Welcome to the dojo 🥋</h2>
+          <h2>Welcome to the dojo</h2>
           <p>
             This map is your whole journey — <strong>{questions.length} questions</strong> from
             &ldquo;I barely know Python&rdquo; to interview-ready. Learn top to bottom: each
@@ -155,18 +155,18 @@ export default function RoadmapGraph({
           onClick={onStartPractice}
           disabled={counts.due === 0 && counts.fresh === 0}
         >
-          {counts.due > 0 ? '⟳ Start review' : brandNew ? '▶ Begin the path' : '▶ Continue the path'}
+          {counts.due > 0 ? 'Start review' : brandNew ? 'Begin the path' : 'Continue the path'}
         </button>
         {missCount > 0 && (
           <button className="btn btn-drill" onClick={onDrill}>
-            🔥 Drill misses ({missCount})
+            Drill misses ({missCount})
           </button>
         )}
         <button className="btn btn-warmup" onClick={onWarmup}>
-          ⚡ Warm-up
+          Warm-up
         </button>
         <button className="btn btn-mock" onClick={onMock} title="Timed, no hints — simulate the real interview">
-          🎤 Mock interview
+          Mock interview
         </button>
       </div>
 
@@ -175,16 +175,16 @@ export default function RoadmapGraph({
         <div className="today-strip">
           <span className="today-label">Today</span>
           <span className={`today-chip ${pulse.solves > 0 ? 'good' : ''}`}>
-            ⚔ {pulse.solves} solved
+            {pulse.solves} solved
           </span>
           {pulse.missedLeft > 0 && (
             <span className="today-chip bad">✗ {pulse.missedLeft} to win back</span>
           )}
           <span className={`today-chip ${pulse.dueLeft === 0 ? 'good' : ''}`}>
-            ⟳ {pulse.dueLeft === 0 ? 'reviews clear' : `${pulse.dueLeft} review${pulse.dueLeft === 1 ? '' : 's'} left`}
+            {pulse.dueLeft === 0 ? 'reviews clear' : `${pulse.dueLeft} review${pulse.dueLeft === 1 ? '' : 's'} left`}
           </span>
           <span className={`today-chip ${pulse.goalMet ? 'good' : ''}`}>
-            {pulse.goalMet ? '✓ daily goal met' : '○ goal: solve 1 + clear reviews'}
+            {pulse.goalMet ? '✓ daily goal met' : 'goal: solve 1 + clear reviews'}
           </span>
           {onStats && (
             <button
@@ -192,7 +192,7 @@ export default function RoadmapGraph({
               onClick={onStats}
               title="Interview readiness — coverage, retention, mocks, pace. Click for the breakdown."
             >
-              🎯 Readiness <strong>{ready.score}</strong>/100 →
+              Readiness <strong>{ready.score}</strong>/100 →
             </button>
           )}
         </div>
@@ -216,7 +216,7 @@ export default function RoadmapGraph({
       {/* The questions that keep biting — one tap from the front door */}
       {weak.length > 0 && (
         <div className="weak-row">
-          <span className="weak-label">🎯 Sharpen these:</span>
+          <span className="weak-label">Sharpen:</span>
           {weak.map(({ q, mistakes }) => (
             <button
               className="weak-chip"
@@ -308,8 +308,8 @@ export default function RoadmapGraph({
         <span className="data-tracks-label">Data tracks — their own map, off the algorithm path</span>
         <div className="data-tracks-row">
           {[
-            { key: 'pandas', icon: '🐼', name: 'pandas' },
-            { key: 'sql', icon: '🗄', name: 'SQL' },
+            { key: 'pandas', name: 'pandas' },
+            { key: 'sql', name: 'SQL' },
           ].map((t) => {
             const st = stats[t.key] || { total: 0, solved: 0 };
             if (st.total === 0) return null;
@@ -319,9 +319,6 @@ export default function RoadmapGraph({
                 className="data-track-card"
                 onClick={() => (onOpenTrack ? onOpenTrack(t.key) : onBrowse(t.key))}
               >
-                <span className="data-track-icon" aria-hidden="true">
-                  {t.icon}
-                </span>
                 <span className="data-track-name">{t.name}</span>
                 <span className="data-track-count">
                   {st.solved}/{st.total}
@@ -366,7 +363,7 @@ export default function RoadmapGraph({
                       {q.title}
                     </span>
                     <span className="q-meta">
-                      {isDue(progress.srs[q.id], today) && <span className="tag due-tag">⟳ due</span>}
+                      {isDue(progress.srs[q.id], today) && <span className="tag due-tag">due</span>}
                       <span className={`tag diff-${q.difficulty}`}>{q.difficulty}</span>
                       <span className={`pill pill-${level}`}>{MASTERY_LABEL[level]}</span>
                     </span>

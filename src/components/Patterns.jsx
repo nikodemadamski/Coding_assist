@@ -21,7 +21,7 @@ export default function Patterns({ questions, progress, onOpenQuestion, onQuiz, 
 
   return (
     <div className="stats patterns">
-      <h1>🧩 Patterns — the templates you must know</h1>
+      <h1>Patterns — the templates you must know</h1>
       <p className="patterns-intro">
         Interviews are pattern recognition under pressure. Learn to spot which of these a problem
         is, and the code skeleton comes almost for free. Skim them, then drill the linked problems
@@ -29,7 +29,7 @@ export default function Patterns({ questions, progress, onOpenQuestion, onQuiz, 
       </p>
       {onQuiz && (
         <button className="btn btn-primary patterns-quiz-btn" onClick={onQuiz}>
-          🎯 Quiz me — name the pattern
+          Quiz me — name the pattern
         </button>
       )}
 

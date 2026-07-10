@@ -190,14 +190,14 @@ export default function Stats({ questions, progress, backupInfo = null, onBackup
       {backupInfo?.nudge && onBackupNow && (
         <div className="backup-nudge" role="status">
           <span>
-            ⚠ {solvedCount} solves live only in this browser
+            {solvedCount} solves live only in this browser
             {backupInfo.daysSince != null
               ? ` — last backup was ${backupInfo.daysSince} days ago.`
               : ' — never backed up.'}{' '}
             One cleared cache loses everything.
           </span>
           <button className="btn" onClick={onBackupNow}>
-            ⬇ Back up now
+            Back up now
           </button>
         </div>
       )}
@@ -241,7 +241,7 @@ export default function Stats({ questions, progress, backupInfo = null, onBackup
 
       <div className="stat-grid">
         <div className="stat-tile">
-          <div className="v">🔥 {streak}</div>
+          <div className="v">{streak}</div>
           <div className="l">day streak</div>
         </div>
         <div className="stat-tile">

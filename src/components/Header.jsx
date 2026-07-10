@@ -27,7 +27,7 @@ export default function Header({
       </button>
       <div className="header-spacer" />
       <span className="streak" title="Current streak (days with at least one solve)">
-        🔥 {streak} day{streak === 1 ? '' : 's'}
+        {streak} day{streak === 1 ? '' : 's'}
       </span>
       <span
         className="belt-chip"
@@ -51,16 +51,16 @@ export default function Header({
         </span>
       </span>
       <button className="icon-btn btn-search" onClick={onSearch} title="Search questions (Ctrl+K or /)">
-        🔍 <kbd className="kbd-hint">⌘K</kbd>
+        Search <kbd className="kbd-hint">⌘K</kbd>
       </button>
       <button className="icon-btn" onClick={onBrowse}>
-        📋 Browse
+        Browse
       </button>
       <button className="icon-btn" onClick={onPatterns}>
-        🧩 Patterns
+        Patterns
       </button>
       <button className="icon-btn" onClick={onGuide}>
-        🥋 Sensei
+        Sensei
       </button>
       <button className="icon-btn" onClick={onStats}>
         Stats
@@ -79,7 +79,7 @@ export default function Header({
         aria-label="Settings"
         title={backupNudge ? 'Your progress has not been backed up in a while' : undefined}
       >
-        ⚙ Settings
+        Settings
         {backupNudge && <span className="backup-dot" aria-hidden="true" />}
       </button>
     </header>

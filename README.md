@@ -163,7 +163,7 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
 - **Your workspace, your proportions**: drag the divider between the problem and the editor
   to whatever split suits you (double-click resets), and step the editor font size with
   **A− / A+** — both remembered across sessions.
-- **⏱ Big-O check on every solve**: the moment your code passes, the interviewer's
+- **Big-O check on every solve**: the moment your code passes, the interviewer's
   favourite follow-up appears — "what's the time complexity?" One tap from six buckets,
   instant verdict against the model solution's bound. All 123 questions now carry a
   verified complexity string (written against the actual reference code), so the mock
@@ -178,7 +178,7 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
   back, reviews left, daily-goal state — plus your live readiness score, one click from its
   full breakdown. You see progress the moment you land, and what's still open before you
   close the tab.
-- **🎯 Sharpen these** (home): the questions you've gotten wrong twice or more sit as chips
+- **Sharpen** (home): the questions you've gotten wrong twice or more sit as chips
   right on the front door — one tap reopens the worst offender.
 - **Review forecast** (Stats page): a 7-day bar row of when your spaced-repetition reviews
   land (overdue ones count as today), so you can see the week's workload before it hits.

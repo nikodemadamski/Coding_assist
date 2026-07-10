@@ -266,7 +266,7 @@ export default function VisualizerModal({ question, code, label, note, onClose }
       <div className="modal viz-modal" role="dialog" aria-modal="true" aria-label="Algorithm visualizer">
         <div className="viz-head">
           <h2>
-            ▶ Visualize — {question.title}
+            Visualize — {question.title}
             <span className="viz-label">{label}</span>
           </h2>
           <button className="icon-btn" onClick={onClose} aria-label="Close visualizer">
@@ -288,7 +288,7 @@ export default function VisualizerModal({ question, code, label, note, onClose }
           </span>
           {note && (
             <details className="viz-plan">
-              <summary>💡 The idea</summary>
+              <summary>The idea</summary>
               <div className="viz-plan-body">
                 <Markdown text={note} />
               </div>
@@ -323,7 +323,7 @@ export default function VisualizerModal({ question, code, label, note, onClose }
                 className="btn btn-primary"
                 onClick={() => (atEnd ? (setStep(0), setPlaying(true)) : setPlaying((p) => !p))}
               >
-                {playing ? '⏸ Pause' : '▶ Play'}
+                {playing ? 'Pause' : 'Play'}
               </button>
               <button
                 className="btn"

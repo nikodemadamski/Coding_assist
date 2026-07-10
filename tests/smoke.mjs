@@ -310,7 +310,7 @@ try {
 
   // ---- failure path: renamed function ----
   await setEditor(page, 'def wrong_name(nums, target):\n    return [0, 1]');
-  await page.locator('button', { hasText: '▶ Run' }).click();
+  await page.locator('button', { hasText: /^Run/ }).click();
   await page.locator('.error-box').waitFor({ timeout: 30000 });
   check(
     (await resultText(page)).includes('keep the starter'),
@@ -319,7 +319,7 @@ try {
 
   // ---- failure path: syntax error ----
   await setEditor(page, 'def two_sum(nums target):\n    pass');
-  await page.locator('button', { hasText: '▶ Run' }).click();
+  await page.locator('button', { hasText: /^Run/ }).click();
   await page.locator('.error-box').waitFor({ timeout: 30000 });
   check((await resultText(page)).includes('Syntax error'), 'syntax error surfaced');
 
@@ -327,7 +327,7 @@ try {
   const solution =
     'def two_sum(nums, target):\n    seen = {}\n    for i, n in enumerate(nums):\n        if target - n in seen:\n            return [seen[target - n], i]\n        seen[n] = i';
   await setEditor(page, solution);
-  await page.locator('button', { hasText: '▶ Run' }).click();
+  await page.locator('button', { hasText: /^Run/ }).click();
   await page.locator('.result-summary.pass').waitFor({ timeout: 60000 });
   check((await resultText(page)).includes('5/5 tests passed'), 'correct solution passes all tests');
 
@@ -405,7 +405,7 @@ try {
 
   // ---- failure path: infinite loop killed by the 5s watchdog ----
   await setEditor(page, 'def two_sum(nums, target):\n    while True:\n        pass');
-  await page.locator('button', { hasText: '▶ Run' }).click();
+  await page.locator('button', { hasText: /^Run/ }).click();
   await page.locator('.error-box').waitFor({ timeout: 120000 });
   check(
     (await resultText(page)).includes('Time limit exceeded'),
@@ -421,12 +421,12 @@ try {
     'SQL questions also show the guided "why this one" card'
   );
   await setEditor(page, 'SELECT name, power FROM fighters WHERE power >= 80 ORDER BY power DESC;');
-  await page.locator('button', { hasText: '▶ Run' }).click();
+  await page.locator('button', { hasText: /^Run/ }).click();
   await page.locator('.result-summary').first().waitFor({ timeout: 60000 });
   check((await resultText(page)).includes('Correct result'), 'correct SQL passes');
 
   await setEditor(page, 'SELECT name, power FROM fighters ORDER BY power;');
-  await page.locator('button', { hasText: '▶ Run' }).click();
+  await page.locator('button', { hasText: /^Run/ }).click();
   await page.locator('.sql-diff').waitFor({ timeout: 30000 });
   const sqlText = await resultText(page);
   check(
@@ -435,7 +435,7 @@ try {
   );
 
   await setEditor(page, 'SELEC name FROM fighters;');
-  await page.locator('button', { hasText: '▶ Run' }).click();
+  await page.locator('button', { hasText: /^Run/ }).click();
   await page.locator('.error-box').waitFor({ timeout: 30000 });
   check((await resultText(page)).includes('syntax error'), 'SQLite error shown verbatim');
 

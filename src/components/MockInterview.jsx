@@ -90,7 +90,7 @@ export default function MockInterview({ questions, progress, onRecordMock, onSol
   if (phase === 'brief') {
     return (
       <div className="stats mock">
-        <h1>🎤 Mock interview</h1>
+        <h1>Mock interview</h1>
         <p className="mock-intro">
           The real thing: one problem, a clock, and no hints. Talk through your thinking as if
           someone&apos;s watching — because in the interview, they are. When the timer stops
@@ -104,7 +104,7 @@ export default function MockInterview({ questions, progress, onRecordMock, onSol
               <span className={`tag diff-${f.difficulty || 'medium'}`}>
                 {f.difficulty || 'random'}
               </span>
-              <span className="mock-format-time">⏱ {f.minutes} min</span>
+              <span className="mock-format-time">{f.minutes} min</span>
               <span className="mock-format-blurb">{f.blurb}</span>
             </button>
           ))}
@@ -121,7 +121,7 @@ export default function MockInterview({ questions, progress, onRecordMock, onSol
     const low = remaining < 60000;
     const timer = (
       <span className={`mock-timer ${low ? 'low' : ''}`} role="timer" aria-label="Time remaining">
-        ⏱ {formatDuration(remaining)}
+        {formatDuration(remaining)}
       </span>
     );
     return (
@@ -171,7 +171,7 @@ export default function MockInterview({ questions, progress, onRecordMock, onSol
 
     return (
       <div className="stats mock">
-        <h1>🎤 Debrief — {question.title}</h1>
+        <h1>Debrief — {question.title}</h1>
         <div
           className={`mock-verdict ${passed ? 'pass' : 'fail'}`}
           role="status"
@@ -180,7 +180,7 @@ export default function MockInterview({ questions, progress, onRecordMock, onSol
             <>✓ Solved in {timeStr} of {format.minutes}:00 — that&apos;s an interview-grade result.</>
           )}
           {passed && end.ranOutOfTime && <>✓ Solved, but the clock ran out first. Speed is the next rep.</>}
-          {!passed && end.ranOutOfTime && <>⏱ Time&apos;s up at {timeStr} — tests not yet passing.</>}
+          {!passed && end.ranOutOfTime && <>Time&apos;s up at {timeStr} — tests not yet passing.</>}
           {!passed && end.ended && <>Ended early at {timeStr}. No shame — log it and go again.</>}
           {!passed && !end.ranOutOfTime && !end.ended && (
             <>Submitted at {timeStr}, tests not passing. The debrief is where the learning is.</>

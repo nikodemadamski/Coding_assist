@@ -75,7 +75,7 @@ export default function TrackMap({ trackKey, questions, progress, onOpenQuestion
           ← Back to the map
         </button>
         <h1>
-          {graph.icon} {graph.label} track
+          {graph.label} track
         </h1>
       </div>
       <p className="map-hint">
@@ -157,7 +157,7 @@ export default function TrackMap({ trackKey, questions, progress, onOpenQuestion
                       {q.title}
                     </span>
                     <span className="q-meta">
-                      {isDue(progress.srs[q.id], today) && <span className="tag due-tag">⟳ due</span>}
+                      {isDue(progress.srs[q.id], today) && <span className="tag due-tag">due</span>}
                       <span className={`tag diff-${q.difficulty}`}>{q.difficulty}</span>
                       <span className={`pill pill-${level}`}>{MASTERY_LABEL[level]}</span>
                     </span>

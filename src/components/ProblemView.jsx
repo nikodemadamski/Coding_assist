@@ -21,9 +21,9 @@ import {
 import { pathStep } from '../data/roadmap.js';
 
 const LANG_LABEL = {
-  python: '🐍 Python 3',
-  pandas: '🐼 Python + pandas',
-  sql: '🗄 SQL (SQLite)',
+  python: 'Python 3',
+  pandas: 'Python + pandas',
+  sql: 'SQL (SQLite)',
 };
 
 const TABS = [
@@ -223,11 +223,11 @@ export default function ProblemView({
 
   const phaseLabel =
     practiceInfo?.phase === 'review'
-      ? `⟳ Review · ${practiceInfo.reviewsLeft} to clear`
+      ? `Review · ${practiceInfo.reviewsLeft} to clear`
       : practiceInfo?.phase === 'new'
-        ? `✦ New · ${practiceInfo.newLeft} left`
+        ? `New · ${practiceInfo.newLeft} left`
         : practiceInfo?.phase === 'drill'
-          ? `🔥 Drill · ${practiceInfo.reviewsLeft} left`
+          ? `Drill · ${practiceInfo.reviewsLeft} left`
           : '';
 
   return (
@@ -271,7 +271,7 @@ export default function ProblemView({
           aria-pressed={focusCode}
           title={focusCode ? 'Show the problem again' : 'Focus the editor (hide the problem)'}
         >
-          {focusCode ? '❐ Show problem' : '⛶ Focus'}
+          {focusCode ? 'Show problem' : 'Focus'}
         </button>
         <button
           className="btn"
@@ -279,7 +279,7 @@ export default function ProblemView({
           disabled={running}
           title={`Run against the tests (${MOD}+Enter)`}
         >
-          {running ? '…' : '▶ Run'} <kbd className="kbd-hint">{MOD}↩</kbd>
+          {running ? '…' : 'Run'} <kbd className="kbd-hint">{MOD}↩</kbd>
         </button>
         <button
           className="btn btn-primary"
@@ -310,7 +310,7 @@ export default function ProblemView({
           <Markdown text={question.description} />
           {!mockMode && question.why && (
             <div className="why-card">
-              <span className="why-card-label">🎯 Why this one</span>
+              <span className="why-card-label">Why this one</span>
               <Markdown text={question.why} />
             </div>
           )}
@@ -349,7 +349,7 @@ export default function ProblemView({
           )}
           {!mockMode && question.insight && (
             <details className="go-deeper">
-              <summary>💎 Go deeper — why this works &amp; why it&apos;s worth knowing</summary>
+              <summary>Go deeper — why this works &amp; why it&apos;s worth knowing</summary>
               <div className="go-deeper-body">
                 <Markdown text={question.insight} />
               </div>
@@ -420,7 +420,7 @@ export default function ProblemView({
                 onClick={() => openVisualizer(code, 'Your code')}
                 title="Trace YOUR code line by line on a real test case"
               >
-                👁 Visualize my code
+                Visualize my code
               </button>
             )}
             <span className="hint-text">
@@ -446,7 +446,7 @@ export default function ProblemView({
           {justSolved && (
             <div className="solved-banner">
               <span>
-                ⚔ Solved{solveMsRef.current != null ? ` in ${formatDuration(solveMsRef.current)}` : ''}!
+                Solved{solveMsRef.current != null ? ` in ${formatDuration(solveMsRef.current)}` : ''}!
                 Scheduled for review — spaced repetition will bring it back.
               </span>
               {nextUp && onOpenNext && (
@@ -470,7 +470,7 @@ export default function ProblemView({
               </div>
               {progress.notes?.[question.id] && (
                 <div className="past-note">
-                  <span className="past-note-label">📝 Your note from last time</span>
+                  <span className="past-note-label">Your note from last time</span>
                   <p>{progress.notes[question.id]}</p>
                 </div>
               )}

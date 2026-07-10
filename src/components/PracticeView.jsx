@@ -40,7 +40,7 @@ export default function PracticeView({
     return (
       <div className="picker">
         <div className="session-done">
-          <h2>{mode === 'drill' ? '🔥 Drill complete' : '⚔ Session complete'}</h2>
+          <h2>{mode === 'drill' ? 'Drill complete' : 'Session complete'}</h2>
           <p>
             {mode === 'drill'
               ? 'You re-cleared every question you missed today. That is how a mistake becomes a skill.'
