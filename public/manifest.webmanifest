@@ -1,0 +1,16 @@
+{
+  "name": "ZoroClaude Dojo",
+  "short_name": "Dojo",
+  "description": "Personal LeetCode-style dojo for Python, pandas and SQL interview training. Fully offline — your progress stays in your browser.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#12141d",
+  "theme_color": "#12141d",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

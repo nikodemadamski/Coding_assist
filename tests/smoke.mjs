@@ -898,6 +898,37 @@ try {
   );
   check(noHScroll2, 'mobile: no horizontal scroll in problem view');
   await mobile.close();
+
+  // ================= PWA: installable + works offline =================
+  const pwa = await browser.newPage();
+  await pwa.goto(BASE);
+  check(
+    (await pwa.locator('link[rel="manifest"]').count()) === 1,
+    'PWA: the page links a web app manifest'
+  );
+  const manifest = await pwa.evaluate(async () => {
+    const res = await fetch('manifest.webmanifest');
+    return res.ok ? res.json() : null;
+  });
+  check(
+    manifest?.name === 'ZoroClaude Dojo' && manifest.icons?.length >= 2,
+    'PWA: manifest resolves with name and icons'
+  );
+  const iconOk = await pwa.evaluate(async () => (await fetch('icons/icon-192.png')).ok);
+  check(iconOk, 'PWA: the home-screen icon is served');
+  // production build registers the SW; wait for it to take control
+  await pwa.evaluate(() => navigator.serviceWorker.ready);
+  await pwa.reload(); // now the shell + assets are fetched under SW control
+  await pwa.locator('.header-logo').waitFor();
+  await pwa.context().setOffline(true);
+  await pwa.reload();
+  await pwa.locator('.header-logo').waitFor({ timeout: 10000 });
+  check(
+    (await pwa.locator('.graph-node').count()) >= 15,
+    'PWA: with the network cut, the app still opens (offline shell)'
+  );
+  await pwa.context().setOffline(false);
+  await pwa.close();
 } finally {
   await browser.close();
   killServer();

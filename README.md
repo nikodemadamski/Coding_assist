@@ -155,6 +155,11 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
   cells they point at (`lo`/`mid`/`hi`, `i`/`j`, `slow`/`fast`…), and the window between two
   pointers is shaded — so two-pointer, sliding-window and binary-search motion is visible on
   the data itself. Works on your own code too (**👁 Visualize my code**).
+- **Installable + offline (PWA)**: open the site on your phone and "Add to Home Screen" —
+  it launches full-screen like a native app, and a service worker keeps the whole dojo
+  working with no connection (navigations go network-first, so deploys still land the
+  moment you're back online). Python/pandas need their runtime downloaded once per
+  browser; everything else is fully offline.
 - **Your workspace, your proportions**: drag the divider between the problem and the editor
   to whatever split suits you (double-click resets), and step the editor font size with
   **A− / A+** — both remembered across sessions.
