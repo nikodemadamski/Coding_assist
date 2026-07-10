@@ -122,6 +122,14 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
   its complexity, and links to the problems in your bank that drill it. Every template is
   machine-checked to be valid Python syntax. The Stuck ladder's "which pattern is this?" rung
   links straight here.
+- **📝 Personal notes — "note to future you"**: every problem has an auto-saving notebook
+  ("what tripped me, what's the key idea"). The payoff is at review time: when spaced
+  repetition brings the question back and you solve it, **your past note resurfaces** right
+  in the reflect panel — past-you warning future-you. Notes live in your progress data, so
+  they export/import with everything else.
+- **Solve → next, no dead ends**: solving a problem in free mode offers a one-click
+  **"Next on your path"** button right in the solved banner, jumping straight to the next
+  unsolved step — the momentum never breaks.
 - **🎉 Milestone celebrations**: earning a new belt or hitting a streak milestone (3, 7, 14,
   30… days) pops a satisfying confetti moment — the small payoff that makes the daily habit
   stick. Fires exactly on the crossing, never on a plain solve or a page reload.

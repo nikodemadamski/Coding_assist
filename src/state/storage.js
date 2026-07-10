@@ -12,6 +12,7 @@ export const EMPTY_PROGRESS = {
   activity: {}, // 'YYYY-MM-DD' -> { visited, solves, fails, missed: [id], goalMet }
   warmup: {}, // level -> { best, runs, lastRunAt }
   mock: [], // [{ id, title, difficulty, date, format, timeMs, passed, ... }]
+  notes: {}, // questionId -> personal note ("what tripped me / key idea")
 };
 
 function safeParse(raw, fallback) {

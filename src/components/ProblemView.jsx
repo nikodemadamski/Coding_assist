@@ -4,6 +4,7 @@ import Results from './Results.jsx';
 import Markdown from './Markdown.jsx';
 import Approaches from './Approaches.jsx';
 import StuckLadder from './StuckLadder.jsx';
+import Notes from './Notes.jsx';
 import VisualizerModal from './VisualizerModal.jsx';
 import { runQuestion } from '../engine/runnerClient.js';
 import { RATING_DELTA, isSolved } from '../state/progress.js';
@@ -46,6 +47,11 @@ export default function ProblemView({
   onSubmitReport = null,
   // jump to the Patterns reference for this problem's pattern (optional)
   onSeePattern = null,
+  // personal notes (optional): save handler; the note itself is read from progress
+  onNote = null,
+  // free-mode continuation (optional): the next unsolved path question
+  nextUp = null,
+  onOpenNext = null,
 }) {
   const [code, setCode] = useState(
     () => progress.drafts[question.id] ?? question.starter_code ?? ''
@@ -305,6 +311,13 @@ export default function ProblemView({
               </div>
             </details>
           )}
+          {!mockMode && onNote && (
+            <Notes
+              questionId={question.id}
+              note={progress.notes?.[question.id]}
+              onSave={onNote}
+            />
+          )}
         </section>
 
         <section className={`pv-pane pane-code ${tab === 'code' ? 'visible' : ''}`}>
@@ -335,7 +348,13 @@ export default function ProblemView({
         >
           {justSolved && (
             <div className="solved-banner">
-              ⚔ Solved! Scheduled for review — spaced repetition will bring it back.
+              <span>⚔ Solved! Scheduled for review — spaced repetition will bring it back.</span>
+              {nextUp && onOpenNext && (
+                <button className="btn btn-jade next-q-btn" onClick={() => onOpenNext(nextUp.id)}>
+                  Next on your path: {pathStep(nextUp.id) ? `step ${pathStep(nextUp.id)} · ` : ''}
+                  {nextUp.title} →
+                </button>
+              )}
             </div>
           )}
 
@@ -343,6 +362,12 @@ export default function ProblemView({
           {practiceMode && outcome === 'pass' && (
             <div className="reflect">
               <div className="solved-banner">✓ Correct! Now lock in the understanding.</div>
+              {progress.notes?.[question.id] && (
+                <div className="past-note">
+                  <span className="past-note-label">📝 Your note from last time</span>
+                  <p>{progress.notes[question.id]}</p>
+                </div>
+              )}
               <p className="reflect-q">
                 Before you move on: in one sentence, what does your solution actually do — and
                 what would break it?
@@ -361,6 +386,14 @@ export default function ProblemView({
                 </h4>
                 <Approaches question={question} onVisualize={openVisualizer} />
               </div>
+              {onNote && (
+                <Notes
+                  questionId={question.id}
+                  note={progress.notes?.[question.id]}
+                  onSave={onNote}
+                  heading="Note to future you — it'll be here at the next review"
+                />
+              )}
               <p className="reflect-q">How well did you know it?</p>
               <div className="rating-row">
                 {RATINGS.map((r) => (

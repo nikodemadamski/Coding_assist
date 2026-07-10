@@ -20,6 +20,7 @@ export default function PracticeView({
   onSolve,
   onFail,
   onDraft,
+  onNote,
   onExit,
   mode = 'practice',
 }) {
@@ -68,6 +69,7 @@ export default function PracticeView({
       onSolve={handleSolve}
       onFail={onFail}
       onDraft={onDraft}
+      onNote={onNote}
       onBack={onExit}
       practiceMode
       practiceInfo={{ phase, reviewsLeft: reviewLeft, newLeft }}

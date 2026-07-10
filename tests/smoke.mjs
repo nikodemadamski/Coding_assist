@@ -302,6 +302,29 @@ try {
   check(true, 'Submit marks the problem solved');
   check((await page.locator('.streak').innerText()).includes('1 day'), 'streak increments');
 
+  // ---- solve → next: the flow never dead-ends ----
+  check(
+    (await page.locator('.next-q-btn').innerText()).includes('Reverse a string'),
+    'the solved banner offers the next unsolved path step'
+  );
+  await page.locator('.next-q-btn').click();
+  check(
+    (await page.locator('.pv-title').innerText()).includes('Reverse a string'),
+    'clicking Next jumps straight into the next question'
+  );
+
+  // ---- personal notes: saved, and they survive a reload ----
+  await page.locator('.notes > summary').click();
+  await page.fill('.notes-input', 'slice trick: s[::-1] — remember negative step');
+  await page.waitForTimeout(700); // let the debounce save
+  await page.reload();
+  await page.locator('.icon-btn', { hasText: 'Browse' }).click();
+  await page.locator('.q-card', { hasText: 'Reverse a string' }).first().click();
+  check(
+    (await page.locator('.notes-input').inputValue()).includes('slice trick'),
+    'a personal note persists across reload'
+  );
+
   // ---- persistence across reload ----
   await page.reload();
   await page.locator('.icon-btn', { hasText: 'Browse' }).click();
@@ -422,6 +445,10 @@ try {
           'py-two-sum': { stage: 0, nextDue: today },
         },
         streak: { count: 1, lastActiveDate: today },
+        notes: {
+          'py-contains-duplicate': 'set() beats sorting here — one pass',
+          'py-two-sum': 'store value -> index, look up the complement',
+        },
       })
     );
   });
@@ -448,6 +475,12 @@ try {
     await page.locator('button', { hasText: 'Submit' }).click();
     await page.locator('.reflect').waitFor({ timeout: 60000 });
     check(await page.locator('.rating-btn.rating-good').isVisible(), `review ${r + 1}: reflect + rating shown`);
+    if (r === 0) {
+      check(
+        await page.locator('.past-note').isVisible(),
+        'your past note resurfaces when the review comes back'
+      );
+    }
     await page.locator('.rating-btn.rating-good').click();
   }
   check(

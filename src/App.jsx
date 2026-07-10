@@ -24,6 +24,7 @@ import {
   saveCustomQuestions,
 } from './state/storage.js';
 import { recordSolve, recordFail, isSolved, currentStreak } from './state/progress.js';
+import { nextOnPath } from './data/roadmap.js';
 import { markVisit, recordDaySolve, recordDayFail } from './state/activity.js';
 import { getInitialTheme, applyTheme } from './state/theme.js';
 import { nextCelebration } from './state/celebrate.js';
@@ -107,6 +108,12 @@ export default function App() {
     [allQuestions, progress]
   );
   const streakVal = currentStreak(progress.streak);
+  // The next unsolved question on the path — powers the "Next →" continuation
+  // in the solved banner (recomputes as soon as a solve lands).
+  const nextUpQuestion = useMemo(
+    () => nextOnPath(allQuestions, (id) => isSolved(progress.solved[id])),
+    [allQuestions, progress]
+  );
   useEffect(() => {
     const cur = { solvedCount, streak: streakVal };
     if (milestoneRef.current === null) {
@@ -144,6 +151,15 @@ export default function App() {
 
   const handleDraft = useCallback((questionId, code) => {
     setProgress((p) => ({ ...p, drafts: { ...p.drafts, [questionId]: code } }));
+  }, []);
+
+  const handleNote = useCallback((questionId, text) => {
+    setProgress((p) => {
+      const notes = { ...(p.notes || {}) };
+      if (text && text.trim()) notes[questionId] = text;
+      else delete notes[questionId]; // clearing the textarea removes the note
+      return { ...p, notes };
+    });
   }, []);
 
   const handleWarmupResult = useCallback((level, correctCount) => {
@@ -252,6 +268,7 @@ export default function App() {
             onSolve={handleSolve}
             onFail={handleFail}
             onDraft={handleDraft}
+            onNote={handleNote}
             onExit={() => setView({ name: 'browse' })}
           />
         )}
@@ -263,6 +280,9 @@ export default function App() {
             onSolve={handleSolve}
             onFail={handleFail}
             onDraft={handleDraft}
+            onNote={handleNote}
+            nextUp={nextUpQuestion}
+            onOpenNext={(id) => setView({ name: 'problem', id, from: view.from || 'home' })}
             onBack={() => setView(backTo)}
             onSeePattern={(key) => setView({ name: 'patterns', focusKey: key })}
           />
