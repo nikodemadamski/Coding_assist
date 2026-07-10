@@ -601,11 +601,21 @@ try {
   }
   await page.locator('.btn-viz').first().click();
   await page.locator('.viz-modal').waitFor({ timeout: 60000 });
-  check(await page.locator('.viz-plan').isVisible(), "the approach's idea is shown in the modal");
+  check(await page.locator('.viz-plan > summary').isVisible(), "the approach's idea chip is in the modal");
   await page.locator('.viz-line.active').waitFor({ timeout: 120000 });
   check(true, 'visualizer traces the solution and highlights the current line');
-  // the plain-English hero narrates the current step
+  // the hero is the single reading spot: narration + the source line
   check(await page.locator('.viz-hero-why').isVisible(), 'a plain-English hero sentence leads each step');
+  check(
+    (await page.locator('.viz-hero .viz-src').innerText()).includes('line'),
+    'the hero shows the source line inline (no separate caption to scan)'
+  );
+  // nothing outside the panes should require page scrolling
+  const noModalScroll = await page.evaluate(() => {
+    const m = document.querySelector('.viz-modal');
+    return m.scrollHeight <= m.clientHeight + 1;
+  });
+  check(noModalScroll, 'the modal fits without page scrolling (panes scroll internally)');
   const stepBefore = await page.locator('.viz-step-count').innerText();
   check(/Step 1 \/ \d+/.test(stepBefore), `visualizer starts at step 1 of N (${stepBefore.trim()})`);
   await page.locator('button[aria-label="Next step"]').click();
@@ -614,12 +624,14 @@ try {
     'stepping forward advances the trace'
   );
   check((await page.locator('.viz-var').count()) >= 2, 'variable panel shows the local variables');
-  // step through: a variable should light up as "changed", and the hero should
-  // carry a plain-English "why" with live values (e.g. "… (= 9) …")
+  // step through: a variable lights up, the hero carries live values, and a
+  // "just happened" effect line summarizes the change in place
   let sawWhy = false;
   let sawChanged = false;
+  let sawEffect = false;
   for (;;) {
     if (!sawChanged && (await page.locator('.viz-var.changed').count()) > 0) sawChanged = true;
+    if (!sawEffect && (await page.locator('.viz-effect').count()) > 0) sawEffect = true;
     if (
       !sawWhy &&
       (await page.locator('.viz-hero-why').count()) > 0 &&
@@ -627,14 +639,33 @@ try {
     ) {
       sawWhy = true;
     }
-    if (sawWhy && sawChanged) break;
+    if (sawWhy && sawChanged && sawEffect) break;
     if (await page.locator('button[aria-label="Next step"]').isDisabled()) break;
     await page.locator('button[aria-label="Next step"]').click();
   }
   check(sawWhy, 'each step narrates WHY it runs, with live values plugged in');
   check(sawChanged, 'the variable that just changed is highlighted');
+  check(sawEffect, 'a "just happened" line summarizes the change (w: \'nat\' → \'bat\')');
   await page.locator('.icon-btn[aria-label="Close visualizer"]').click();
   check((await page.locator('.viz-modal').count()) === 0, 'visualizer closes');
+
+  // ---- visualize MY code: the tracer runs whatever is in the editor ----
+  await setEditor(
+    page,
+    'def two_sum(nums, target):\n    for i in range(len(nums)):\n        for j in range(i + 1, len(nums)):\n            if nums[i] + nums[j] == target:\n                return [i, j]'
+  );
+  await page.locator('button', { hasText: 'Visualize my code' }).click();
+  await page.locator('.viz-modal').waitFor({ timeout: 60000 });
+  check(
+    (await page.locator('.viz-label').innerText()).includes('Your code'),
+    'Visualize my code opens the tracer on the editor contents'
+  );
+  await page.locator('.viz-line.active').waitFor({ timeout: 60000 });
+  check(
+    (await page.locator('.viz-code').innerText()).includes('for j in range'),
+    "the traced source is the user's own code"
+  );
+  await page.locator('.icon-btn[aria-label="Close visualizer"]').click();
   await page.locator('.icon-btn[aria-label="Back to problem list"]').click();
 
   // ---- warm-up mode: rapid-fire typing drills ----

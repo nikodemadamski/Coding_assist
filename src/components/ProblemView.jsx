@@ -331,6 +331,15 @@ export default function ProblemView({
             <button className="btn" onClick={handleReset}>
               Reset to starter
             </button>
+            {!mockMode && question.track !== 'sql' && (question.tests?.length ?? 0) > 0 && (
+              <button
+                className="btn btn-viz"
+                onClick={() => openVisualizer(code, 'Your code')}
+                title="Trace YOUR code line by line on a real test case"
+              >
+                👁 Visualize my code
+              </button>
+            )}
             <span className="hint-text">
               {question.track === 'sql'
                 ? 'Write a single SELECT query.'

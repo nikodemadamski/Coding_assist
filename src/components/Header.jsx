@@ -37,6 +37,11 @@ export default function Header({
         }
       >
         {belt.name} belt
+        {belt.next && (
+          <span className="belt-count">
+            {solvedCount}/{belt.next.threshold}
+          </span>
+        )}
         <span className="belt-strip" role="img" aria-label={`Belt progress toward next rank`}>
           <span
             className="belt-strip-fill"

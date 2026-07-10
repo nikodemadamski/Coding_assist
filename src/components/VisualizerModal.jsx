@@ -2,9 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Markdown from './Markdown.jsx';
 import { runPythonTrace } from '../engine/pyClient.js';
 
-// NeetCode-style algorithm visualizer: replays a REAL traced execution of the
-// chosen solution on a chosen test case — current line highlighted in the
-// code, every local variable shown as it changes, play/pause/scrub.
+// NeetCode-style algorithm visualizer: replays a REAL traced execution of any
+// code (a reference approach or the user's own) on a chosen test case.
+// Built to be FOLLOWED: everything fits without page-scrolling, one hero block
+// tells you what's happening + what just changed, and inside a collection only
+// the element that changed lights up.
 
 const SPEEDS = [0.5, 1, 2];
 
@@ -21,13 +23,70 @@ function fmt(v) {
   return String(v);
 }
 
-function Cells({ items, kind }) {
+const shortFmt = (v, n = 32) => {
+  const s = fmt(v);
+  return s.length > n ? s.slice(0, n - 1) + '…' : s;
+};
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+// One short human line per changed variable: "w: 'nat' → 'bat'",
+// "groups['abt'] = ['bat']", "res += [1, 2]".
+function summarizeChange(name, before, after) {
+  if (before === '__new__') return `${name} = ${shortFmt(after)}`;
+  const prim = (v) => v === null || typeof v !== 'object';
+  if (prim(before) && prim(after)) return `${name}: ${fmt(before)} → ${fmt(after)}`;
+  if (after?.__dict__) {
+    const prevPairs = new Map((before?.__dict__ ?? []).map(([k, v]) => [JSON.stringify(k), v]));
+    const bits = [];
+    for (const [k, v] of after.__dict__) {
+      const kk = JSON.stringify(k);
+      if (!prevPairs.has(kk)) bits.push(`${name}[${fmt(k)}] = ${shortFmt(v, 24)}`);
+      else if (!same(prevPairs.get(kk), v)) bits.push(`${name}[${fmt(k)}] → ${shortFmt(v, 24)}`);
+    }
+    return bits.slice(0, 2).join('  ·  ') || `${name} changed`;
+  }
+  if (Array.isArray(after)) {
+    const b = Array.isArray(before) ? before : [];
+    if (after.length > b.length) return `${name} += ${after.slice(b.length).map(fmt).join(', ')}`;
+    if (after.length < b.length) return `${name} shrank to ${shortFmt(after)}`;
+    for (let i = 0; i < after.length; i++) {
+      if (!same(after[i], b[i])) return `${name}[${i}] → ${shortFmt(after[i], 24)}`;
+    }
+    return `${name} changed`;
+  }
+  if (after?.__set__) {
+    const b = new Set((before?.__set__ ?? []).map((x) => JSON.stringify(x)));
+    const added = after.__set__.filter((x) => !b.has(JSON.stringify(x)));
+    if (added.length) return `${name} + ${added.map(fmt).join(', ')}`;
+    return `${name} changed`;
+  }
+  return `${name} changed`;
+}
+
+// hotIndex predicates: which elements inside a collection just changed.
+function listHot(before, after) {
+  const b = Array.isArray(before) ? before : [];
+  return after.map((x, i) => i >= b.length || !same(x, b[i]));
+}
+function setHot(before, after) {
+  const b = new Set((before?.__set__ ?? []).map((x) => JSON.stringify(x)));
+  return after.map((x) => !b.has(JSON.stringify(x)));
+}
+function dictHot(before, after) {
+  const prevPairs = new Map((before?.__dict__ ?? []).map(([k, v]) => [JSON.stringify(k), v]));
+  return after.map(([k, v]) => {
+    const kk = JSON.stringify(k);
+    return !prevPairs.has(kk) || !same(prevPairs.get(kk), v);
+  });
+}
+
+function Cells({ items, kind, hot }) {
   const shown = items.slice(0, 14);
   return (
     <span className={`viz-cells ${kind || ''}`}>
       {shown.map((x, i) => (
-        <span className="viz-cell" key={i}>
-          <span className="viz-cell-v">{typeof x === 'object' && x !== null ? fmt(x) : fmt(x)}</span>
+        <span className={`viz-cell ${hot?.[i] ? 'hot' : ''}`} key={i}>
+          <span className="viz-cell-v">{fmt(x)}</span>
           {kind !== 'set' && <span className="viz-cell-i">{i}</span>}
         </span>
       ))}
@@ -36,22 +95,31 @@ function Cells({ items, kind }) {
   );
 }
 
-function VarValue({ value }) {
+// Renders a value; when `before` is provided, only the changed elements light
+// up (no more whole-collection strike-throughs).
+function VarValue({ value, before }) {
   if (Array.isArray(value)) {
     if (value.length === 0) return <span className="viz-empty">[] empty</span>;
-    return <Cells items={value} />;
+    return <Cells items={value} hot={before !== undefined ? listHot(before, value) : null} />;
   }
   if (value && typeof value === 'object') {
     if (value.__set__) {
       if (value.__set__.length === 0) return <span className="viz-empty">set() empty</span>;
-      return <Cells items={value.__set__} kind="set" />;
+      return (
+        <Cells
+          items={value.__set__}
+          kind="set"
+          hot={before !== undefined ? setHot(before, value.__set__) : null}
+        />
+      );
     }
     if (value.__dict__) {
       if (value.__dict__.length === 0) return <span className="viz-empty">{'{}'} empty</span>;
+      const hot = before !== undefined ? dictHot(before, value.__dict__) : null;
       return (
         <span className="viz-chips">
           {value.__dict__.slice(0, 12).map(([k, v], i) => (
-            <span className="viz-chip" key={i}>
+            <span className={`viz-chip ${hot?.[i] ? 'hot' : ''}`} key={i}>
               {fmt(k)} → {fmt(v)}
             </span>
           ))}
@@ -156,9 +224,7 @@ export default function VisualizerModal({ question, code, label, note, onClose }
   const test = question.tests[testIndex];
   const atEnd = total > 0 && step === total - 1;
 
-  // What changed since the previous step — the one thing to actually watch.
-  // Maps a changed var name to its previous value, or the '__new__' marker if
-  // it just came into scope.
+  // What changed since the previous step: name -> previous value (or '__new__').
   const changed = useMemo(() => {
     const out = {};
     if (!cur) return out;
@@ -171,6 +237,9 @@ export default function VisualizerModal({ question, code, label, note, onClose }
     return out;
   }, [cur, prev]);
   const changedNames = Object.keys(changed);
+  const effects = changedNames.map((n) => summarizeChange(n, changed[n], cur.locals[n]));
+
+  const srcLine = cur ? (trace.lines[cur.line - 1] || '').trim() : '';
 
   return (
     <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -185,18 +254,6 @@ export default function VisualizerModal({ question, code, label, note, onClose }
           </button>
         </div>
 
-        <p className="viz-what">
-          Watch the <strong>{label}</strong> run for real, one line at a time. Read the{' '}
-          <strong>big sentence</strong> for what&apos;s happening; the highlighted variable on the
-          right is the one that just <strong>changed</strong>. Step with ← → or press play.
-        </p>
-        {note && (
-          <div className="viz-plan">
-            <span className="viz-plan-label">The idea</span>
-            <Markdown text={note} />
-          </div>
-        )}
-
         <div className="viz-input-row">
           <label htmlFor="viz-test">Test case</label>
           <select id="viz-test" value={testIndex} onChange={(e) => setTestIndex(Number(e.target.value))}>
@@ -209,6 +266,14 @@ export default function VisualizerModal({ question, code, label, note, onClose }
           <span className="viz-expected">
             expected → <code>{fmt(test.expected)}</code>
           </span>
+          {note && (
+            <details className="viz-plan">
+              <summary>💡 The idea</summary>
+              <div className="viz-plan-body">
+                <Markdown text={note} />
+              </div>
+            </details>
+          )}
         </div>
 
         {trace === null && (
@@ -257,30 +322,55 @@ export default function VisualizerModal({ question, code, label, note, onClose }
                   {sp}x
                 </button>
               ))}
+              <input
+                className="viz-scrub"
+                type="range"
+                min="0"
+                max={Math.max(0, total - 1)}
+                value={step}
+                onChange={(e) => {
+                  setPlaying(false);
+                  setStep(Number(e.target.value));
+                }}
+                aria-label="Scrub through steps"
+              />
               <span className="viz-step-count">
                 Step {total ? step + 1 : 0} / {total}
                 {trace.truncated && ' (capped)'}
               </span>
             </div>
-            <input
-              className="viz-scrub"
-              type="range"
-              min="0"
-              max={Math.max(0, total - 1)}
-              value={step}
-              onChange={(e) => {
-                setPlaying(false);
-                setStep(Number(e.target.value));
-              }}
-              aria-label="Scrub through steps"
-            />
 
-            {/* One plain-English sentence per step — the thing to actually read. */}
+            {/* THE reading spot: what's happening, what it just did, and where. */}
             <div className="viz-hero" role="status">
-              <span className="viz-hero-step">Step {total ? step + 1 : 0}</span>
-              <span className="viz-hero-why">
+              <div className="viz-hero-top">
+                <span className="viz-hero-step">Step {total ? step + 1 : 0}</span>
+                {cur && (
+                  <span className="viz-src">
+                    line {cur.line}
+                    {cur.func && cur.func !== question.function_name ? ` in ${cur.func}()` : ''}:{' '}
+                    <code>{srcLine}</code>
+                  </span>
+                )}
+              </div>
+              <div className="viz-hero-why">
                 {cur?.note || (atEnd ? 'Done — the function returns its answer.' : 'Getting started…')}
-              </span>
+              </div>
+              {effects.length > 0 && (
+                <div className="viz-effects">
+                  <span className="viz-effects-label">just happened</span>
+                  {effects.map((e, i) => (
+                    <code className="viz-effect" key={i}>
+                      {e}
+                    </code>
+                  ))}
+                </div>
+              )}
+              {atEnd && (
+                <div className="viz-effects">
+                  <span className="viz-effects-label done">returned</span>
+                  <code className="viz-effect done">{fmt(trace.result)}</code>
+                </div>
+              )}
             </div>
 
             <div className="viz-panes">
@@ -296,18 +386,13 @@ export default function VisualizerModal({ question, code, label, note, onClose }
                 ))}
               </div>
               <div className="viz-vars">
-                <div className="viz-vars-head">
-                  Variables
-                  {changedNames.length > 0 && (
-                    <span className="viz-changed-flag">
-                      {changedNames.join(', ')} changed
-                    </span>
-                  )}
-                </div>
                 {varNames.map((name) => {
                   const inScope = cur && name in cur.locals;
                   const didChange = name in changed;
                   const wasNew = changed[name] === '__new__';
+                  const before = didChange && !wasNew ? changed[name] : undefined;
+                  const isPrim =
+                    inScope && (cur.locals[name] === null || typeof cur.locals[name] !== 'object');
                   return (
                     <div
                       className={`viz-var ${didChange ? 'changed' : ''} ${inScope ? '' : 'out'}`}
@@ -321,15 +406,13 @@ export default function VisualizerModal({ question, code, label, note, onClose }
                       </span>
                       {inScope ? (
                         <span className="viz-var-vals">
-                          {didChange && !wasNew && (
+                          {isPrim && before !== undefined && (
                             <>
-                              <span className="viz-var-was">
-                                <VarValue value={changed[name]} />
-                              </span>
+                              <span className="viz-var-was">{fmt(before)}</span>
                               <span className="viz-arrow">→</span>
                             </>
                           )}
-                          <VarValue value={cur.locals[name]} />
+                          <VarValue value={cur.locals[name]} before={before} />
                         </span>
                       ) : (
                         <span className="viz-empty">— not in scope yet</span>
@@ -344,18 +427,6 @@ export default function VisualizerModal({ question, code, label, note, onClose }
                   </div>
                 )}
               </div>
-            </div>
-
-            <div className="viz-caption">
-              {cur ? (
-                <div className="viz-src">
-                  Running line {cur.line}
-                  {cur.func && cur.func !== question.function_name ? ` · in ${cur.func}()` : ''}:{' '}
-                  <code>{(trace.lines[cur.line - 1] || '').trim()}</code>
-                </div>
-              ) : (
-                'No steps captured.'
-              )}
             </div>
           </>
         )}

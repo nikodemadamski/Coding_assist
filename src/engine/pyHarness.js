@@ -384,7 +384,7 @@ def _tracer(frame, event, arg):
             "line": frame.f_lineno,
             "func": frame.f_code.co_name,
             "note": note,
-            "locals": {k: _snap(v) for k, v in frame.f_locals.items() if not k.startswith("_")},
+            "locals": {k: _snap(v) for k, v in frame.f_locals.items() if not k.startswith(("_", "."))},
         })
     return _tracer
 
