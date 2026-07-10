@@ -154,6 +154,33 @@ export default function ProblemView({
     setViz({ code: vizCode, label: vizLabel, note: vizNote });
   }, []);
 
+  // Mobile: horizontal swipe on the reading panes flips Problem/Code/Result.
+  // Swipes that start in the editor or the key strip are ignored — horizontal
+  // movement there means scrolling code, never switching tabs.
+  const swipeRef = useRef(null);
+  const onSwipeStart = useCallback((e) => {
+    if (e.target.closest('.cm-editor, .mkeys, input, select, textarea')) {
+      swipeRef.current = null;
+      return;
+    }
+    const t = e.touches[0];
+    swipeRef.current = { x: t.clientX, y: t.clientY };
+  }, []);
+  const onSwipeEnd = useCallback((e) => {
+    const start = swipeRef.current;
+    swipeRef.current = null;
+    if (!start) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    if (Math.abs(dx) < 70 || Math.abs(dy) > 40) return; // a scroll, not a swipe
+    setTab((cur) => {
+      const order = TABS.map((x) => x.id);
+      const i = order.indexOf(cur);
+      return order[Math.max(0, Math.min(order.length - 1, dx < 0 ? i + 1 : i - 1))];
+    });
+  }, []);
+
   const solved = isSolved(progress.solved[question.id]);
 
   // Keyboard solve loop: Ctrl/⌘+Enter runs, Ctrl/⌘+Shift+Enter submits.
@@ -345,7 +372,13 @@ export default function ProblemView({
         ))}
       </div>
 
-      <div className="pv-body" ref={bodyRef} style={{ '--pv-split': `${uiPrefs.split}%` }}>
+      <div
+        className="pv-body"
+        ref={bodyRef}
+        style={{ '--pv-split': `${uiPrefs.split}%` }}
+        onTouchStart={onSwipeStart}
+        onTouchEnd={onSwipeEnd}
+      >
         <section className={`pv-pane pane-problem ${tab === 'problem' ? 'visible' : ''}`}>
           <Markdown text={question.description} />
           {!mockMode && question.why && (

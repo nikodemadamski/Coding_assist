@@ -958,6 +958,38 @@ try {
 
   await mobile.locator('.q-card', { hasText: 'FizzBuzz' }).first().click();
   check(await mobile.locator('.pv-tabs').isVisible(), 'mobile: tabbed panes appear under 900px');
+  {
+    const tabsBox = await mobile.locator('.pv-tabs').boundingBox();
+    const bodyBox = await mobile.locator('.pv-body').boundingBox();
+    check(tabsBox.y > bodyBox.y + bodyBox.height - 2, 'mobile: the tab bar sits at the bottom, thumb height');
+  }
+  // swipe left on the problem pane -> Code tab
+  await mobile.evaluate(() => {
+    const el = document.querySelector('.pane-problem');
+    const mk = (type, x, key) => {
+      const touch = new Touch({ identifier: 1, target: el, clientX: x, clientY: 300 });
+      el.dispatchEvent(new TouchEvent(type, { [key]: [touch], bubbles: true, cancelable: true }));
+    };
+    mk('touchstart', 320, 'touches');
+    mk('touchend', 60, 'changedTouches');
+  });
+  check(
+    (await mobile.locator('.pv-tab.active').innerText()) === 'Code',
+    'mobile: swiping left flips to the Code tab'
+  );
+  await mobile.evaluate(() => {
+    const el = document.querySelector('.pane-code');
+    const mk = (type, x, key) => {
+      const touch = new Touch({ identifier: 1, target: el, clientX: x, clientY: 300 });
+      el.dispatchEvent(new TouchEvent(type, { [key]: [touch], bubbles: true, cancelable: true }));
+    };
+    mk('touchstart', 60, 'touches');
+    mk('touchend', 320, 'changedTouches');
+  });
+  check(
+    (await mobile.locator('.pv-tab.active').innerText()) === 'Problem',
+    'mobile: swiping right goes back to the Problem tab'
+  );
   check(
     await mobile.locator('.pane-problem').isVisible(),
     'mobile: Problem tab shown by default'

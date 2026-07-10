@@ -673,6 +673,23 @@ button {
   .pv-pane.visible {
     display: flex;
   }
+
+  /* tabs live at the bottom on phones — where thumbs are */
+  .pv-tabs {
+    order: 3;
+    border-bottom: none;
+    border-top: 1px solid var(--line);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .pv-tab {
+    border-bottom: none;
+    border-top: 2px solid transparent;
+    padding: 12px 4px;
+  }
+  .pv-tab.active {
+    border-top-color: var(--crimson);
+    border-bottom: none;
+  }
 }
 
 @media (min-width: 900px) {
