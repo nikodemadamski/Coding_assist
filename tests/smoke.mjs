@@ -338,6 +338,19 @@ try {
     /Solved in \d/.test(await page.locator('.solved-banner').innerText()),
     'the banner reports how long the first solve took'
   );
+
+  // ---- Big-O check-in: the interviewer follow-up, on every solve ----
+  check(await page.locator('.bigo').isVisible(), 'solving raises the what-was-your-Big-O check');
+  check((await page.locator('.bigo-chip').count()) === 6, 'six complexity buckets to pick from');
+  await page.locator('.bigo-chip', { hasText: 'O(n log n)' }).click();
+  check(
+    (await page.locator('.bigo-answer').innerText()).includes('Not quite'),
+    'a wrong pick is called out against the model'
+  );
+  check(
+    (await page.locator('.bigo-answer').innerText()).includes('O(n) time'),
+    'the model complexity is revealed either way'
+  );
   check((await page.locator('.streak').innerText()).includes('1 day'), 'streak increments');
 
   // ---- solve → next: the flow never dead-ends ----

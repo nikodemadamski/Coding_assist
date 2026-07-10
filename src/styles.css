@@ -1302,6 +1302,44 @@ details.hint[open] summary {
   text-align: right;
 }
 
+/* ── after-solve Big-O check-in ─────────────────────────────────────────── */
+.bigo {
+  margin: 10px 0;
+  padding: 10px 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--sky);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.bigo-q {
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+.bigo-options {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.bigo-chip {
+  font-family: var(--font-code);
+}
+.bigo-answer {
+  font-size: 0.86rem;
+}
+.bigo-answer code {
+  font-family: var(--font-code);
+  font-size: 0.82rem;
+}
+.bigo-answer.right strong {
+  color: var(--jade);
+}
+.bigo-answer.wrong strong {
+  color: var(--crimson);
+}
+
 /* ── interview readiness card ───────────────────────────────────────────── */
 .ready-card {
   display: flex;

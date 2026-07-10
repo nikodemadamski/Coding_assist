@@ -1139,6 +1139,7 @@ import { NEETCODE_3 } from './neetcode3.js';
 import { NEETCODE_4 } from './neetcode4.js';
 import { NEETCODE_5 } from './neetcode5.js';
 import { LEARN } from './learn.js';
+import { COMPLEXITY } from './complexity.js';
 
 const RAW_QUESTIONS = [
   ...PYTHON_QUESTIONS,
@@ -1169,10 +1170,11 @@ const UNORDERED = {
   'py-top-k-frequent': 'outer',
 };
 
-// Merge the premium learning layer (why / constraints / insight) and the
-// order-sensitivity flag onto each question by id.
+// Merge the premium learning layer (why / constraints / insight), the
+// order-sensitivity flag, and the model complexity onto each question by id.
 export const SEED_QUESTIONS = RAW_QUESTIONS.map((q) => {
   let out = LEARN[q.id] ? { ...q, ...LEARN[q.id] } : q;
   if (UNORDERED[q.id]) out = { ...out, unordered: UNORDERED[q.id] };
+  if (COMPLEXITY[q.id] && !out.complexity) out = { ...out, complexity: COMPLEXITY[q.id] };
   return out;
 });

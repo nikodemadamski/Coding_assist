@@ -5,6 +5,7 @@ import Markdown from './Markdown.jsx';
 import Approaches from './Approaches.jsx';
 import StuckLadder from './StuckLadder.jsx';
 import Notes from './Notes.jsx';
+import BigOCheck from './BigOCheck.jsx';
 import VisualizerModal from './VisualizerModal.jsx';
 import { runQuestion } from '../engine/runnerClient.js';
 import { RATING_DELTA, isSolved } from '../state/progress.js';
@@ -454,6 +455,7 @@ export default function ProblemView({
               )}
             </div>
           )}
+          {justSolved && <BigOCheck question={question} key={`bigo-${question.id}`} />}
 
           {/* Practice: correct → reflect + rate to schedule the next review */}
           {practiceMode && outcome === 'pass' && (
@@ -468,6 +470,7 @@ export default function ProblemView({
                   <p>{progress.notes[question.id]}</p>
                 </div>
               )}
+              <BigOCheck question={question} key={`bigo-r-${question.id}`} />
               <p className="reflect-q">
                 Before you move on: in one sentence, what does your solution actually do — and
                 what would break it?
