@@ -532,6 +532,100 @@ button {
   min-height: 0;
 }
 
+/* ── mobile coding keys ─────────────────────────────────────────────────── */
+/* Hidden on desktop; on phones a one-tap strip for the symbols Python needs. */
+.mkeys {
+  display: none;
+}
+@media (max-width: 899px) {
+  .mkeys {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .mkeys::-webkit-scrollbar {
+    display: none;
+  }
+  .mkey {
+    flex: 0 0 auto;
+    min-width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--font-code);
+    font-size: 1rem;
+    padding: 0 8px;
+    touch-action: manipulation;
+  }
+  .mkey:active {
+    background: var(--line);
+  }
+  .mkey-wide {
+    min-width: 46px;
+  }
+  .mkeys-gap {
+    flex: 1;
+    min-width: 8px;
+  }
+  .mkey-run,
+  .mkey-submit {
+    font-family: var(--font-body);
+    font-size: 0.86rem;
+    font-weight: 600;
+  }
+  .mkey-submit {
+    background: var(--crimson);
+    border-color: var(--crimson);
+    color: #fff;
+  }
+  /* keyboard-shortcut hints mean nothing on a touch screen */
+  .kbd-hint {
+    display: none;
+  }
+  /* toolbar: the title gets the room; meta tags go quiet */
+  .pv-toolbar .pv-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+}
+@media (max-width: 560px) {
+  .pv-toolbar .tag {
+    display: none;
+  }
+  /* the function-name reminder is in the problem text; save the row */
+  .editor-bar .hint-text {
+    display: none;
+  }
+}
+
+/* phone header: the logo and the four actions; status lives on the pages */
+@media (max-width: 700px) {
+  .header {
+    gap: 6px;
+    padding: 6px 10px 5px;
+  }
+  .header .streak,
+  .header .belt-chip {
+    display: none;
+  }
+  .header-logo {
+    font-size: 1.02rem;
+  }
+}
+
 /* the divider only exists on the desktop split layout */
 .pv-divider {
   display: none;

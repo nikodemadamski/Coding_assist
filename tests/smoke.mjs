@@ -316,7 +316,7 @@ try {
 
   // ---- failure path: renamed function ----
   await setEditor(page, 'def wrong_name(nums, target):\n    return [0, 1]');
-  await page.locator('button', { hasText: /^Run/ }).click();
+  await page.locator('.pv-toolbar button', { hasText: /^Run/ }).click();
   await page.locator('.error-box').waitFor({ timeout: 30000 });
   check(
     (await resultText(page)).includes('keep the starter'),
@@ -325,7 +325,7 @@ try {
 
   // ---- failure path: syntax error ----
   await setEditor(page, 'def two_sum(nums target):\n    pass');
-  await page.locator('button', { hasText: /^Run/ }).click();
+  await page.locator('.pv-toolbar button', { hasText: /^Run/ }).click();
   await page.locator('.error-box').waitFor({ timeout: 30000 });
   check((await resultText(page)).includes('Syntax error'), 'syntax error surfaced');
 
@@ -333,11 +333,11 @@ try {
   const solution =
     'def two_sum(nums, target):\n    seen = {}\n    for i, n in enumerate(nums):\n        if target - n in seen:\n            return [seen[target - n], i]\n        seen[n] = i';
   await setEditor(page, solution);
-  await page.locator('button', { hasText: /^Run/ }).click();
+  await page.locator('.pv-toolbar button', { hasText: /^Run/ }).click();
   await page.locator('.result-summary.pass').waitFor({ timeout: 60000 });
   check((await resultText(page)).includes('5/5 tests passed'), 'correct solution passes all tests');
 
-  await page.locator('button', { hasText: 'Submit' }).click();
+  await page.locator('.pv-toolbar button', { hasText: 'Submit' }).click();
   await page.locator('.solved-banner').waitFor({ timeout: 60000 });
   check(true, 'Submit marks the problem solved');
   check(
@@ -411,7 +411,7 @@ try {
 
   // ---- failure path: infinite loop killed by the 5s watchdog ----
   await setEditor(page, 'def two_sum(nums, target):\n    while True:\n        pass');
-  await page.locator('button', { hasText: /^Run/ }).click();
+  await page.locator('.pv-toolbar button', { hasText: /^Run/ }).click();
   await page.locator('.error-box').waitFor({ timeout: 120000 });
   check(
     (await resultText(page)).includes('Time limit exceeded'),
@@ -427,12 +427,12 @@ try {
     'SQL questions also show the guided "why this one" card'
   );
   await setEditor(page, 'SELECT name, power FROM fighters WHERE power >= 80 ORDER BY power DESC;');
-  await page.locator('button', { hasText: /^Run/ }).click();
+  await page.locator('.pv-toolbar button', { hasText: /^Run/ }).click();
   await page.locator('.result-summary').first().waitFor({ timeout: 60000 });
   check((await resultText(page)).includes('Correct result'), 'correct SQL passes');
 
   await setEditor(page, 'SELECT name, power FROM fighters ORDER BY power;');
-  await page.locator('button', { hasText: /^Run/ }).click();
+  await page.locator('.pv-toolbar button', { hasText: /^Run/ }).click();
   await page.locator('.sql-diff').waitFor({ timeout: 30000 });
   const sqlText = await resultText(page);
   check(
@@ -441,7 +441,7 @@ try {
   );
 
   await setEditor(page, 'SELEC name FROM fighters;');
-  await page.locator('button', { hasText: /^Run/ }).click();
+  await page.locator('.pv-toolbar button', { hasText: /^Run/ }).click();
   await page.locator('.error-box').waitFor({ timeout: 30000 });
   check((await resultText(page)).includes('syntax error'), 'SQLite error shown verbatim');
 
@@ -533,7 +533,7 @@ try {
     const heading = (await page.locator('.pv-title').innerText()).trim();
     const title = Object.keys(SOLUTIONS).find((t) => heading.includes(t));
     await setEditor(page, SOLUTIONS[title]);
-    await page.locator('button', { hasText: 'Submit' }).click();
+    await page.locator('.pv-toolbar button', { hasText: 'Submit' }).click();
     await page.locator('.reflect').waitFor({ timeout: 60000 });
     check(await page.locator('.rating-btn.rating-good').isVisible(), `review ${r + 1}: reflect + rating shown`);
     if (r === 0) {
@@ -582,7 +582,7 @@ try {
   await page.locator('.btn-drill').click();
   check((await page.locator('.phase-pill').innerText()).includes('Drill'), 'drill session shows the drill phase');
   await setEditor(page, 'def contains_duplicate(nums):\n    return len(set(nums)) != len(nums)');
-  await page.locator('button', { hasText: 'Submit' }).click();
+  await page.locator('.pv-toolbar button', { hasText: 'Submit' }).click();
   await page.locator('.reflect').waitFor({ timeout: 60000 });
   await page.locator('.rating-btn.rating-good').click();
   await page.locator('.session-done').waitFor({ timeout: 30000 });
@@ -922,7 +922,7 @@ try {
     page,
     'def two_sum(nums, target):\n    seen = {}\n    for i, n in enumerate(nums):\n        if target - n in seen:\n            return [seen[target - n], i]\n        seen[n] = i'
   );
-  await page.locator('button', { hasText: 'Submit' }).click();
+  await page.locator('.pv-toolbar button', { hasText: 'Submit' }).click();
   await page.locator('.celebration').waitFor({ timeout: 60000 });
   check(
     (await page.locator('.celebration').innerText()).includes('Yellow'),
@@ -964,6 +964,24 @@ try {
   );
   await mobile.locator('.pv-tab', { hasText: 'Code' }).click();
   check(await mobile.locator('.cm-content').isVisible(), 'mobile: Code tab shows the editor');
+
+  // ---- mobile coding keys: the strip phone keyboards are missing ----
+  check(await mobile.locator('.mkeys').isVisible(), 'mobile: a coding key strip sits above the editor');
+  check((await mobile.locator('.mkey').count()) >= 18, 'mobile: symbols, indent and Run/Submit are one tap away');
+  check(!(await mobile.locator('.pv-toolbar .kbd-hint').first().isVisible()), 'mobile: desktop shortcut hints are hidden');
+  check(!(await mobile.locator('.header .belt-chip').isVisible()), 'mobile: header sheds status chrome on phones');
+  await mobile.click('.cm-content');
+  await mobile.keyboard.press('ControlOrMeta+a');
+  await mobile.keyboard.press('Delete');
+  await mobile.locator('.mkey', { hasText: '#' }).click();
+  await mobile.locator('.mkey', { hasText: ':' }).click();
+  await mobile.locator('.mkey', { hasText: '⇥' }).click();
+  const mline = await mobile.locator('.cm-line').first().innerText();
+  check(mline.includes('#:'), 'mobile: tapping strip keys types into the editor');
+  check(/^\s{4}/.test(mline.replace(/\u00a0/g, ' ')), 'mobile: the indent key indents the line');
+  await mobile.locator('.mkey', { hasText: '⇤' }).click();
+  const mline2 = await mobile.locator('.cm-line').first().innerText();
+  check(!/^\s/.test(mline2.replace(/\u00a0/g, ' ')), 'mobile: the dedent key walks it back');
   await mobile.locator('.pv-tab', { hasText: 'Result' }).click();
   check(await mobile.locator('.pane-result').isVisible(), 'mobile: Result tab works');
   const noHScroll2 = await mobile.evaluate(

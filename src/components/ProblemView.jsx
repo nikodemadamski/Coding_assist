@@ -40,6 +40,10 @@ const RATINGS = [
 
 const MOD = typeof navigator !== 'undefined' && /Mac/.test(navigator.platform) ? '⌘' : 'Ctrl';
 
+// Phone keyboards bury the characters Python lives on. This strip sits above
+// the editor on narrow screens — one tap for the symbols, indent and dedent.
+const MOBILE_KEYS = [':', '(', ')', '[', ']', '{', '}', "'", '"', ',', '.', '_', '=', '<', '>', '#'];
+
 export default function ProblemView({
   question,
   progress,
@@ -91,6 +95,42 @@ export default function ProblemView({
     (d) => setUiPrefs((p) => saveUiPrefs({ fontSize: p.fontSize + d })),
     []
   );
+
+  // Mobile key strip: dispatch straight into CodeMirror. pointerdown +
+  // preventDefault so the tap never steals focus — the phone keyboard stays up.
+  const cmRef = useRef(null);
+  const tapInsert = useCallback((text) => {
+    const view = cmRef.current?.view;
+    if (!view) return;
+    view.dispatch(view.state.replaceSelection(text));
+    view.focus();
+  }, []);
+  const tapIndent = useCallback((dir) => {
+    const view = cmRef.current?.view;
+    if (!view) return;
+    const { state } = view;
+    const changes = [];
+    const seen = new Set();
+    for (const r of state.selection.ranges) {
+      const from = Math.min(r.from, r.to);
+      const to = Math.max(r.from, r.to);
+      for (let pos = from; pos <= to; ) {
+        const line = state.doc.lineAt(pos);
+        if (!seen.has(line.number)) {
+          seen.add(line.number);
+          if (dir > 0) changes.push({ from: line.from, insert: '    ' });
+          else {
+            const m = line.text.match(/^ {1,4}/);
+            if (m) changes.push({ from: line.from, to: line.from + m[0].length });
+          }
+        }
+        if (line.to >= to) break;
+        pos = line.to + 1;
+      }
+    }
+    if (changes.length) view.dispatch({ changes });
+    view.focus();
+  }, []);
 
   // Drag the divider: live-resize while moving, persist on release.
   const startDividerDrag = useCallback((e) => {
@@ -429,12 +469,57 @@ export default function ProblemView({
                 : `Keep the function name ${question.function_name}().`}
             </span>
           </div>
+          <div className="mkeys" role="toolbar" aria-label="Coding keys">
+            <button
+              type="button"
+              className="mkey mkey-wide"
+              title="Indent line"
+              onPointerDown={(e) => {
+                e.preventDefault();
+                tapIndent(1);
+              }}
+            >
+              ⇥
+            </button>
+            <button
+              type="button"
+              className="mkey mkey-wide"
+              title="Unindent line"
+              onPointerDown={(e) => {
+                e.preventDefault();
+                tapIndent(-1);
+              }}
+            >
+              ⇤
+            </button>
+            {MOBILE_KEYS.map((k) => (
+              <button
+                type="button"
+                className="mkey"
+                key={k}
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  tapInsert(k);
+                }}
+              >
+                {k}
+              </button>
+            ))}
+            <span className="mkeys-gap" />
+            <button type="button" className="mkey mkey-run" onClick={() => execute(false)} disabled={running}>
+              Run
+            </button>
+            <button type="button" className="mkey mkey-submit" onClick={() => execute(true)} disabled={running}>
+              Submit
+            </button>
+          </div>
           <div className="editor-wrap">
             <Editor
               track={question.track}
               value={code}
               onChange={handleChange}
               fontSize={uiPrefs.fontSize}
+              cmRef={cmRef}
             />
           </div>
         </section>

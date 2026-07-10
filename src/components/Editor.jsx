@@ -57,7 +57,9 @@ const lightTheme = (fontSize) =>
     { dark: false }
   );
 
-export default function Editor({ track, value, onChange, fontSize = 14 }) {
+// `cmRef` (optional) receives @uiw/react-codemirror's handle ({ view, state,
+// editor }) so the mobile key strip can dispatch inserts into the editor.
+export default function Editor({ track, value, onChange, fontSize = 14, cmRef = null }) {
   const theme = useTheme();
   const isLight = theme === 'light';
   const extensions = useMemo(
@@ -70,6 +72,7 @@ export default function Editor({ track, value, onChange, fontSize = 14 }) {
 
   return (
     <CodeMirror
+      ref={cmRef}
       value={value}
       onChange={onChange}
       extensions={extensions}
