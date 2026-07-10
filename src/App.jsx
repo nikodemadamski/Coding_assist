@@ -22,8 +22,16 @@ import {
   saveProgress,
   loadCustomQuestions,
   saveCustomQuestions,
+  loadLastBackup,
+  downloadExport,
 } from './state/storage.js';
-import { recordSolve, recordFail, isSolved, currentStreak } from './state/progress.js';
+import {
+  recordSolve,
+  recordFail,
+  isSolved,
+  currentStreak,
+  backupStatus,
+} from './state/progress.js';
 import { nextOnPath } from './data/roadmap.js';
 import { markVisit, recordDaySolve, recordDayFail } from './state/activity.js';
 import { getInitialTheme, applyTheme } from './state/theme.js';
@@ -108,6 +116,13 @@ export default function App() {
     [allQuestions, progress]
   );
   const streakVal = currentStreak(progress.streak);
+  // Nudge for a fresh export when progress is only in this browser's storage.
+  const [lastBackup, setLastBackup] = useState(loadLastBackup);
+  const backupInfo = useMemo(() => backupStatus(lastBackup, solvedCount), [lastBackup, solvedCount]);
+  const handleBackupNow = useCallback(
+    () => setLastBackup(downloadExport(progress, customQuestions)),
+    [progress, customQuestions]
+  );
   // The next unsolved question on the path — powers the "Next →" continuation
   // in the solved banner (recomputes as soon as a solve lands).
   const nextUpQuestion = useMemo(
@@ -205,6 +220,7 @@ export default function App() {
         onSettings={() => setSettingsOpen(true)}
         theme={theme}
         onToggleTheme={toggleTheme}
+        backupNudge={backupInfo.nudge}
       />
       <main className="app-main">
         {view.name === 'home' && (
@@ -307,7 +323,14 @@ export default function App() {
         {view.name === 'quiz' && (
           <PatternQuiz questions={allQuestions} onExit={() => setView({ name: 'patterns' })} />
         )}
-        {view.name === 'stats' && <Stats questions={allQuestions} progress={progress} />}
+        {view.name === 'stats' && (
+          <Stats
+            questions={allQuestions}
+            progress={progress}
+            backupInfo={backupInfo}
+            onBackupNow={handleBackupNow}
+          />
+        )}
         {view.name === 'guide' && <Guide />}
       </main>
       {settingsOpen && (
@@ -315,6 +338,7 @@ export default function App() {
           progress={progress}
           customQuestions={customQuestions}
           onImport={handleRestore}
+          onBackedUp={setLastBackup}
           onClose={() => setSettingsOpen(false)}
         />
       )}

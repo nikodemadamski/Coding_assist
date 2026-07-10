@@ -1,20 +1,15 @@
 import { useRef, useState } from 'react';
-import { exportData, parseImport } from '../state/storage.js';
+import { parseImport, downloadExport, loadLastBackup } from '../state/storage.js';
 
-export default function Settings({ progress, customQuestions, onImport, onClose }) {
+export default function Settings({ progress, customQuestions, onImport, onBackedUp, onClose }) {
   const [message, setMessage] = useState('');
+  const [lastBackup, setLastBackup] = useState(loadLastBackup);
   const fileRef = useRef(null);
 
   function handleExport() {
-    const blob = new Blob([exportData(progress, customQuestions)], {
-      type: 'application/json',
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `zoroclaude-dojo-export-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const date = downloadExport(progress, customQuestions);
+    setLastBackup(date);
+    onBackedUp?.(date);
     setMessage('Exported. Keep that file safe — it is your full training record.');
   }
 
@@ -46,7 +41,10 @@ export default function Settings({ progress, customQuestions, onImport, onClose 
         <label>Backup</label>
         <p className="note">
           Progress, drafts, review schedule and imported questions live in localStorage. Export
-          regularly so you never lose data.
+          regularly so you never lose data.{' '}
+          <span className="last-backup">
+            {lastBackup ? `Last backup: ${lastBackup}.` : 'Never backed up yet.'}
+          </span>
         </p>
         <div className="modal-actions" style={{ justifyContent: 'flex-start', marginTop: 8 }}>
           <button className="btn" onClick={handleExport}>

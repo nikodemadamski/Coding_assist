@@ -616,6 +616,47 @@ try {
   check(await page.locator('.guide-page h1').isVisible(), 'Sensei guide page renders');
   await page.locator('.icon-btn', { hasText: 'Stats' }).click();
   check(await page.locator('.calendar-block').isVisible(), 'Stats page shows the attendance calendar');
+
+  // ---- review forecast + backup nudge (seeded: 8 solves, reviews spread out) ----
+  await page.evaluate(() => {
+    const today = new Date();
+    const day = (n) => {
+      const d = new Date(today);
+      d.setDate(d.getDate() + n);
+      return d.toISOString().slice(0, 10);
+    };
+    const p = JSON.parse(localStorage.getItem('zoro.progress.v1'));
+    const ids = ['py-reverse-string', 'py-fizzbuzz', 'py-common-elements', 'py-two-sum', 'py-valid-anagram', 'py-contains-duplicate', 'py-valid-palindrome', 'py-binary-search'];
+    const iso = new Date().toISOString();
+    for (const id of ids) p.solved[id] = { firstSolvedAt: iso, attempts: 1, solves: 1, lastSolvedAt: iso };
+    p.srs = {
+      'py-reverse-string': { stage: 0, nextDue: day(-1) }, // overdue -> today
+      'py-fizzbuzz': { stage: 0, nextDue: day(0) },
+      'py-two-sum': { stage: 1, nextDue: day(2) },
+      'py-valid-anagram': { stage: 1, nextDue: day(2) },
+      'py-binary-search': { stage: 2, nextDue: day(5) },
+    };
+    localStorage.setItem('zoro.progress.v1', JSON.stringify(p));
+    localStorage.removeItem('zoro.backup.v1');
+  });
+  await page.reload();
+  await page.locator('.icon-btn', { hasText: 'Stats' }).click();
+  check((await page.locator('.fc-day').count()) === 7, 'review forecast shows the next 7 days');
+  const fcToday = await page.locator('.fc-day').first().innerText();
+  check(fcToday.includes('2') && fcToday.includes('today'), `overdue+due reviews land on today (${fcToday.replace(/\s+/g, ' ')})`);
+  check((await page.locator('.fc-bar.due-now').count()) === 1, "today's bar is highlighted");
+  check(await page.locator('.backup-nudge').isVisible(), '8+ unbacked-up solves raise the backup nudge');
+  check(await page.locator('.header .backup-dot').isVisible(), 'the Settings button carries a nudge dot');
+  await page.locator('.backup-nudge .btn').click();
+  check((await page.locator('.backup-nudge').count()) === 0, 'Back up now clears the nudge');
+  check(
+    (await page.evaluate(() => localStorage.getItem('zoro.backup.v1'))) === new Date().toISOString().slice(0, 10),
+    'the backup date is recorded'
+  );
+  // Settings shows the recorded date
+  await page.locator('.icon-btn[aria-label="Settings"]').click();
+  check((await page.locator('.last-backup').innerText()).includes('Last backup:'), 'Settings shows the last-backup date');
+  await page.locator('.modal .btn-primary', { hasText: 'Done' }).click();
   await page.locator('.header-logo').click();
 
   // ---- roadmap home after real progress ----

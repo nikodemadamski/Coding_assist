@@ -158,6 +158,11 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
 - **Your workspace, your proportions**: drag the divider between the problem and the editor
   to whatever split suits you (double-click resets), and step the editor font size with
   **A− / A+** — both remembered across sessions.
+- **Review forecast** (Stats page): a 7-day bar row of when your spaced-repetition reviews
+  land (overdue ones count as today), so you can see the week's workload before it hits.
+- **Backup nudge**: progress lives only in your browser's localStorage — once you have real
+  progress and haven't exported in two weeks, Stats shows a one-click "Back up now" banner
+  and the ⚙ Settings button carries a dot until you do.
 - **Attendance calendar + daily goal** (Stats page): a GitHub-style grid of every day you
   showed up, and whether you met the goal (clear your reviews + solve ≥1). Don't break the
   chain.

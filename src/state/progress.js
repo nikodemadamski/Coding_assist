@@ -148,6 +148,36 @@ export function practiceCounts(progress, questions, today = todayStr()) {
   };
 }
 
+// Reviews landing on each of the next `days` days. Anything overdue counts as
+// today — that's when you'd actually do it.
+export function reviewForecast(progress, validIds, today = todayStr(), days = 7) {
+  const out = Array.from({ length: days }, (_, i) => ({ date: addDays(today, i), count: 0 }));
+  const index = new Map(out.map((d, i) => [d.date, i]));
+  for (const [id, entry] of Object.entries(progress.srs)) {
+    if (!validIds.has(id) || !entry?.nextDue) continue;
+    if (entry.nextDue <= today) out[0].count++;
+    else if (index.has(entry.nextDue)) out[index.get(entry.nextDue)].count++;
+  }
+  return out;
+}
+
+// ---- backup nudge ----
+// Everything lives in localStorage; a browser cleanup wipes it. Nudge once
+// there's enough progress to hurt and no export in the last two weeks.
+
+export const BACKUP_NUDGE_DAYS = 14;
+export const BACKUP_NUDGE_MIN_SOLVES = 8;
+
+export function backupStatus(lastBackupDate, solvedCount, today = todayStr()) {
+  if (solvedCount < BACKUP_NUDGE_MIN_SOLVES) return { nudge: false, daysSince: null };
+  if (!lastBackupDate) return { nudge: true, daysSince: null };
+  const daysSince = Math.max(
+    0,
+    Math.round((new Date(today) - new Date(lastBackupDate)) / 86400000)
+  );
+  return { nudge: daysSince >= BACKUP_NUDGE_DAYS, daysSince };
+}
+
 // Mastery level for a question, for the NeetCode-style status pills.
 // new -> learning -> reviewing -> mastered as the SRS stage climbs.
 export function masteryLevel(progress, questionId) {

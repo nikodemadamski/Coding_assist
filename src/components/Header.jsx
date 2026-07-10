@@ -11,6 +11,7 @@ export default function Header({
   onSettings,
   theme,
   onToggleTheme,
+  backupNudge = false,
 }) {
   const solvedCount = Object.values(progress.solved).filter(isSolved).length;
   const belt = beltFor(solvedCount);
@@ -72,8 +73,14 @@ export default function Header({
       >
         {theme === 'light' ? '🌙' : '☀️'}
       </button>
-      <button className="icon-btn" onClick={onSettings} aria-label="Settings">
+      <button
+        className="icon-btn"
+        onClick={onSettings}
+        aria-label="Settings"
+        title={backupNudge ? 'Your progress has not been backed up in a while' : undefined}
+      >
         ⚙ Settings
+        {backupNudge && <span className="backup-dot" aria-hidden="true" />}
       </button>
     </header>
   );

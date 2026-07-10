@@ -1302,6 +1302,73 @@ details.hint[open] summary {
   text-align: right;
 }
 
+/* ── review forecast (next 7 days) ──────────────────────────────────────── */
+.forecast-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 12px 14px 8px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  max-width: 480px;
+}
+.fc-day {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.fc-n {
+  font-family: var(--font-code);
+  font-size: 0.74rem;
+  color: var(--text-dim);
+  min-height: 1em;
+}
+.fc-bar {
+  width: 100%;
+  max-width: 34px;
+  background: var(--sky);
+  opacity: 0.75;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.3s ease;
+}
+.fc-bar.due-now {
+  background: var(--gold);
+  opacity: 1;
+}
+.fc-l {
+  font-size: 0.68rem;
+  color: var(--text-dim);
+}
+
+/* ── backup nudge ───────────────────────────────────────────────────────── */
+.backup-nudge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 10px 0 16px;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--gold) 8%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--line));
+  border-radius: 10px;
+  font-size: 0.88rem;
+}
+.backup-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 5px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+.last-backup {
+  color: var(--text-dim);
+}
+
 /* ── where-you-slip list ────────────────────────────────────────────────── */
 .slip-list {
   display: flex;

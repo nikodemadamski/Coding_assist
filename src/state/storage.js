@@ -48,6 +48,40 @@ export function saveCustomQuestions(questions) {
   localStorage.setItem(CUSTOM_QUESTIONS_KEY, JSON.stringify(questions));
 }
 
+// ---- backup bookkeeping ----
+
+const BACKUP_KEY = 'zoro.backup.v1'; // 'YYYY-MM-DD' of the last export
+
+export function loadLastBackup(storage = globalThis.localStorage) {
+  try {
+    return storage?.getItem(BACKUP_KEY) || null;
+  } catch {
+    return null;
+  }
+}
+
+export function markBackedUp(dateStr, storage = globalThis.localStorage) {
+  try {
+    storage?.setItem(BACKUP_KEY, dateStr);
+  } catch {
+    // non-fatal: the nudge just stays
+  }
+}
+
+// Trigger the JSON download and record the backup date. Returns the date.
+export function downloadExport(progress, customQuestions) {
+  const blob = new Blob([exportData(progress, customQuestions)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `zoroclaude-dojo-export-${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  markBackedUp(date);
+  return date;
+}
+
 // ---- export / import ----
 
 export function exportData(progress, customQuestions) {

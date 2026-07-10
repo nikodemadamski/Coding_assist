@@ -1,5 +1,12 @@
 import { useMemo } from 'react';
-import { beltFor, currentStreak, dueQuestionIds, isSolved, masteryLevel } from '../state/progress.js';
+import {
+  beltFor,
+  currentStreak,
+  dueQuestionIds,
+  isSolved,
+  masteryLevel,
+  reviewForecast,
+} from '../state/progress.js';
 import { summarizeMocks, formatDuration } from '../state/mockSession.js';
 import { ROADMAP, categoryKeyOf } from '../data/roadmap.js';
 import Calendar from './Calendar.jsx';
@@ -47,12 +54,47 @@ function ProgressRows({ rows }) {
   );
 }
 
-export default function Stats({ questions, progress }) {
+// Weekday label for a 'YYYY-MM-DD' date.
+function dayLabel(dateStr, i) {
+  if (i === 0) return 'today';
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: 'short' });
+}
+
+function Forecast({ forecast }) {
+  const max = Math.max(1, ...forecast.map((f) => f.count));
+  const totalWeek = forecast.reduce((n, f) => n + f.count, 0);
+  return (
+    <>
+      <div className="forecast-row" role="img" aria-label="Reviews due over the next 7 days">
+        {forecast.map((f, i) => (
+          <div className="fc-day" key={f.date} title={`${f.count} review(s) on ${f.date}`}>
+            <span className="fc-n">{f.count > 0 ? f.count : ''}</span>
+            <span
+              className={`fc-bar ${i === 0 && f.count > 0 ? 'due-now' : ''}`}
+              style={{ height: `${4 + (f.count / max) * 44}px` }}
+            />
+            <span className="fc-l">{dayLabel(f.date, i)}</span>
+          </div>
+        ))}
+      </div>
+      <p className="note" style={{ marginTop: 6 }}>
+        {totalWeek === 0
+          ? 'Nothing scheduled this week — solve new problems and reviews will start landing here.'
+          : 'Clear reviews the day they land and the pile never grows.'}
+      </p>
+    </>
+  );
+}
+
+export default function Stats({ questions, progress, backupInfo = null, onBackupNow = null }) {
   const solvedCount = Object.values(progress.solved).filter(isSolved).length;
   const total = questions.length;
   const belt = beltFor(solvedCount);
   const streak = currentStreak(progress.streak);
-  const dueCount = dueQuestionIds(progress, new Set(questions.map((q) => q.id))).length;
+  const validIds = useMemo(() => new Set(questions.map((q) => q.id)), [questions]);
+  const dueCount = dueQuestionIds(progress, validIds).length;
+  const forecast = useMemo(() => reviewForecast(progress, validIds), [progress, validIds]);
 
   const mastery = useMemo(() => {
     const counts = { new: 0, learning: 0, reviewing: 0, mastered: 0 };
@@ -97,6 +139,21 @@ export default function Stats({ questions, progress }) {
   return (
     <div className="stats">
       <h1>Training record</h1>
+
+      {backupInfo?.nudge && onBackupNow && (
+        <div className="backup-nudge" role="status">
+          <span>
+            ⚠ {solvedCount} solves live only in this browser
+            {backupInfo.daysSince != null
+              ? ` — last backup was ${backupInfo.daysSince} days ago.`
+              : ' — never backed up.'}{' '}
+            One cleared cache loses everything.
+          </span>
+          <button className="btn" onClick={onBackupNow}>
+            ⬇ Back up now
+          </button>
+        </div>
+      )}
 
       {/* Journey hero — the whole path at a glance */}
       <section className="journey-card">
@@ -150,6 +207,11 @@ export default function Stats({ questions, progress }) {
           <div className="l">mock interviews</div>
         </div>
       </div>
+
+      <h2 style={{ margin: '22px 0 8px' }}>
+        Review forecast <span className="count">what&apos;s landing this week</span>
+      </h2>
+      <Forecast forecast={forecast} />
 
       <h2 style={{ margin: '22px 0 8px' }}>Attendance</h2>
       <Calendar progress={progress} />

@@ -13,6 +13,10 @@ import {
   masteryLevel,
   practiceCounts,
   RATING_DELTA,
+  reviewForecast,
+  backupStatus,
+  BACKUP_NUDGE_DAYS,
+  BACKUP_NUDGE_MIN_SOLVES,
 } from '../src/state/progress.js';
 import {
   createSession,
@@ -243,6 +247,46 @@ console.log('Training logic tests\n');
   check(masteryLevel({ ...prog, srs: { a: { stage: 0, nextDue: today } } }, 'a') === 'learning', 'stage 0 -> learning');
   check(masteryLevel({ ...prog, srs: { a: { stage: 2, nextDue: today } } }, 'a') === 'reviewing', 'stage 2 -> reviewing');
   check(masteryLevel({ ...prog, srs: { a: { stage: 4, nextDue: today } } }, 'a') === 'mastered', 'stage 4 -> mastered');
+}
+
+// ---- review forecast ----
+{
+  console.log('\nReview forecast:');
+  const today = todayStr();
+  const prog = {
+    ...structuredClone(EMPTY_PROGRESS),
+    srs: {
+      overdue: { stage: 1, nextDue: addDays(today, -3) },
+      dueToday: { stage: 0, nextDue: today },
+      in2: { stage: 0, nextDue: addDays(today, 2) },
+      in2b: { stage: 1, nextDue: addDays(today, 2) },
+      in6: { stage: 2, nextDue: addDays(today, 6) },
+      beyond: { stage: 3, nextDue: addDays(today, 10) },
+      notInBank: { stage: 0, nextDue: today },
+    },
+  };
+  const ids = new Set(['overdue', 'dueToday', 'in2', 'in2b', 'in6', 'beyond']);
+  const fc = reviewForecast(prog, ids, today);
+  check(fc.length === 7, 'forecast covers 7 days');
+  check(fc[0].date === today && fc[0].count === 2, 'overdue reviews land on today');
+  check(fc[2].count === 2, 'two reviews on day +2');
+  check(fc[6].count === 1, 'one review on day +6');
+  check(fc[1].count === 0 && fc[3].count === 0, 'quiet days show zero');
+  check(!fc.some((d) => d.count > 6), 'beyond-horizon and unknown ids are excluded');
+}
+
+// ---- backup nudge ----
+{
+  console.log('\nBackup nudge:');
+  const today = todayStr();
+  const few = backupStatus(null, BACKUP_NUDGE_MIN_SOLVES - 1, today);
+  check(!few.nudge, 'too little progress -> no nudge');
+  const never = backupStatus(null, BACKUP_NUDGE_MIN_SOLVES, today);
+  check(never.nudge && never.daysSince === null, 'enough progress + never exported -> nudge');
+  const fresh = backupStatus(addDays(today, -2), 30, today);
+  check(!fresh.nudge && fresh.daysSince === 2, 'recent backup -> no nudge, days counted');
+  const stale = backupStatus(addDays(today, -BACKUP_NUDGE_DAYS), 30, today);
+  check(stale.nudge && stale.daysSince === BACKUP_NUDGE_DAYS, `${BACKUP_NUDGE_DAYS}+ days -> nudge`);
 }
 
 console.log(failures === 0 ? '\nAll training-logic tests green.' : `\n${failures} FAILURE(S).`);
