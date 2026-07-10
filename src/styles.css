@@ -2105,6 +2105,83 @@ details.hint[open] summary {
   font-size: 0.95rem;
   margin-right: auto;
 }
+/* Daily modes ride along as quiet links — one primary CTA per strip. */
+.map-strip .btn-warmup,
+.map-strip .btn-mock,
+.map-strip .btn-drill,
+.today-actions .btn-warmup,
+.today-actions .btn-drill {
+  background: none;
+  border-color: transparent;
+  color: var(--text-dim);
+  padding: 5px 8px;
+  font-size: 0.84rem;
+}
+.map-strip .btn-drill,
+.today-actions .btn-drill {
+  color: var(--crimson); /* misses deserve the one loud word */
+}
+.map-strip .btn-warmup:hover,
+.today-actions .btn-warmup:hover {
+  color: var(--gold);
+  border-color: var(--line);
+  background: none;
+}
+.map-strip .btn-mock:hover,
+.map-strip .btn-drill:hover,
+.today-actions .btn-drill:hover {
+  color: var(--crimson);
+  border-color: var(--line);
+  background: none;
+}
+
+/* header Library dropdown */
+.hdr-menu {
+  position: relative;
+}
+.hdr-caret {
+  font-size: 0.7em;
+  opacity: 0.7;
+}
+.hdr-menu-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 210px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 5px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  z-index: 60;
+}
+.hdr-menu-pop button {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 7px;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.88rem;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+.hdr-menu-pop button:hover,
+.hdr-menu-pop button:focus-visible {
+  background: var(--panel-2);
+  outline: none;
+}
+.hdr-menu-note {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
 /* today pulse: session progress + the readiness number, on the front door */
 .today-strip {
   display: flex;

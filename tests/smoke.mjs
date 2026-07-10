@@ -59,6 +59,12 @@ async function setEditor(page, code) {
 
 const resultText = (page) => page.locator('.pane-result').innerText();
 
+// Stats / Patterns / Sensei live in the header's Library menu.
+async function openLibrary(page, label) {
+  await page.locator('.hdr-menu-btn').click();
+  await page.locator('.hdr-menu-pop button', { hasText: label }).click();
+}
+
 try {
   // ================= desktop =================
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
@@ -584,7 +590,7 @@ try {
   await page.locator('.session-done button', { hasText: 'Back to the dojo' }).click();
 
   // ---- Patterns reference (templates you must know) ----
-  await page.locator('.icon-btn', { hasText: 'Patterns' }).click();
+  await openLibrary(page, 'Patterns');
   check((await page.locator('.pattern-card').count()) >= 12, 'Patterns page lists the core patterns');
   await page.locator('.pattern-card-head', { hasText: 'Hashing' }).click();
   check(
@@ -633,9 +639,14 @@ try {
   await page.locator('.header-logo').click();
 
   // ---- Sensei guide + attendance calendar ----
-  await page.locator('.icon-btn', { hasText: 'Sensei' }).click();
+  await page.locator('.hdr-menu-btn').click();
+  check((await page.locator('.hdr-menu-pop button').count()) === 3, 'Library menu holds Stats / Patterns / Sensei');
+  await page.keyboard.press('Escape');
+  check((await page.locator('.hdr-menu-pop').count()) === 0, 'Esc closes the Library menu');
+  await openLibrary(page, 'Sensei');
   check(await page.locator('.guide-page h1').isVisible(), 'Sensei guide page renders');
-  await page.locator('.icon-btn', { hasText: 'Stats' }).click();
+  check((await page.locator('.hdr-menu-pop').count()) === 0, 'picking an item closes the menu');
+  await openLibrary(page, 'Stats');
   check(await page.locator('.calendar-block').isVisible(), 'Stats page shows the attendance calendar');
 
   // ---- review forecast + backup nudge (seeded: 8 solves, reviews spread out) ----
@@ -665,7 +676,7 @@ try {
     localStorage.removeItem('zoro.backup.v1');
   });
   await page.reload();
-  await page.locator('.icon-btn', { hasText: 'Stats' }).click();
+  await openLibrary(page, 'Stats');
   // readiness card: score, four dimensions, pace vs target, advice
   check(await page.locator('.ready-card').isVisible(), 'Stats leads with the interview-readiness card');
   const readyScore = Number(await page.locator('.ready-num').innerText());
@@ -882,7 +893,7 @@ try {
   await page.locator('button', { hasText: 'Record & finish' }).click();
   check((await page.locator('.graph-node').count()) >= 15, 'finishing a mock returns to the dojo');
   // the mock is logged on the Stats page
-  await page.locator('.icon-btn', { hasText: 'Stats' }).click();
+  await openLibrary(page, 'Stats');
   check(
     (await page.locator('.mock-log-row').count()) >= 1,
     'the completed interview is recorded on the Stats page'

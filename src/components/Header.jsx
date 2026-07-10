@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { beltFor, currentStreak, isSolved } from '../state/progress.js';
 
 export default function Header({
@@ -16,6 +17,28 @@ export default function Header({
   const solvedCount = Object.values(progress.solved).filter(isSolved).length;
   const belt = beltFor(solvedCount);
   const streak = currentStreak(progress.streak);
+
+  // Library menu: Stats / Patterns / Sensei live behind one header item.
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e) => {
+      if (!menuRef.current?.contains(e.target)) setMenuOpen(false);
+    };
+    const onKey = (e) => e.key === 'Escape' && setMenuOpen(false);
+    window.addEventListener('pointerdown', onDown);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [menuOpen]);
+
+  const go = (fn) => () => {
+    setMenuOpen(false);
+    fn();
+  };
 
   return (
     <header className="header">
@@ -56,15 +79,29 @@ export default function Header({
       <button className="icon-btn" onClick={onBrowse}>
         Browse
       </button>
-      <button className="icon-btn" onClick={onPatterns}>
-        Patterns
-      </button>
-      <button className="icon-btn" onClick={onGuide}>
-        Sensei
-      </button>
-      <button className="icon-btn" onClick={onStats}>
-        Stats
-      </button>
+      <div className="hdr-menu" ref={menuRef}>
+        <button
+          className="icon-btn hdr-menu-btn"
+          onClick={() => setMenuOpen((o) => !o)}
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+        >
+          Library <span className="hdr-caret" aria-hidden="true">▾</span>
+        </button>
+        {menuOpen && (
+          <div className="hdr-menu-pop" role="menu">
+            <button role="menuitem" onClick={go(onStats)}>
+              Stats <span className="hdr-menu-note">readiness &amp; record</span>
+            </button>
+            <button role="menuitem" onClick={go(onPatterns)}>
+              Patterns <span className="hdr-menu-note">the templates</span>
+            </button>
+            <button role="menuitem" onClick={go(onGuide)}>
+              Sensei <span className="hdr-menu-note">how to train</span>
+            </button>
+          </div>
+        )}
+      </div>
       <button
         className="icon-btn"
         onClick={onToggleTheme}
