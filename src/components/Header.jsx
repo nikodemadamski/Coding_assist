@@ -46,7 +46,7 @@ export default function Header({
         <span className="blade" aria-hidden="true">
           ⚔
         </span>
-        ZoroClaude Dojo
+        <span className="logo-long">ZoroClaude&nbsp;</span>Dojo
       </button>
       <div className="header-spacer" />
       <span className="streak" title="Current streak (days with at least one solve)">
