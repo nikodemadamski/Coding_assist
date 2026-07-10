@@ -8,6 +8,7 @@ import {
   reviewForecast,
 } from '../state/progress.js';
 import { summarizeMocks, formatDuration } from '../state/mockSession.js';
+import { readiness, PACE_MIN_SAMPLES } from '../state/readiness.js';
 import { ROADMAP, categoryKeyOf } from '../data/roadmap.js';
 import Calendar from './Calendar.jsx';
 
@@ -61,6 +62,51 @@ function dayLabel(dateStr, i) {
   return new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: 'short' });
 }
 
+const READY_PART_LABEL = {
+  coverage: 'Path coverage',
+  mastery: 'Retention depth',
+  mocks: 'Mock-interview record',
+  pace: 'Solve pace',
+};
+
+function ReadinessCard({ ready }) {
+  return (
+    <section className="ready-card">
+      <div className="ready-left">
+        <div className="ready-score" role="img" aria-label={`Interview readiness ${ready.score} out of 100`}>
+          <span className="ready-num">{ready.score}</span>
+          <span className="ready-of">/100</span>
+        </div>
+        <div className="ready-level">{ready.level}</div>
+      </div>
+      <div className="ready-parts">
+        {Object.entries(ready.parts).map(([k, v]) => (
+          <div className={`ready-part ${k === ready.weakest ? 'weakest' : ''}`} key={k}>
+            <span className="ready-part-label">{READY_PART_LABEL[k]}</span>
+            <span className="ready-part-track">
+              <span className="ready-part-fill" style={{ width: `${Math.round(v * 100)}%` }} />
+            </span>
+            <span className="ready-part-pct">{Math.round(v * 100)}%</span>
+          </div>
+        ))}
+        <div className="ready-pace-row">
+          {Object.entries(ready.pace).map(([diff, p]) => (
+            <span className={`ready-pace tag diff-${diff}`} key={diff} title={`Median first-solve time vs the ${formatDuration(p.target)} target`}>
+              {diff}:{' '}
+              {p.n === 0
+                ? 'no timed solves'
+                : p.n < PACE_MIN_SAMPLES
+                  ? `${formatDuration(p.median)} (${p.n}/${PACE_MIN_SAMPLES} timed)`
+                  : `${formatDuration(p.median)} vs ${formatDuration(p.target)}`}
+            </span>
+          ))}
+        </div>
+        <p className="ready-advice">{ready.advice}</p>
+      </div>
+    </section>
+  );
+}
+
 function Forecast({ forecast }) {
   const max = Math.max(1, ...forecast.map((f) => f.count));
   const totalWeek = forecast.reduce((n, f) => n + f.count, 0);
@@ -95,6 +141,7 @@ export default function Stats({ questions, progress, backupInfo = null, onBackup
   const validIds = useMemo(() => new Set(questions.map((q) => q.id)), [questions]);
   const dueCount = dueQuestionIds(progress, validIds).length;
   const forecast = useMemo(() => reviewForecast(progress, validIds), [progress, validIds]);
+  const ready = useMemo(() => readiness(progress, questions), [progress, questions]);
 
   const mastery = useMemo(() => {
     const counts = { new: 0, learning: 0, reviewing: 0, mastered: 0 };
@@ -154,6 +201,9 @@ export default function Stats({ questions, progress, backupInfo = null, onBackup
           </button>
         </div>
       )}
+
+      {/* Am I ready? — the number the whole app exists to move */}
+      <ReadinessCard ready={ready} />
 
       {/* Journey hero — the whole path at a glance */}
       <section className="journey-card">

@@ -1302,6 +1302,109 @@ details.hint[open] summary {
   text-align: right;
 }
 
+/* ── interview readiness card ───────────────────────────────────────────── */
+.ready-card {
+  display: flex;
+  gap: 22px;
+  align-items: center;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.ready-left {
+  text-align: center;
+  min-width: 128px;
+}
+.ready-score {
+  font-family: var(--font-display);
+  line-height: 1;
+}
+.ready-num {
+  font-size: 3.2rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+.ready-of {
+  font-size: 1.1rem;
+  color: var(--text-dim);
+}
+.ready-level {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.ready-parts {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.ready-part {
+  display: grid;
+  grid-template-columns: 150px minmax(60px, 1fr) 44px;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.82rem;
+}
+.ready-part-label {
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.ready-part.weakest .ready-part-label {
+  color: var(--gold);
+  font-weight: 600;
+}
+.ready-part-track {
+  height: 7px;
+  background: var(--panel-2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.ready-part-fill {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  background: var(--sky);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+.ready-part.weakest .ready-part-fill {
+  background: var(--gold);
+}
+.ready-part-pct {
+  font-family: var(--font-code);
+  font-size: 0.76rem;
+  color: var(--text-dim);
+  text-align: right;
+}
+.ready-pace-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+.ready-pace {
+  font-size: 0.74rem;
+}
+.ready-advice {
+  margin: 4px 0 0;
+  font-size: 0.84rem;
+  color: var(--text);
+}
+@media (max-width: 700px) {
+  .ready-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ready-part {
+    grid-template-columns: 110px 1fr 40px;
+  }
+}
+
 /* ── review forecast (next 7 days) ──────────────────────────────────────── */
 .forecast-row {
   display: flex;

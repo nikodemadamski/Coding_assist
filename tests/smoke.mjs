@@ -334,6 +334,10 @@ try {
   await page.locator('button', { hasText: 'Submit' }).click();
   await page.locator('.solved-banner').waitFor({ timeout: 60000 });
   check(true, 'Submit marks the problem solved');
+  check(
+    /Solved in \d/.test(await page.locator('.solved-banner').innerText()),
+    'the banner reports how long the first solve took'
+  );
   check((await page.locator('.streak').innerText()).includes('1 day'), 'streak increments');
 
   // ---- solve → next: the flow never dead-ends ----
@@ -629,6 +633,10 @@ try {
     const ids = ['py-reverse-string', 'py-fizzbuzz', 'py-common-elements', 'py-two-sum', 'py-valid-anagram', 'py-contains-duplicate', 'py-valid-palindrome', 'py-binary-search'];
     const iso = new Date().toISOString();
     for (const id of ids) p.solved[id] = { firstSolvedAt: iso, attempts: 1, solves: 1, lastSolvedAt: iso };
+    // three timed easy solves -> the readiness pace dimension unlocks
+    p.solved['py-reverse-string'].firstSolveMs = 5 * 60000;
+    p.solved['py-fizzbuzz'].firstSolveMs = 8 * 60000;
+    p.solved['py-two-sum'].firstSolveMs = 12 * 60000;
     p.srs = {
       'py-reverse-string': { stage: 0, nextDue: day(-1) }, // overdue -> today
       'py-fizzbuzz': { stage: 0, nextDue: day(0) },
@@ -641,6 +649,17 @@ try {
   });
   await page.reload();
   await page.locator('.icon-btn', { hasText: 'Stats' }).click();
+  // readiness card: score, four dimensions, pace vs target, advice
+  check(await page.locator('.ready-card').isVisible(), 'Stats leads with the interview-readiness card');
+  const readyScore = Number(await page.locator('.ready-num').innerText());
+  check(readyScore > 0 && readyScore < 100, `readiness score is a real 0-100 number (${readyScore})`);
+  check((await page.locator('.ready-part').count()) === 4, 'readiness breaks into 4 scored dimensions');
+  check(
+    (await page.locator('.ready-pace-row').innerText()).includes('vs'),
+    'pace chip compares your median to the target time'
+  );
+  check((await page.locator('.ready-advice').innerText()).includes('Biggest gap'), 'the card says what to fix first');
+
   check((await page.locator('.fc-day').count()) === 7, 'review forecast shows the next 7 days');
   const fcToday = await page.locator('.fc-day').first().innerText();
   check(fcToday.includes('2') && fcToday.includes('today'), `overdue+due reviews land on today (${fcToday.replace(/\s+/g, ' ')})`);

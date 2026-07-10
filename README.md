@@ -163,6 +163,11 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
 - **Your workspace, your proportions**: drag the divider between the problem and the editor
   to whatever split suits you (double-click resets), and step the editor font size with
   **A− / A+** — both remembered across sessions.
+- **Interview readiness score** (Stats): one honest 0–100 built from the four things an
+  interviewer actually tests — path coverage, retention depth, your mock-interview record,
+  and first-solve pace against per-difficulty targets (easy ≤15m, medium ≤25m, hard ≤40m).
+  The card highlights your weakest dimension and says what to do about it. Every first
+  solve is now timed automatically (shown in the solved banner) to feed the pace stat.
 - **🎯 Sharpen these** (home): the questions you've gotten wrong twice or more sit as chips
   right on the front door — one tap reopens the worst offender.
 - **Review forecast** (Stats page): a 7-day bar row of when your spaced-repetition reviews

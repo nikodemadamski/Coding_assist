@@ -8,6 +8,7 @@ import Notes from './Notes.jsx';
 import VisualizerModal from './VisualizerModal.jsx';
 import { runQuestion } from '../engine/runnerClient.js';
 import { RATING_DELTA, isSolved } from '../state/progress.js';
+import { formatDuration } from '../state/mockSession.js';
 import {
   loadUiPrefs,
   saveUiPrefs,
@@ -76,6 +77,12 @@ export default function ProblemView({
   const [uiPrefs, setUiPrefs] = useState(loadUiPrefs); // divider split % + editor font size
   const draftTimer = useRef(null);
   const bodyRef = useRef(null);
+  // Interview pace: the component remounts per question (key={id}), so mount
+  // time is "problem opened". Capped so a left-open tab doesn't poison stats.
+  const openedAt = useRef(Date.now());
+  const solveMsRef = useRef(null);
+  const SOLVE_TIME_CAP = 90 * 60000;
+  const elapsedMs = () => Math.min(Date.now() - openedAt.current, SOLVE_TIME_CAP);
 
   const bumpFont = useCallback(
     (d) => setUiPrefs((p) => saveUiPrefs({ fontSize: p.fontSize + d })),
@@ -168,12 +175,13 @@ export default function ProblemView({
           // debrief. No solved banner, no practice reflect here.
           onSubmitReport?.(rep);
         } else if (rep.allPassed) {
+          solveMsRef.current = elapsedMs();
           if (practiceMode) {
             // Wait for a confidence rating before scheduling — the rating tunes
             // the next review interval.
             setOutcome('pass');
           } else {
-            onSolve(question.id);
+            onSolve(question.id, { timeMs: solveMsRef.current });
             setJustSolved(true);
           }
         } else {
@@ -200,7 +208,7 @@ export default function ProblemView({
   // advances the session — onSolve is the practice handler that drops the
   // question from the queue, so we must NOT also call onNext (that re-queues).
   function rate(level) {
-    onSolve(question.id, { stageDelta: RATING_DELTA[level] });
+    onSolve(question.id, { stageDelta: RATING_DELTA[level], timeMs: solveMsRef.current });
   }
 
   function handleReset() {
@@ -434,7 +442,10 @@ export default function ProblemView({
         >
           {justSolved && (
             <div className="solved-banner">
-              <span>⚔ Solved! Scheduled for review — spaced repetition will bring it back.</span>
+              <span>
+                ⚔ Solved{solveMsRef.current != null ? ` in ${formatDuration(solveMsRef.current)}` : ''}!
+                Scheduled for review — spaced repetition will bring it back.
+              </span>
               {nextUp && onOpenNext && (
                 <button className="btn btn-jade next-q-btn" onClick={() => onOpenNext(nextUp.id)}>
                   Next on your path: {pathStep(nextUp.id) ? `step ${pathStep(nextUp.id)} · ` : ''}
@@ -447,7 +458,10 @@ export default function ProblemView({
           {/* Practice: correct → reflect + rate to schedule the next review */}
           {practiceMode && outcome === 'pass' && (
             <div className="reflect">
-              <div className="solved-banner">✓ Correct! Now lock in the understanding.</div>
+              <div className="solved-banner">
+                ✓ Correct{solveMsRef.current != null ? ` in ${formatDuration(solveMsRef.current)}` : ''}!
+                Now lock in the understanding.
+              </div>
               {progress.notes?.[question.id] && (
                 <div className="past-note">
                   <span className="past-note-label">📝 Your note from last time</span>

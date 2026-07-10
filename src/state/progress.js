@@ -47,19 +47,31 @@ export const RATING_DELTA = { easy: 2, good: 1, hard: -1 };
 
 // A successful submit. `opts.stageDelta` lets a confidence rating move the review
 // forward faster (Easy) or hold it back (Hard); default +1 keeps the plain ladder.
+// `opts.timeMs` (open→pass) is kept from the FIRST solve only — that's the
+// honest "could I do this cold?" number the pace stats are built on.
 // Returns a new Progress object.
-export function recordSolve(progress, questionId, now = new Date(), { stageDelta = 1 } = {}) {
+export function recordSolve(
+  progress,
+  questionId,
+  now = new Date(),
+  { stageDelta = 1, timeMs = null } = {}
+) {
   const today = todayStr(now);
   const iso = now.toISOString();
   const next = structuredClone(progress);
 
   const prev = next.solved[questionId];
-  next.solved[questionId] = {
-    firstSolvedAt: prev ? prev.firstSolvedAt : iso,
-    attempts: (prev ? prev.attempts : 0) + 1,
-    solves: (prev ? prev.solves || 0 : 0) + 1,
+  const entry = {
+    ...prev, // keep mistakes (and any fail history) — a solve doesn't erase them
+    firstSolvedAt: prev?.firstSolvedAt || iso, // fail-first entries carry null
+    attempts: (prev?.attempts || 0) + 1,
+    solves: (prev?.solves || 0) + 1,
     lastSolvedAt: iso,
   };
+  if (Number.isFinite(timeMs) && !(prev?.solves > 0)) {
+    entry.firstSolveMs = Math.round(timeMs);
+  }
+  next.solved[questionId] = entry;
 
   const srs = next.srs[questionId];
   if (!srs) {
