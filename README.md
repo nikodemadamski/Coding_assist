@@ -163,6 +163,8 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
 - **Your workspace, your proportions**: drag the divider between the problem and the editor
   to whatever split suits you (double-click resets), and step the editor font size with
   **A− / A+** — both remembered across sessions.
+- **🎯 Sharpen these** (home): the questions you've gotten wrong twice or more sit as chips
+  right on the front door — one tap reopens the worst offender.
 - **Review forecast** (Stats page): a 7-day bar row of when your spaced-repetition reviews
   land (overdue ones count as today), so you can see the week's workload before it hits.
 - **Backup nudge**: progress lives only in your browser's localStorage — once you have real

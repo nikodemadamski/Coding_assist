@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ROADMAP, categoryKeyOf, byPathOrder, pathStep, nextOnPath } from '../data/roadmap.js';
-import { isSolved, isDue, masteryLevel, practiceCounts, todayStr } from '../state/progress.js';
+import {
+  isSolved,
+  isDue,
+  masteryLevel,
+  practiceCounts,
+  todayStr,
+  weakSpots,
+} from '../state/progress.js';
 import { todaysMisses } from '../state/activity.js';
 import {
   GRAPH_NODES,
@@ -80,6 +87,7 @@ export default function RoadmapGraph({
     () => nextOnPath(questions, (id) => isSolved(progress.solved[id])),
     [questions, progress]
   );
+  const weak = useMemo(() => weakSpots(progress, questions), [progress, questions]);
 
   const nodeById = Object.fromEntries(GRAPH_NODES.map((n) => [n.key, n]));
   const catDef = (key) => ROADMAP.find((c) => c.key === key);
@@ -171,6 +179,23 @@ export default function RoadmapGraph({
           {nextUp.why && <span className="next-step-why">{nextUp.why}</span>}
           <span className="next-step-cue">Open →</span>
         </button>
+      )}
+
+      {/* The questions that keep biting — one tap from the front door */}
+      {weak.length > 0 && (
+        <div className="weak-row">
+          <span className="weak-label">🎯 Sharpen these:</span>
+          {weak.map(({ q, mistakes }) => (
+            <button
+              className="weak-chip"
+              key={q.id}
+              onClick={() => onOpenQuestion(q.id)}
+              title={`${mistakes} wrong submits so far — reopen it and make it stick`}
+            >
+              {q.title} <span className="weak-n">✗{mistakes}</span>
+            </button>
+          ))}
+        </div>
       )}
 
       <p className="map-hint">

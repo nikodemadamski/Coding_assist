@@ -178,6 +178,16 @@ export function backupStatus(lastBackupDate, solvedCount, today = todayStr()) {
   return { nudge: daysSince >= BACKUP_NUDGE_DAYS, daysSince };
 }
 
+// The questions you keep getting wrong — surfaced on the home map so they get
+// deliberate attention. One slip is noise; two or more is a pattern.
+export function weakSpots(progress, questions, n = 3) {
+  return questions
+    .map((q) => ({ q, mistakes: progress.solved[q.id]?.mistakes || 0 }))
+    .filter((r) => r.mistakes >= 2)
+    .sort((a, b) => b.mistakes - a.mistakes)
+    .slice(0, n);
+}
+
 // Mastery level for a question, for the NeetCode-style status pills.
 // new -> learning -> reviewing -> mastered as the SRS stage climbs.
 export function masteryLevel(progress, questionId) {

@@ -657,7 +657,25 @@ try {
   await page.locator('.icon-btn[aria-label="Settings"]').click();
   check((await page.locator('.last-backup').innerText()).includes('Last backup:'), 'Settings shows the last-backup date');
   await page.locator('.modal .btn-primary', { hasText: 'Done' }).click();
-  await page.locator('.header-logo').click();
+
+  // ---- weak-spot chips on the home map ----
+  await page.evaluate(() => {
+    const p = JSON.parse(localStorage.getItem('zoro.progress.v1'));
+    p.solved['py-two-sum'] = { ...p.solved['py-two-sum'], mistakes: 4 };
+    p.solved['py-valid-anagram'] = { ...p.solved['py-valid-anagram'], mistakes: 2 };
+    localStorage.setItem('zoro.progress.v1', JSON.stringify(p));
+  });
+  await page.reload();
+  check((await page.locator('.weak-chip').count()) === 2, 'repeat-miss questions surface as chips on home');
+  const firstChip = await page.locator('.weak-chip').first().innerText();
+  check(firstChip.includes('Two Sum') && firstChip.includes('✗4'), `worst offender leads (${firstChip.replace(/\s+/g, ' ')})`);
+  await page.locator('.weak-chip').first().click();
+  await page.locator('.editor-bar').waitFor({ timeout: 10000 });
+  check(
+    (await page.locator('.problem-view').innerText()).includes('Two Sum'),
+    'a weak-spot chip reopens the problem'
+  );
+  await page.locator('.icon-btn[aria-label="Back to problem list"]').click();
 
   // ---- roadmap home after real progress ----
   check(

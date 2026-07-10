@@ -1964,6 +1964,41 @@ details.hint[open] summary {
   font-size: 0.95rem;
   margin-right: auto;
 }
+/* weak-spot chips: the questions with repeated wrong submits */
+.weak-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 2px;
+}
+.weak-label {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+}
+.weak-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  background: var(--panel);
+  border: 1px solid color-mix(in srgb, var(--crimson) 45%, var(--line));
+  border-radius: 999px;
+  color: var(--text);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.weak-chip:hover {
+  border-color: var(--crimson);
+  background: color-mix(in srgb, var(--crimson) 8%, var(--panel));
+}
+.weak-n {
+  font-family: var(--font-code);
+  font-size: 0.74rem;
+  color: var(--crimson);
+}
+
 .map-hint {
   color: var(--text-dim);
   font-size: 0.85rem;

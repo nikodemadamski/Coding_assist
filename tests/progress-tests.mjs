@@ -15,6 +15,7 @@ import {
   RATING_DELTA,
   reviewForecast,
   backupStatus,
+  weakSpots,
   BACKUP_NUDGE_DAYS,
   BACKUP_NUDGE_MIN_SOLVES,
 } from '../src/state/progress.js';
@@ -287,6 +288,28 @@ console.log('Training logic tests\n');
   check(!fresh.nudge && fresh.daysSince === 2, 'recent backup -> no nudge, days counted');
   const stale = backupStatus(addDays(today, -BACKUP_NUDGE_DAYS), 30, today);
   check(stale.nudge && stale.daysSince === BACKUP_NUDGE_DAYS, `${BACKUP_NUDGE_DAYS}+ days -> nudge`);
+}
+
+// ---- weak spots ----
+{
+  console.log('\nWeak spots:');
+  const qs = [{ id: 'a', title: 'A' }, { id: 'b', title: 'B' }, { id: 'c', title: 'C' }, { id: 'd', title: 'D' }, { id: 'e', title: 'E' }];
+  const prog = {
+    ...structuredClone(EMPTY_PROGRESS),
+    solved: {
+      a: { attempts: 5, solves: 1, mistakes: 4 },
+      b: { attempts: 2, solves: 1, mistakes: 1 }, // one slip: not a pattern
+      c: { attempts: 3, solves: 0, mistakes: 2 }, // never solved still counts
+      d: { attempts: 9, solves: 2, mistakes: 6 },
+      e: { attempts: 4, solves: 1, mistakes: 3 },
+    },
+  };
+  const weak = weakSpots(prog, qs);
+  check(weak.length === 3, 'caps at 3 chips');
+  check(weak[0].q.id === 'd' && weak[0].mistakes === 6, 'worst offender first');
+  check(weak.map((w) => w.q.id).join(',') === 'd,a,e', 'sorted by mistake count');
+  check(!weak.some((w) => w.q.id === 'b'), 'a single mistake does not qualify');
+  check(weakSpots(structuredClone(EMPTY_PROGRESS), qs).length === 0, 'no data -> no chips');
 }
 
 console.log(failures === 0 ? '\nAll training-logic tests green.' : `\n${failures} FAILURE(S).`);
