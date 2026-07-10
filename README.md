@@ -151,7 +151,10 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
   (*"Is target - n (= 7) in seen (= {2: 0})? No → skip it."*). The variable that just
   **changed** is highlighted and shown as *before → after*, so there's one thing to watch per
   step instead of a wall of state. Play/pause/scrub, step with ← →, and the approach's core
-  idea sits up top.
+  idea sits up top. Index variables get labeled **▲ pointer markers** under the exact array
+  cells they point at (`lo`/`mid`/`hi`, `i`/`j`, `slow`/`fast`…), and the window between two
+  pointers is shaded — so two-pointer, sliding-window and binary-search motion is visible on
+  the data itself. Works on your own code too (**👁 Visualize my code**).
 - **Attendance calendar + daily goal** (Stats page): a GitHub-style grid of every day you
   showed up, and whether you met the goal (clear your reviews + solve ≥1). Don't break the
   chain.

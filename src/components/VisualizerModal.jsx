@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Markdown from './Markdown.jsx';
 import { runPythonTrace } from '../engine/pyClient.js';
+import { scanSubscripts, computeMarkers, spanOf } from '../state/vizPointers.js';
 
 // NeetCode-style algorithm visualizer: replays a REAL traced execution of any
 // code (a reference approach or the user's own) on a chosen test case.
@@ -80,14 +81,23 @@ function dictHot(before, after) {
   });
 }
 
-function Cells({ items, kind, hot }) {
+function Cells({ items, kind, hot, markers, span }) {
   const shown = items.slice(0, 14);
+  const ptrAt = {};
+  for (const m of markers ?? []) {
+    ptrAt[m.index] = ptrAt[m.index] ? `${ptrAt[m.index]},${m.name}` : m.name;
+  }
+  const inSpan = (i) => span && i >= span[0] && i <= span[1];
   return (
     <span className={`viz-cells ${kind || ''}`}>
       {shown.map((x, i) => (
-        <span className={`viz-cell ${hot?.[i] ? 'hot' : ''}`} key={i}>
+        <span
+          className={`viz-cell ${hot?.[i] ? 'hot' : ''} ${inSpan(i) ? 'in-span' : ''}`}
+          key={i}
+        >
           <span className="viz-cell-v">{fmt(x)}</span>
           {kind !== 'set' && <span className="viz-cell-i">{i}</span>}
+          {ptrAt[i] && <span className="viz-ptr">▲ {ptrAt[i]}</span>}
         </span>
       ))}
       {items.length > shown.length && <span className="viz-more">…+{items.length - shown.length}</span>}
@@ -97,10 +107,17 @@ function Cells({ items, kind, hot }) {
 
 // Renders a value; when `before` is provided, only the changed elements light
 // up (no more whole-collection strike-throughs).
-function VarValue({ value, before }) {
+function VarValue({ value, before, markers, span }) {
   if (Array.isArray(value)) {
     if (value.length === 0) return <span className="viz-empty">[] empty</span>;
-    return <Cells items={value} hot={before !== undefined ? listHot(before, value) : null} />;
+    return (
+      <Cells
+        items={value}
+        hot={before !== undefined ? listHot(before, value) : null}
+        markers={markers}
+        span={span}
+      />
+    );
   }
   if (value && typeof value === 'object') {
     if (value.__set__) {
@@ -218,6 +235,9 @@ export default function VisualizerModal({ question, code, label, note, onClose }
     }
     return names;
   }, [steps]);
+
+  // Which int variables index into which lists (from the source code).
+  const subscripts = useMemo(() => scanSubscripts(code), [code]);
 
   const cur = steps[step];
   const prev = step > 0 ? steps[step - 1] : null;
@@ -393,6 +413,19 @@ export default function VisualizerModal({ question, code, label, note, onClose }
                   const before = didChange && !wasNew ? changed[name] : undefined;
                   const isPrim =
                     inScope && (cur.locals[name] === null || typeof cur.locals[name] !== 'object');
+                  let markers = null;
+                  let span = null;
+                  if (inScope && Array.isArray(cur.locals[name])) {
+                    const listCount = Object.values(cur.locals).filter(Array.isArray).length;
+                    markers = computeMarkers({
+                      locals: cur.locals,
+                      listName: name,
+                      listLength: cur.locals[name].length,
+                      subscripts,
+                      listCount,
+                    });
+                    span = spanOf(markers);
+                  }
                   return (
                     <div
                       className={`viz-var ${didChange ? 'changed' : ''} ${inScope ? '' : 'out'}`}
@@ -412,7 +445,12 @@ export default function VisualizerModal({ question, code, label, note, onClose }
                               <span className="viz-arrow">→</span>
                             </>
                           )}
-                          <VarValue value={cur.locals[name]} before={before} />
+                          <VarValue
+                            value={cur.locals[name]}
+                            before={before}
+                            markers={markers}
+                            span={span}
+                          />
                         </span>
                       ) : (
                         <span className="viz-empty">— not in scope yet</span>

@@ -665,6 +665,22 @@ try {
     (await page.locator('.viz-code').innerText()).includes('for j in range'),
     "the traced source is the user's own code"
   );
+  // pointer overlay: i/j get ▲ markers under the exact cells they index, and
+  // the window between them is shaded
+  let sawPtr = false;
+  let sawSpan = false;
+  for (let s = 0; s < 40; s++) {
+    if (!sawPtr && (await page.locator('.viz-ptr').count()) > 0) {
+      const labels = await page.locator('.viz-ptr').allInnerTexts();
+      sawPtr = labels.some((t) => t.includes('i')) || labels.some((t) => t.includes('j'));
+    }
+    if (!sawSpan && (await page.locator('.viz-cell.in-span').count()) > 0) sawSpan = true;
+    if (sawPtr && sawSpan) break;
+    if (await page.locator('button[aria-label="Next step"]').isDisabled()) break;
+    await page.locator('button[aria-label="Next step"]').click();
+  }
+  check(sawPtr, 'pointer markers (▲ i / ▲ j) appear under the cells they index');
+  check(sawSpan, 'the window between two pointers is shaded');
   await page.locator('.icon-btn[aria-label="Close visualizer"]').click();
   await page.locator('.icon-btn[aria-label="Back to problem list"]').click();
 

@@ -2356,6 +2356,29 @@ details.hint[open] summary {
   margin-top: 2px;
   font-family: var(--font-code);
 }
+/* pointer overlay: labeled ▲ under the cell an index variable points at */
+.viz-ptr {
+  font-size: 0.64rem;
+  font-weight: 700;
+  color: var(--gold);
+  font-family: var(--font-code);
+  white-space: nowrap;
+  line-height: 1.1;
+  animation: viz-ptr-in 0.25s ease-out;
+}
+@keyframes viz-ptr-in {
+  from { transform: translateY(-3px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+/* the window between the outermost pointers (two-pointer / sliding window) */
+.viz-cell.in-span .viz-cell-v {
+  background: color-mix(in srgb, var(--gold) 9%, var(--panel-2));
+  border-color: color-mix(in srgb, var(--gold) 45%, var(--line));
+}
+.viz-cell.in-span.hot .viz-cell-v {
+  background: color-mix(in srgb, var(--gold) 22%, var(--panel-2));
+  border-color: var(--gold);
+}
 
 .viz-chips {
   display: flex;
