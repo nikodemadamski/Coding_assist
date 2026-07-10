@@ -225,6 +225,40 @@ try {
   await page.locator('.pv-focus-toggle').click();
   check(await page.locator('.pane-problem').isVisible(), 'toggling Focus brings the problem back');
 
+  // ---- draggable divider + editor font preference (desktop) ----
+  check(await page.locator('.pv-divider').isVisible(), 'a drag divider sits between problem and code');
+  const widthBefore = (await page.locator('.pane-problem').boundingBox()).width;
+  {
+    const d = await page.locator('.pv-divider').boundingBox();
+    await page.mouse.move(d.x + d.width / 2, d.y + d.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(d.x + 150, d.y + d.height / 2, { steps: 5 });
+    await page.mouse.up();
+  }
+  const widthAfter = (await page.locator('.pane-problem').boundingBox()).width;
+  check(widthAfter > widthBefore + 80, `dragging the divider widens the problem pane (${Math.round(widthBefore)} → ${Math.round(widthAfter)}px)`);
+  const savedSplit = await page.evaluate(() => JSON.parse(localStorage.getItem('zoro.ui.v1')).split);
+  check(savedSplit > 42, `the split persists to localStorage (${savedSplit}%)`);
+  await page.locator('.pv-divider').dblclick();
+  check(
+    (await page.evaluate(() => JSON.parse(localStorage.getItem('zoro.ui.v1')).split)) === 42,
+    'double-click resets the split to the default'
+  );
+  const fontBefore = await page.locator('.cm-editor').evaluate((el) => getComputedStyle(el).fontSize);
+  await page.locator('button[aria-label="Larger editor font"]').click();
+  await page.locator('button[aria-label="Larger editor font"]').click();
+  const fontAfter = await page.locator('.cm-editor').evaluate((el) => getComputedStyle(el).fontSize);
+  check(
+    fontBefore === '14px' && fontAfter === '16px',
+    `A+ grows the editor font and it applies live (${fontBefore} → ${fontAfter})`
+  );
+  check(
+    (await page.evaluate(() => JSON.parse(localStorage.getItem('zoro.ui.v1')).fontSize)) === 16,
+    'the font size persists to localStorage'
+  );
+  await page.locator('button[aria-label="Smaller editor font"]').click();
+  await page.locator('button[aria-label="Smaller editor font"]').click();
+
   // ---- the "stuck ladder": climb rung by rung, code is the last rung ----
   check(await page.locator('.stuck').isVisible(), 'a stuck-when-you-need-it ladder is shown');
   check(

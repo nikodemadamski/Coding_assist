@@ -8,6 +8,14 @@ import Notes from './Notes.jsx';
 import VisualizerModal from './VisualizerModal.jsx';
 import { runQuestion } from '../engine/runnerClient.js';
 import { RATING_DELTA, isSolved } from '../state/progress.js';
+import {
+  loadUiPrefs,
+  saveUiPrefs,
+  clampSplit,
+  FONT_MIN,
+  FONT_MAX,
+  UI_DEFAULTS,
+} from '../state/uiPrefs.js';
 import { pathStep } from '../data/roadmap.js';
 
 const LANG_LABEL = {
@@ -65,7 +73,32 @@ export default function ProblemView({
   const [justSolved, setJustSolved] = useState(false);
   const [outcome, setOutcome] = useState(null); // practice: 'pass' | 'fail' | null
   const [viz, setViz] = useState(null); // { code, label } → visualizer open
+  const [uiPrefs, setUiPrefs] = useState(loadUiPrefs); // divider split % + editor font size
   const draftTimer = useRef(null);
+  const bodyRef = useRef(null);
+
+  const bumpFont = useCallback(
+    (d) => setUiPrefs((p) => saveUiPrefs({ fontSize: p.fontSize + d })),
+    []
+  );
+
+  // Drag the divider: live-resize while moving, persist on release.
+  const startDividerDrag = useCallback((e) => {
+    e.preventDefault();
+    const rect = bodyRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const pctAt = (x) => clampSplit(((x - rect.left) / rect.width) * 100);
+    const onMove = (ev) => setUiPrefs((p) => ({ ...p, split: pctAt(ev.clientX) }));
+    const onUp = (ev) => {
+      setUiPrefs(saveUiPrefs({ split: pctAt(ev.clientX) }));
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      document.body.style.removeProperty('cursor');
+    };
+    document.body.style.cursor = 'col-resize';
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  }, []);
 
   const openVisualizer = useCallback((vizCode, vizLabel, vizNote) => {
     setViz({ code: vizCode, label: vizLabel, note: vizNote });
@@ -261,7 +294,7 @@ export default function ProblemView({
         ))}
       </div>
 
-      <div className="pv-body">
+      <div className="pv-body" ref={bodyRef} style={{ '--pv-split': `${uiPrefs.split}%` }}>
         <section className={`pv-pane pane-problem ${tab === 'problem' ? 'visible' : ''}`}>
           <Markdown text={question.description} />
           {!mockMode && question.why && (
@@ -320,6 +353,26 @@ export default function ProblemView({
           )}
         </section>
 
+        <div
+          className="pv-divider"
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize the problem panel (arrow keys or drag; double-click resets)"
+          tabIndex={0}
+          title="Drag to resize · double-click to reset"
+          onPointerDown={startDividerDrag}
+          onDoubleClick={() => setUiPrefs(saveUiPrefs({ split: UI_DEFAULTS.split }))}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowLeft') {
+              e.preventDefault();
+              setUiPrefs((p) => saveUiPrefs({ split: p.split - 2 }));
+            } else if (e.key === 'ArrowRight') {
+              e.preventDefault();
+              setUiPrefs((p) => saveUiPrefs({ split: p.split + 2 }));
+            }
+          }}
+        />
+
         <section className={`pv-pane pane-code ${tab === 'code' ? 'visible' : ''}`}>
           <div className="editor-bar">
             <span
@@ -331,6 +384,25 @@ export default function ProblemView({
             <button className="btn" onClick={handleReset}>
               Reset to starter
             </button>
+            <span className="font-ctl" title="Editor font size">
+              <button
+                className="btn font-btn"
+                onClick={() => bumpFont(-1)}
+                disabled={uiPrefs.fontSize <= FONT_MIN}
+                aria-label="Smaller editor font"
+              >
+                A−
+              </button>
+              <span className="font-size-val">{uiPrefs.fontSize}px</span>
+              <button
+                className="btn font-btn"
+                onClick={() => bumpFont(1)}
+                disabled={uiPrefs.fontSize >= FONT_MAX}
+                aria-label="Larger editor font"
+              >
+                A+
+              </button>
+            </span>
             {!mockMode && question.track !== 'sql' && (question.tests?.length ?? 0) > 0 && (
               <button
                 className="btn btn-viz"
@@ -347,7 +419,12 @@ export default function ProblemView({
             </span>
           </div>
           <div className="editor-wrap">
-            <Editor track={question.track} value={code} onChange={handleChange} />
+            <Editor
+              track={question.track}
+              value={code}
+              onChange={handleChange}
+              fontSize={uiPrefs.fontSize}
+            />
           </div>
         </section>
 

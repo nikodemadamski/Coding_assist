@@ -155,6 +155,9 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
   cells they point at (`lo`/`mid`/`hi`, `i`/`j`, `slow`/`fast`…), and the window between two
   pointers is shaded — so two-pointer, sliding-window and binary-search motion is visible on
   the data itself. Works on your own code too (**👁 Visualize my code**).
+- **Your workspace, your proportions**: drag the divider between the problem and the editor
+  to whatever split suits you (double-click resets), and step the editor font size with
+  **A− / A+** — both remembered across sessions.
 - **Attendance calendar + daily goal** (Stats page): a GitHub-style grid of every day you
   showed up, and whether you met the goal (clear your reviews + solve ≥1). Don't break the
   chain.
