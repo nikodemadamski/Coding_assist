@@ -685,6 +685,14 @@ try {
     localStorage.setItem('zoro.progress.v1', JSON.stringify(p));
   });
   await page.reload();
+  // today pulse: real solves happened earlier in this run, so it shows live counts
+  check(await page.locator('.today-strip').isVisible(), 'home shows a Today pulse strip');
+  const pulseText = await page.locator('.today-strip').innerText();
+  check(/[1-9]\d* solved/.test(pulseText), `pulse counts today's solves (${pulseText.match(/\d+ solved/)?.[0]})`);
+  check(/Readiness \d+\/100/.test(pulseText.replace(/\s+/g, ' ')), 'pulse carries the readiness score');
+  await page.locator('.today-ready').click();
+  check(await page.locator('.ready-card').isVisible(), 'the readiness chip jumps to the Stats breakdown');
+  await page.locator('.header-logo').click();
   check((await page.locator('.weak-chip').count()) === 2, 'repeat-miss questions surface as chips on home');
   const firstChip = await page.locator('.weak-chip').first().innerText();
   check(firstChip.includes('Two Sum') && firstChip.includes('✗4'), `worst offender leads (${firstChip.replace(/\s+/g, ' ')})`);

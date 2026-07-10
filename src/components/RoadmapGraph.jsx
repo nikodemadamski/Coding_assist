@@ -8,7 +8,8 @@ import {
   todayStr,
   weakSpots,
 } from '../state/progress.js';
-import { todaysMisses } from '../state/activity.js';
+import { todaysMisses, todayPulse } from '../state/activity.js';
+import { readiness } from '../state/readiness.js';
 import {
   GRAPH_NODES,
   GRAPH_EDGES,
@@ -33,6 +34,7 @@ export default function RoadmapGraph({
   onDrill,
   onOpenTrack,
   onBrowse,
+  onStats,
 }) {
   const [openCat, setOpenCat] = useState(null);
   const [scale, setScale] = useState(1);
@@ -88,6 +90,8 @@ export default function RoadmapGraph({
     [questions, progress]
   );
   const weak = useMemo(() => weakSpots(progress, questions), [progress, questions]);
+  const pulse = useMemo(() => todayPulse(progress, questions), [progress, questions]);
+  const ready = useMemo(() => readiness(progress, questions), [progress, questions]);
 
   const nodeById = Object.fromEntries(GRAPH_NODES.map((n) => [n.key, n]));
   const catDef = (key) => ROADMAP.find((c) => c.key === key);
@@ -165,6 +169,34 @@ export default function RoadmapGraph({
           🎤 Mock interview
         </button>
       </div>
+
+      {/* Today's pulse: what you've done, what's left, and the big number */}
+      {!brandNew && (
+        <div className="today-strip">
+          <span className="today-label">Today</span>
+          <span className={`today-chip ${pulse.solves > 0 ? 'good' : ''}`}>
+            ⚔ {pulse.solves} solved
+          </span>
+          {pulse.missedLeft > 0 && (
+            <span className="today-chip bad">✗ {pulse.missedLeft} to win back</span>
+          )}
+          <span className={`today-chip ${pulse.dueLeft === 0 ? 'good' : ''}`}>
+            ⟳ {pulse.dueLeft === 0 ? 'reviews clear' : `${pulse.dueLeft} review${pulse.dueLeft === 1 ? '' : 's'} left`}
+          </span>
+          <span className={`today-chip ${pulse.goalMet ? 'good' : ''}`}>
+            {pulse.goalMet ? '✓ daily goal met' : '○ goal: solve 1 + clear reviews'}
+          </span>
+          {onStats && (
+            <button
+              className="today-ready"
+              onClick={onStats}
+              title="Interview readiness — coverage, retention, mocks, pace. Click for the breakdown."
+            >
+              🎯 Readiness <strong>{ready.score}</strong>/100 →
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Guided next step: what to do next, and why it's worth doing */}
       {nextUp && (

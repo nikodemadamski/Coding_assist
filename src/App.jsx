@@ -234,6 +234,7 @@ export default function App() {
             onDrill={() => setView({ name: 'drill' })}
             onOpenTrack={(key) => setView({ name: 'track', trackKey: key })}
             onBrowse={(key) => setView({ name: 'browse', focusCategory: key })}
+            onStats={() => setView({ name: 'stats' })}
           />
         )}
         {view.name === 'track' && (

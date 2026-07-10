@@ -168,6 +168,10 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
   and first-solve pace against per-difficulty targets (easy ≤15m, medium ≤25m, hard ≤40m).
   The card highlights your weakest dimension and says what to do about it. Every first
   solve is now timed automatically (shown in the solved banner) to feed the pace stat.
+- **Today pulse** (home): a one-line readout of the current session — solves, misses to win
+  back, reviews left, daily-goal state — plus your live readiness score, one click from its
+  full breakdown. You see progress the moment you land, and what's still open before you
+  close the tab.
 - **🎯 Sharpen these** (home): the questions you've gotten wrong twice or more sit as chips
   right on the front door — one tap reopens the worst offender.
 - **Review forecast** (Stats page): a 7-day bar row of when your spaced-repetition reviews

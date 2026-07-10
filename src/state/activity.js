@@ -56,6 +56,22 @@ export function isGoalMetToday(progress, now = new Date()) {
   return dayOf(progress, todayStr(now)).goalMet;
 }
 
+// One-line pulse of the current day, for the home page: what you've done and
+// what's still standing between you and the daily goal.
+export function todayPulse(progress, questions, now = new Date()) {
+  const today = todayStr(now);
+  const day = dayOf(progress, today);
+  const validIds = new Set(questions.map((q) => q.id));
+  const dueLeft = dueQuestionIds(progress, validIds, today).length;
+  return {
+    solves: day.solves,
+    fails: day.fails,
+    missedLeft: day.missed.filter((id) => validIds.has(id)).length,
+    dueLeft,
+    goalMet: day.goalMet,
+  };
+}
+
 // ---- calendar + summary ----
 
 // Returns the last `days` calendar days (oldest first) with their status:

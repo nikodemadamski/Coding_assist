@@ -7,6 +7,7 @@ import {
   isGoalMetToday,
   calendarDays,
   activitySummary,
+  todayPulse,
 } from '../src/state/activity.js';
 import { createDrillSession, currentId, sessionCounts } from '../src/state/practiceSession.js';
 import { todayStr } from '../src/state/progress.js';
@@ -110,6 +111,24 @@ const questions = [{ id: 'q1' }, { id: 'q2' }, { id: 'q3' }];
   check(sum.daysVisited === 4, 'summary counts 4 visited days');
   check(sum.daysGoalMet === 3, 'summary counts 3 goal-met days');
   check(sum.longestGoalStreak === 2, 'longest consecutive goal streak is 2 (the gap breaks it)');
+}
+
+// ---- today pulse ----
+{
+  const TODAY = todayStr(NOW);
+  const qs = [{ id: 'q1' }, { id: 'q2' }, { id: 'q3' }];
+  const p = structuredClone(EMPTY_PROGRESS);
+  p.activity = {
+    [TODAY]: { visited: true, solves: 2, fails: 3, missed: ['q3', 'gone-from-bank'], goalMet: false },
+  };
+  p.srs = { q1: { stage: 0, nextDue: TODAY }, q2: { stage: 0, nextDue: '2999-01-01' } };
+  const pulse = todayPulse(p, qs, NOW);
+  check(pulse.solves === 2 && pulse.fails === 3, 'pulse carries today solves/fails');
+  check(pulse.missedLeft === 1, 'pulse counts only misses still in the bank');
+  check(pulse.dueLeft === 1, 'pulse counts reviews still due today');
+  check(pulse.goalMet === false, 'pulse carries goal state');
+  const empty = todayPulse(structuredClone(EMPTY_PROGRESS), qs, NOW);
+  check(empty.solves === 0 && empty.dueLeft === 0 && !empty.goalMet, 'fresh day pulses zeros');
 }
 
 console.log(failures === 0 ? '\nAll attendance/drill tests green.' : `\n${failures} FAILURE(S).`);

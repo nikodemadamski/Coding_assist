@@ -2067,6 +2067,55 @@ details.hint[open] summary {
   font-size: 0.95rem;
   margin-right: auto;
 }
+/* today pulse: session progress + the readiness number, on the front door */
+.today-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 2px;
+}
+.today-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.today-chip {
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+.today-chip.good {
+  color: var(--jade);
+  border-color: color-mix(in srgb, var(--jade) 45%, var(--line));
+}
+.today-chip.bad {
+  color: var(--crimson);
+  border-color: color-mix(in srgb, var(--crimson) 45%, var(--line));
+}
+.today-ready {
+  margin-left: auto;
+  padding: 3px 12px;
+  border: 1px solid color-mix(in srgb, var(--gold) 50%, var(--line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--gold) 7%, var(--panel));
+  color: var(--text);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+.today-ready:hover {
+  border-color: var(--gold);
+}
+.today-ready strong {
+  color: var(--gold);
+}
+
 /* weak-spot chips: the questions with repeated wrong submits */
 .weak-row {
   display: flex;
