@@ -59,6 +59,8 @@ export default function ProblemView({
   onSeePattern = null,
   // personal notes (optional): save handler; the note itself is read from progress
   onNote = null,
+  // after-solve Big-O check-in result recorder (optional)
+  onBigO = null,
   // free-mode continuation (optional): the next unsolved path question
   nextUp = null,
   onOpenNext = null,
@@ -455,7 +457,9 @@ export default function ProblemView({
               )}
             </div>
           )}
-          {justSolved && <BigOCheck question={question} key={`bigo-${question.id}`} />}
+          {justSolved && (
+            <BigOCheck question={question} onResult={onBigO} key={`bigo-${question.id}`} />
+          )}
 
           {/* Practice: correct → reflect + rate to schedule the next review */}
           {practiceMode && outcome === 'pass' && (
@@ -470,7 +474,7 @@ export default function ProblemView({
                   <p>{progress.notes[question.id]}</p>
                 </div>
               )}
-              <BigOCheck question={question} key={`bigo-r-${question.id}`} />
+              <BigOCheck question={question} onResult={onBigO} key={`bigo-r-${question.id}`} />
               <p className="reflect-q">
                 Before you move on: in one sentence, what does your solution actually do — and
                 what would break it?

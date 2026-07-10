@@ -63,6 +63,20 @@ console.log('bigo-tests: full-bank coverage');
   check(`most of the bank is auto-gradeable (${gradeable}/${SEED_QUESTIONS.length})`, gradeable >= SEED_QUESTIONS.length * 0.6);
 }
 
+console.log('bigo-tests: recordBigO');
+{
+  const { recordBigO } = await import('../src/state/progress.js');
+  const { EMPTY_PROGRESS } = await import('../src/state/storage.js');
+  const p0 = structuredClone(EMPTY_PROGRESS);
+  const p1 = recordBigO(p0, true);
+  const p2 = recordBigO(recordBigO(p1, false), false);
+  check('right increments', p1.bigo.right === 1 && p1.bigo.wrong === 0);
+  check('wrong increments', p2.bigo.right === 1 && p2.bigo.wrong === 2);
+  check('original untouched', p0.bigo.right === 0);
+  const legacy = recordBigO({ solved: {} }, true); // pre-bigo progress shape
+  check('legacy progress without bigo field still records', legacy.bigo.right === 1);
+}
+
 if (failures) {
   console.error(`bigo-tests: ${failures} failure(s)`);
   process.exit(1);

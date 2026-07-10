@@ -21,6 +21,7 @@ export default function PracticeView({
   onFail,
   onDraft,
   onNote,
+  onBigO,
   onExit,
   mode = 'practice',
 }) {
@@ -70,6 +71,7 @@ export default function PracticeView({
       onFail={onFail}
       onDraft={onDraft}
       onNote={onNote}
+      onBigO={onBigO}
       onBack={onExit}
       practiceMode
       practiceInfo={{ phase, reviewsLeft: reviewLeft, newLeft }}

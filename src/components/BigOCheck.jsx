@@ -6,13 +6,18 @@ import { optimalComplexity } from '../state/mockSession.js';
 // "what's the complexity?" One tap, instant verdict against the model
 // solution. When the model's bound doesn't map cleanly onto a bucket
 // (grids, O(h), per-operation costs) it reveals instead of grading.
-export default function BigOCheck({ question }) {
+export default function BigOCheck({ question, onResult }) {
   const model = optimalComplexity(question);
   const [pick, setPick] = useState(null);
   if (!model) return null;
   const bucket = bigOBucket(model);
   const verdict =
     pick === null ? null : bucket === null ? 'reveal' : pick === bucket ? 'right' : 'wrong';
+
+  const answer = (b) => {
+    setPick(b);
+    if (bucket !== null) onResult?.(b === bucket); // ungradeable bounds don't count
+  };
 
   return (
     <div className="bigo">
@@ -22,7 +27,7 @@ export default function BigOCheck({ question }) {
       {pick === null ? (
         <div className="bigo-options">
           {BIGO_BUCKETS.map((b) => (
-            <button key={b} className="chip bigo-chip" onClick={() => setPick(b)}>
+            <button key={b} className="chip bigo-chip" onClick={() => answer(b)}>
               {b}
             </button>
           ))}

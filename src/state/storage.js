@@ -13,6 +13,7 @@ export const EMPTY_PROGRESS = {
   warmup: {}, // level -> { best, runs, lastRunAt }
   mock: [], // [{ id, title, difficulty, date, format, timeMs, passed, ... }]
   notes: {}, // questionId -> personal note ("what tripped me / key idea")
+  bigo: { right: 0, wrong: 0 }, // after-solve complexity check-in record
 };
 
 function safeParse(raw, fallback) {

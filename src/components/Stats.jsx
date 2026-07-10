@@ -256,6 +256,17 @@ export default function Stats({ questions, progress, backupInfo = null, onBackup
           <div className="v">{mockStats.count}</div>
           <div className="l">mock interviews</div>
         </div>
+        <div className="stat-tile">
+          <div className="v">
+            {(progress.bigo?.right || 0) + (progress.bigo?.wrong || 0) > 0
+              ? `${Math.round(
+                  (100 * (progress.bigo?.right || 0)) /
+                    ((progress.bigo?.right || 0) + (progress.bigo?.wrong || 0))
+                )}%`
+              : '—'}
+          </div>
+          <div className="l">Big-O accuracy</div>
+        </div>
       </div>
 
       <h2 style={{ margin: '22px 0 8px' }}>

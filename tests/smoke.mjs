@@ -351,6 +351,10 @@ try {
     (await page.locator('.bigo-answer').innerText()).includes('O(n) time'),
     'the model complexity is revealed either way'
   );
+  check(
+    (await page.evaluate(() => JSON.parse(localStorage.getItem('zoro.progress.v1')).bigo)).wrong === 1,
+    'the check-in result is recorded for the accuracy stat'
+  );
   check((await page.locator('.streak').innerText()).includes('1 day'), 'streak increments');
 
   // ---- solve → next: the flow never dead-ends ----

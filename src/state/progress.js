@@ -190,6 +190,15 @@ export function backupStatus(lastBackupDate, solvedCount, today = todayStr()) {
   return { nudge: daysSince >= BACKUP_NUDGE_DAYS, daysSince };
 }
 
+// Record an answer to the after-solve Big-O check-in.
+export function recordBigO(progress, correct) {
+  const cur = progress.bigo || { right: 0, wrong: 0 };
+  return {
+    ...progress,
+    bigo: { right: cur.right + (correct ? 1 : 0), wrong: cur.wrong + (correct ? 0 : 1) },
+  };
+}
+
 // The questions you keep getting wrong — surfaced on the home map so they get
 // deliberate attention. One slip is noise; two or more is a pattern.
 export function weakSpots(progress, questions, n = 3) {

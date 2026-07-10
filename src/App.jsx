@@ -31,6 +31,7 @@ import {
   isSolved,
   currentStreak,
   backupStatus,
+  recordBigO,
 } from './state/progress.js';
 import { nextOnPath } from './data/roadmap.js';
 import { markVisit, recordDaySolve, recordDayFail } from './state/activity.js';
@@ -198,6 +199,10 @@ export default function App() {
     setProgress((p) => ({ ...p, mock: [...(p.mock || []), record] }));
   }, []);
 
+  const handleBigO = useCallback((correct) => {
+    setProgress((p) => recordBigO(p, correct));
+  }, []);
+
   const handleImported = useCallback((questions) => {
     setCustomQuestions((qs) => [...qs, ...questions]);
   }, []);
@@ -286,6 +291,7 @@ export default function App() {
             onFail={handleFail}
             onDraft={handleDraft}
             onNote={handleNote}
+            onBigO={handleBigO}
             onExit={() => setView({ name: 'browse' })}
           />
         )}
@@ -298,6 +304,7 @@ export default function App() {
             onFail={handleFail}
             onDraft={handleDraft}
             onNote={handleNote}
+            onBigO={handleBigO}
             nextUp={nextUpQuestion}
             onOpenNext={(id) => setView({ name: 'problem', id, from: view.from || 'home' })}
             onBack={() => setView(backTo)}
