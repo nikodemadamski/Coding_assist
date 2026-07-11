@@ -98,6 +98,21 @@ for (const level of WARMUP_LEVELS.filter((l) => l.track === 'python')) {
   check(bad.length === 0, `${level.key}: every answer compiles as Python`, bad.slice(0, 3).join(' | '));
 }
 
+// ---- every pandas answer executes against the real DataFrames ----
+{
+  const { runPandasSnippets } = await import('./engines.mjs');
+  const { WARMUP_PD_PRELUDE } = await import('../src/data/warmups-pandas.js');
+  for (const level of WARMUP_LEVELS.filter((l) => l.track === 'pandas')) {
+    const answers = WARMUP_SETS[level.key].flatMap((i) => [i.answer, ...(i.accept ?? [])]);
+    const bad = await runPandasSnippets(WARMUP_PD_PRELUDE, answers);
+    check(
+      bad.length === 0,
+      `${level.key}: every answer executes against the real DataFrames`,
+      bad.slice(0, 3).join(' | ')
+    );
+  }
+}
+
 // ---- every SQL answer executes against the warm-up schema ----
 {
   const initSqlJs = (await import('sql.js')).default;

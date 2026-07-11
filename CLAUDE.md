@@ -32,7 +32,9 @@ Full gates (lint + test + build + smoke) before every push, no exceptions.
 - trees encode as nested `[value, left, right]`, `null` = empty; lists as value arrays.
 - `roadmap.js` (path order, categoryKeyOf), `roadmapGraph.js` (algorithm map layout),
   `trackGraphs.js` (pandas/SQL trees), `patternGuide.js` (16 templates), `patternHints.js`,
-  `warmups.js` (3×50 typing drills), `validateQuestion.js` (schema gate, also used by import).
+  `warmups.js` + `warmups-pandas.js` + `warmups-sql.js` (typing drills, 3 tracks × 3
+  levels × 50; SQL checking folds case, pandas/SQL answers EXECUTE in the warm-up gate),
+  `validateQuestion.js` (schema gate, also used by import).
 
 ## Engine (src/engine/)
 

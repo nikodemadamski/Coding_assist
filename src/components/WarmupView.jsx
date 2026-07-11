@@ -114,14 +114,17 @@ export default function WarmupView({ progress, onResult, onExit }) {
             python
           </button>
           <button
+            className={`chip ${track === 'pandas' ? 'active' : ''}`}
+            onClick={() => setTrack('pandas')}
+          >
+            pandas
+          </button>
+          <button
             className={`chip ${track === 'sql' ? 'active' : ''}`}
             onClick={() => setTrack('sql')}
           >
             sql
           </button>
-          <span className="chip disabled" title="Coming soon">
-            pandas · soon
-          </span>
         </div>
         <div className="wu-levels">
           {WARMUP_LEVELS.filter((l) => l.track === track).map((l) => {
@@ -167,7 +170,10 @@ export default function WarmupView({ progress, onResult, onExit }) {
 
     return (
       <div className="stats warmup">
-        <h1>Warm-up — {levelDef.track === 'sql' ? 'SQL ' : ''}{levelDef.label}</h1>
+        <h1>
+          Warm-up — {levelDef.track === 'sql' ? 'SQL ' : levelDef.track === 'pandas' ? 'pandas ' : ''}
+          {levelDef.label}
+        </h1>
         {result.reason === 'finished' && (
           <div className="solved-banner">Perfect run — all {total} answered. Fully warm.</div>
         )}

@@ -103,16 +103,17 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
   (solved *and* in time). A mock pass counts toward your streak and spaced-repetition
   schedule like any solve.
 - **⚡ Warm-up** (home screen): like stretching before the gym — rapid-fire "type the
-  answer" one-liners against a per-question countdown, in two tracks. **Python** (*create
-  an empty list called nums* → `nums = []`) and **SQL** (*select every column from crew* →
-  `SELECT * FROM crew`), 50 questions each at Beginner, Intermediate and Hard — 300 drills
-  total. The run ends on the first mistake, a timeout, or a perfect 50, then a quick
-  summary shows what you nailed, what you typed vs. the right answer, and your slowest
-  answers to drill. Answer checking is forgiving about spacing and quote style — and SQL
-  checking is case-insensitive outside string literals, so `SELECT` and `select` both
-  count. Every answer in the bank is machine-verified: Python answers compile through the
-  real interpreter, SQL answers execute against a real SQLite schema. Best streaks are
-  saved per level.
+  answer" one-liners against a per-question countdown, in three tracks. **Python**
+  (*create an empty list called nums* → `nums = []`), **pandas** (*the mean bounty per
+  role* → `df.groupby('role')['bounty'].mean()`) and **SQL** (*select every column from
+  crew* → `SELECT * FROM crew`), 50 questions each at Beginner, Intermediate and Hard —
+  450 drills total. The run ends on the first mistake, a timeout, or a perfect 50, then a
+  quick summary shows what you nailed, what you typed vs. the right answer, and your
+  slowest answers to drill. Answer checking is forgiving about spacing and quote style —
+  and SQL checking is case-insensitive outside string literals, so `SELECT` and `select`
+  both count. Every answer in the bank is machine-verified: Python answers compile
+  through the real interpreter, pandas answers **execute** against real DataFrames, and
+  SQL answers execute against a real SQLite schema. Best streaks are saved per level.
 - **Guided, premium problem pages**: every foundational problem carries a **🎯 Why this one**
   card (what you learn and why it matters), a proper **Constraints** list, and an unlockable
   **💎 Go deeper** insight — the transferable idea, why interviewers use it, and where else it

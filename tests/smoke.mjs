@@ -905,6 +905,31 @@ try {
   await page.keyboard.press('Enter');
   await page.locator('.wu-miss').waitFor({ timeout: 5000 });
   await page.locator('button', { hasText: 'Change level' }).click();
+
+  // ---- pandas warm-up track ----
+  await page.locator('.wu-tracks button', { hasText: 'pandas' }).click();
+  check((await page.locator('.wu-level-card').count()) === 3, 'pandas track offers 3 levels');
+  check(
+    (await page.locator('.wu-level-card').first().innerText()).includes('50 questions'),
+    'pandas levels carry a full 50-question bank'
+  );
+  await page.locator('.wu-level-card', { hasText: 'Intermediate' }).click();
+  await page.locator('.wu-prompt').waitFor({ timeout: 10000 });
+  {
+    const prompt = (await page.locator('.wu-prompt').innerText()).trim();
+    const wuItem = WARMUP_SETS['pd-intermediate'].find((it) => it.prompt === prompt);
+    check(!!wuItem, 'pandas warm-up question comes from the pandas bank');
+    await page.fill('.wu-input', wuItem.answer);
+    await page.keyboard.press('Enter');
+    check(
+      (await page.locator('.wu-run-streak').innerText()).includes('1'),
+      'a correct pandas answer advances the streak'
+    );
+  }
+  await page.fill('.wu-input', 'df.definitely_wrong()');
+  await page.keyboard.press('Enter');
+  await page.locator('.wu-miss').waitFor({ timeout: 5000 });
+  await page.locator('button', { hasText: 'Change level' }).click();
   await page.locator('button', { hasText: '← Back to the dojo' }).click();
 
   // ---- mock interview: timed, hints locked, debrief ----

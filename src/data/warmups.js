@@ -6,6 +6,7 @@
 // and "double quotes" all count.
 
 import { WARMUP_SQL_SETS } from './warmups-sql.js';
+import { WARMUP_PD_SETS } from './warmups-pandas.js';
 
 export const WARMUP_LEVELS = [
   {
@@ -28,6 +29,27 @@ export const WARMUP_LEVELS = [
     label: 'Hard',
     blurb: 'Interview idioms — heaps, deques, lambdas as keys, unpacking, walrus.',
     seconds: 10,
+  },
+  {
+    key: 'pd-beginner',
+    track: 'pandas',
+    label: 'Beginner',
+    blurb: 'Select, filter, sort, describe — reading a DataFrame without thinking.',
+    seconds: 25,
+  },
+  {
+    key: 'pd-intermediate',
+    track: 'pandas',
+    label: 'Intermediate',
+    blurb: 'groupby, merge, str methods, boolean masks — the everyday analysis kit.',
+    seconds: 20,
+  },
+  {
+    key: 'pd-hard',
+    track: 'pandas',
+    label: 'Hard',
+    blurb: 'pivot_table, melt, rolling, transform, pd.cut — interview pandas.',
+    seconds: 15,
   },
   {
     key: 'sql-beginner',
@@ -243,5 +265,6 @@ export const WARMUP_SETS = {
     q('Sort words alphabetically, ignoring case', 'sorted(words, key=str.lower)'),
     q('First line of a while loop that runs while the deque dq is non-empty', 'while dq:', 'while len(dq) > 0:', 'while len(dq):'),
   ],
+  ...WARMUP_PD_SETS,
   ...WARMUP_SQL_SETS,
 };

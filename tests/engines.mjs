@@ -83,6 +83,56 @@ export async function runPy(question, code) {
   return runInPyodide(question, code);
 }
 
+// Execute standalone pandas snippets (warm-up answers) against a prelude that
+// builds the DataFrames they reference. Each snippet runs in a fresh namespace
+// so assignment drills can't leak into each other. Returns failure strings.
+const SNIPPET_RUNNER = `
+import json
+_payload = json.loads(SNIPPETS_JSON)
+_failures = []
+for _ans in _payload["answers"]:
+    _ns = {}
+    try:
+        exec(_payload["prelude"], _ns)
+        exec(compile(_ans, "<warmup>", "exec"), _ns)
+    except Exception as _err:
+        _failures.append(f"{_ans}  ({type(_err).__name__}: {_err})")
+json.dumps(_failures)
+`;
+
+export async function runPandasSnippets(prelude, answers) {
+  const engine = await resolvePandasEngine();
+  const payload = JSON.stringify({ prelude, answers });
+  if (engine === 'pyodide') {
+    const py = await getPyodide();
+    py.globals.set('SNIPPETS_JSON', payload);
+    return JSON.parse(await py.runPythonAsync(SNIPPET_RUNNER));
+  }
+  const wrapper = `
+import sys, json
+payload = json.loads(sys.argv[1])
+failures = []
+for ans in payload["answers"]:
+    ns = {}
+    try:
+        exec(payload["prelude"], ns)
+        exec(compile(ans, "<warmup>", "exec"), ns)
+    except Exception as err:
+        failures.append(f"{ans}  ({type(err).__name__}: {err})")
+sys.stdout.write("\\n__SNIPPETS_RESULT__" + json.dumps(failures))
+`;
+  const proc = spawnSync('python3', ['-c', wrapper, payload], {
+    encoding: 'utf8',
+    timeout: 120000,
+  });
+  if (proc.status !== 0) {
+    throw new Error(`CPython snippet runner failed: ${proc.stderr || proc.stdout}`);
+  }
+  const marker = proc.stdout.lastIndexOf('__SNIPPETS_RESULT__');
+  if (marker === -1) throw new Error(`snippet runner produced no result: ${proc.stdout}`);
+  return JSON.parse(proc.stdout.slice(marker + '__SNIPPETS_RESULT__'.length));
+}
+
 let SQL = null;
 
 export async function runSql(question, code) {
