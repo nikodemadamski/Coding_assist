@@ -61,7 +61,13 @@ const ADVICE = {
   mastery: 'Biggest gap: retention. Clear your reviews daily so solved problems become owned problems.',
   mocks: 'Biggest gap: pressure. Run mock interviews — the timer changes everything, practice under it.',
   pace: 'Biggest gap: speed. Re-solve problems you know and race the target time, not just correctness.',
+  bigo: 'Biggest gap: complexity fluency. Answer the after-solve Big-O check every time — say the bound before you peek.',
 };
+
+// The Big-O check-in joins the score only once there's a real sample — a
+// couple of lucky taps shouldn't move an interview-readiness number.
+export const BIGO_MIN_SAMPLES = 15;
+export const BIGO_WEIGHT = 0.1;
 
 export function readiness(progress, questions) {
   const total = Math.max(1, questions.length);
@@ -81,6 +87,10 @@ export function readiness(progress, questions) {
     .filter((p) => p.n >= PACE_MIN_SAMPLES)
     .map((p) => p.ratio);
 
+  const bigoRight = progress.bigo?.right || 0;
+  const bigoAnswered = bigoRight + (progress.bigo?.wrong || 0);
+  const bigoActive = bigoAnswered >= BIGO_MIN_SAMPLES;
+
   const parts = {
     coverage: solvedCount / total,
     mastery: (mastered + 0.5 * reviewing) / total,
@@ -89,14 +99,26 @@ export function readiness(progress, questions) {
       : 0,
     pace: paceRatios.length ? paceRatios.reduce((a, b) => a + b, 0) / paceRatios.length : 0,
   };
+  if (bigoAnswered > 0) parts.bigo = bigoRight / bigoAnswered;
+
+  // Effective weights: once the Big-O sample is big enough it takes its 10%
+  // and the base four scale down to make room; before that they are the score.
+  const effWeights = bigoActive
+    ? {
+        ...Object.fromEntries(
+          Object.entries(WEIGHTS).map(([k, w]) => [k, w * (1 - BIGO_WEIGHT)])
+        ),
+        bigo: BIGO_WEIGHT,
+      }
+    : WEIGHTS;
 
   const score = Math.round(
     100 *
-      Object.entries(WEIGHTS).reduce((sum, [k, w]) => sum + w * parts[k], 0)
+      Object.entries(effWeights).reduce((sum, [k, w]) => sum + w * parts[k], 0)
   );
 
-  const weakest = Object.keys(parts).reduce((a, b) =>
-    parts[b] / WEIGHTS[b] < parts[a] / WEIGHTS[a] ? b : a
+  const weakest = Object.keys(effWeights).reduce((a, b) =>
+    parts[b] / effWeights[b] < parts[a] / effWeights[a] ? b : a
   );
 
   return {
@@ -104,6 +126,7 @@ export function readiness(progress, questions) {
     level: LEVELS.find(([min]) => score >= min)[1],
     parts,
     pace,
+    bigo: { answered: bigoAnswered, active: bigoActive, needed: BIGO_MIN_SAMPLES },
     advice: ADVICE[weakest],
     weakest,
   };

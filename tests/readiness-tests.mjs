@@ -8,6 +8,8 @@ import {
   PACE_MIN_SAMPLES,
   MOCK_FULL_CREDIT,
   WEIGHTS,
+  BIGO_MIN_SAMPLES,
+  BIGO_WEIGHT,
 } from '../src/state/readiness.js';
 import { recordSolve, recordFail, todayStr, addDays } from '../src/state/progress.js';
 import { EMPTY_PROGRESS } from '../src/state/storage.js';
@@ -96,6 +98,46 @@ console.log('readiness-tests: score');
 
   // Weights sum to 1 so the score is a true 0-100.
   check('weights sum to 1', Math.abs(Object.values(WEIGHTS).reduce((a, b) => a + b, 0) - 1) < 1e-9);
+}
+
+console.log('readiness-tests: Big-O fluency dimension (sample-gated)');
+{
+  const qs = [q('a'), q('b')];
+  // no answers at all: no bigo part, base weights untouched
+  const none = readiness(fresh(), qs);
+  check('no answers -> no bigo part shown', !('bigo' in none.parts));
+  check('no answers -> inactive', none.bigo.active === false && none.bigo.answered === 0);
+
+  // a few answers: visible but NOT in the score yet
+  const few = fresh();
+  few.bigo = { right: 2, wrong: 2 };
+  const f = readiness(few, qs);
+  check('under the sample floor -> part visible', f.parts.bigo === 0.5);
+  check('under the sample floor -> still inactive', f.bigo.active === false);
+  check('a 50% bigo below the floor does not move the score', f.score === readiness(fresh(), qs).score);
+
+  // at the floor: joins the score at its weight
+  const active = fresh();
+  active.bigo = { right: BIGO_MIN_SAMPLES, wrong: 0 };
+  const a = readiness(active, qs);
+  check('at the floor -> active', a.bigo.active === true);
+  check(
+    `perfect bigo adds its ${BIGO_WEIGHT * 100}% (score ${a.score})`,
+    a.score === Math.round(100 * BIGO_WEIGHT)
+  );
+
+  // a bad record can now be the named weakest dimension
+  const qs3 = [q('a'), q('b'), q('c')];
+  const bad = fresh();
+  bad.bigo = { right: 0, wrong: BIGO_MIN_SAMPLES };
+  for (const id of ['a', 'b', 'c']) {
+    bad.solved[id] = solvedEntry(min(5));
+    bad.srs[id] = { stage: 4, nextDue: addDays(todayStr(), 30) };
+  }
+  bad.mock = Array.from({ length: MOCK_FULL_CREDIT }, () => ({ passed: true, timeMs: min(10) }));
+  const b = readiness(bad, qs3);
+  check('an 0% bigo record becomes the weakest dimension', b.weakest === 'bigo');
+  check('advice targets complexity fluency', b.advice.toLowerCase().includes('complexity'));
 }
 
 console.log('readiness-tests: recordSolve timing + preserved history');

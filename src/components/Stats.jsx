@@ -67,6 +67,7 @@ const READY_PART_LABEL = {
   mastery: 'Retention depth',
   mocks: 'Mock-interview record',
   pace: 'Solve pace',
+  bigo: 'Big-O fluency',
 };
 
 function ReadinessCard({ ready }) {
@@ -80,15 +81,25 @@ function ReadinessCard({ ready }) {
         <div className="ready-level">{ready.level}</div>
       </div>
       <div className="ready-parts">
-        {Object.entries(ready.parts).map(([k, v]) => (
-          <div className={`ready-part ${k === ready.weakest ? 'weakest' : ''}`} key={k}>
-            <span className="ready-part-label">{READY_PART_LABEL[k]}</span>
-            <span className="ready-part-track">
-              <span className="ready-part-fill" style={{ width: `${Math.round(v * 100)}%` }} />
-            </span>
-            <span className="ready-part-pct">{Math.round(v * 100)}%</span>
-          </div>
-        ))}
+        {Object.entries(ready.parts).map(([k, v]) => {
+          const gated = k === 'bigo' && !ready.bigo.active;
+          return (
+            <div className={`ready-part ${k === ready.weakest ? 'weakest' : ''}`} key={k}>
+              <span
+                className="ready-part-label"
+                title={gated ? `Joins the score after ${ready.bigo.needed} answered checks` : undefined}
+              >
+                {READY_PART_LABEL[k]}
+              </span>
+              <span className="ready-part-track">
+                <span className="ready-part-fill" style={{ width: `${Math.round(v * 100)}%` }} />
+              </span>
+              <span className="ready-part-pct">
+                {gated ? `${ready.bigo.answered}/${ready.bigo.needed}` : `${Math.round(v * 100)}%`}
+              </span>
+            </div>
+          );
+        })}
         <div className="ready-pace-row">
           {Object.entries(ready.pace).map(([diff, p]) => (
             <span className={`ready-pace tag diff-${diff}`} key={diff} title={`Median first-solve time vs the ${formatDuration(p.target)} target`}>
