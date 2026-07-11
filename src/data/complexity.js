@@ -76,7 +76,7 @@ export const COMPLEXITY = {
   'py-combination-sum': 'O(2^t) time — t grows with target, O(t) recursion depth',
   'py-generate-parens': 'O(4ⁿ/√n) time — Catalan growth',
   'py-word-search': 'O(m·n · 4^L) time — L = word length, O(L) space',
-  'py-palindrome-partition': 'O(n · 2ⁿ) time, O(n) space',
+  'py-palindrome-partition': 'O(n · 2ⁿ) time, O(n²) space — precomputed palindrome table',
 
   // ---- graphs ----
   'py-number-of-islands': 'O(m·n) time, O(m·n) space worst case',

@@ -494,6 +494,222 @@ export const APPROACHES = {
     },
   ],
 
+  // ── backtracking ─────────────────────────────────────────────────────────
+  'py-subsets': [
+    {
+      name: 'Iterative doubling',
+      complexity: 'O(n · 2ⁿ) time and space',
+      code: 'def subsets(nums):\n    res = [[]]\n    for n in sorted(nums):\n        res += [s + [n] for s in res]\n    return res',
+      note: 'Each new element doubles the answer: every existing subset, with and without it. Three lines, no recursion.',
+    },
+    {
+      name: 'Backtracking: include or exclude',
+      complexity: 'O(n · 2ⁿ) time and space',
+      code: 'def subsets(nums):\n    nums = sorted(nums)\n    res = []\n    path = []\n    def backtrack(i):\n        if i == len(nums):\n            res.append(path[:])\n            return\n        backtrack(i + 1)\n        path.append(nums[i])\n        backtrack(i + 1)\n        path.pop()\n    backtrack(0)\n    return res',
+      note: 'The decision tree made explicit: at each index, branch on skip vs take. This shape generalises to every constrained variant the doubling trick cannot handle.',
+    },
+  ],
+  'py-subsets-ii': [
+    {
+      name: 'Enumerate all, dedupe with a set',
+      complexity: 'O(n · 2ⁿ) time and space',
+      code: 'def subsets_with_dup(nums):\n    nums = sorted(nums)\n    seen = set()\n    for mask in range(1 << len(nums)):\n        sub = tuple(nums[i] for i in range(len(nums)) if mask & (1 << i))\n        seen.add(sub)\n    return [list(s) for s in seen]',
+      note: 'Generate every bitmask subset of the SORTED input and let a set eat the duplicates. Wasteful but obviously correct.',
+    },
+    {
+      name: 'Sort + skip duplicate branches',
+      complexity: 'O(n · 2ⁿ) time and space',
+      code: 'def subsets_with_dup(nums):\n    nums = sorted(nums)\n    res = []\n    path = []\n    def bt(i):\n        res.append(path[:])\n        for j in range(i, len(nums)):\n            if j > i and nums[j] == nums[j - 1]:\n                continue\n            path.append(nums[j])\n            bt(j + 1)\n            path.pop()\n    bt(0)\n    return res',
+      note: 'After sorting, a duplicate may only extend the branch where its twin was just used — the `j > i and nums[j] == nums[j-1]` skip prevents duplicates from ever being BUILT, not filtered after.',
+    },
+  ],
+  'py-permutations': [
+    {
+      name: 'itertools.permutations',
+      complexity: 'O(n · n!) time and space',
+      code: 'def permutations(nums):\n    return [list(p) for p in itertools.permutations(sorted(nums))]',
+      note: 'Know the library exists — and that the interviewer will immediately say "now do it yourself". (Note the module path: this function\'s own name shadows the bare `permutations` import.)',
+    },
+    {
+      name: 'Backtracking on the remainder',
+      complexity: 'O(n · n!) time and space',
+      code: 'def permutations(nums):\n    res = []\n    def backtrack(path, remaining):\n        if not remaining:\n            res.append(path)\n            return\n        for i in range(len(remaining)):\n            backtrack(path + [remaining[i]], remaining[:i] + remaining[i + 1:])\n    backtrack([], sorted(nums))\n    return res',
+      note: 'Pick each remaining element as the next slot and recurse on what is left. n choices, then n−1, then n−2 — that product IS n!.',
+    },
+  ],
+  'py-combination-sum': [
+    {
+      name: 'DP: build the lists per amount',
+      complexity: 'O(target · combos) time, O(target · combos) space',
+      code: 'def combination_sum(candidates, target):\n    dp = [[] for _ in range(target + 1)]\n    dp[0] = [[]]\n    for c in sorted(candidates):\n        for t in range(c, target + 1):\n            for combo in dp[t - c]:\n                dp[t].append(combo + [c])\n    return dp[target]',
+      note: 'Coin-change, but storing the actual combinations instead of counts. Iterating candidates in the outer loop keeps each combo in one canonical order — no duplicates to filter.',
+    },
+    {
+      name: 'Backtracking with a start index',
+      complexity: 'O(2^t) time — t grows with target, O(t) recursion depth',
+      code: 'def combination_sum(candidates, target):\n    candidates = sorted(candidates)\n    res = []\n    def backtrack(start, path, remaining):\n        if remaining == 0:\n            res.append(path[:])\n            return\n        for i in range(start, len(candidates)):\n            c = candidates[i]\n            if c > remaining:\n                break\n            path.append(c)\n            backtrack(i, path, remaining - c)\n            path.pop()\n    backtrack(0, [], target)\n    return res',
+      note: 'Reuse is allowed, so recurse with the SAME index i (not i+1); the start index stops [2,3] and [3,2] both appearing; sorted + break prunes dead branches early.',
+    },
+  ],
+  'py-generate-parens': [
+    {
+      name: 'Generate everything, filter the valid',
+      complexity: 'O(2²ⁿ · n) time, O(2²ⁿ) space',
+      code: 'def generate_parenthesis(n):\n    def valid(s):\n        bal = 0\n        for ch in s:\n            bal += 1 if ch == "(" else -1\n            if bal < 0:\n                return False\n        return bal == 0\n    return [\n        "".join(p) for p in product("()", repeat=2 * n) if valid("".join(p))\n    ]',
+      note: 'All 2²ⁿ strings, keep the balanced ones. The waste is the point: most strings die at their first character — which is exactly what the backtracking version never generates.',
+    },
+    {
+      name: 'Backtrack on open/close counts',
+      complexity: 'O(4ⁿ/√n) time — Catalan growth',
+      code: 'def generate_parenthesis(n):\n    res = []\n    def bt(s, o, c):\n        if len(s) == 2 * n:\n            res.append(s)\n            return\n        if o < n:\n            bt(s + "(", o + 1, c)\n        if c < o:\n            bt(s + ")", o, c + 1)\n    bt("", 0, 0)\n    return res',
+      note: 'Two rules — open while you can, close only below the open count — mean every path in the tree is a valid prefix. You only ever build answers.',
+    },
+  ],
+  'py-word-search': [
+    {
+      name: 'Visited set on the path',
+      complexity: 'O(m·n · 4^L) time, O(L) space',
+      code: 'def exist(board, word):\n    rows, cols = len(board), len(board[0])\n    def dfs(r, c, i, used):\n        if i == len(word):\n            return True\n        if r < 0 or r >= rows or c < 0 or c >= cols:\n            return False\n        if (r, c) in used or board[r][c] != word[i]:\n            return False\n        used.add((r, c))\n        found = (\n            dfs(r + 1, c, i + 1, used)\n            or dfs(r - 1, c, i + 1, used)\n            or dfs(r, c + 1, i + 1, used)\n            or dfs(r, c - 1, i + 1, used)\n        )\n        used.discard((r, c))\n        return found\n    return any(dfs(r, c, 0, set()) for r in range(rows) for c in range(cols))',
+      note: 'Track the current path in a set and un-add on the way back — the add/undo pair is the heart of every backtracking solution.',
+    },
+    {
+      name: 'Mark the board in place',
+      complexity: 'O(m·n · 4^L) time — L = word length, O(L) space',
+      code: 'def exist(board, word):\n    rows, cols = len(board), len(board[0])\n    def dfs(r, c, i):\n        if i == len(word):\n            return True\n        if r < 0 or r >= rows or c < 0 or c >= cols or board[r][c] != word[i]:\n            return False\n        tmp = board[r][c]\n        board[r][c] = "#"\n        found = dfs(r + 1, c, i + 1) or dfs(r - 1, c, i + 1) or dfs(r, c + 1, i + 1) or dfs(r, c - 1, i + 1)\n        board[r][c] = tmp\n        return found\n    for r in range(rows):\n        for c in range(cols):\n            if dfs(r, c, 0):\n                return True\n    return False',
+      note: 'The board itself becomes the visited set: stamp a sentinel, restore on backtrack. Same asymptotics, no extra structure — mention you are mutating the input.',
+    },
+  ],
+  'py-palindrome-partition': [
+    {
+      name: 'Check each piece as you cut',
+      complexity: 'O(n · 2ⁿ) time, O(n) space',
+      code: 'def partition(s):\n    res = []\n    path = []\n    def is_pal(x):\n        return x == x[::-1]\n    def bt(start):\n        if start == len(s):\n            res.append(path[:])\n            return\n        for end in range(start + 1, len(s) + 1):\n            piece = s[start:end]\n            if is_pal(piece):\n                path.append(piece)\n                bt(end)\n                path.pop()\n    bt(0)\n    return res',
+      note: 'Cut a palindromic prefix, recurse on the rest. Each piece is re-verified with a fresh reversal every time it is considered.',
+    },
+    {
+      name: 'Precompute a palindrome table',
+      complexity: 'O(n · 2ⁿ) time, O(n²) space — precomputed palindrome table',
+      code: 'def partition(s):\n    n = len(s)\n    pal = [[False] * n for _ in range(n)]\n    for i in range(n - 1, -1, -1):\n        for j in range(i, n):\n            pal[i][j] = s[i] == s[j] and (j - i < 2 or pal[i + 1][j - 1])\n    res = []\n    path = []\n    def bt(start):\n        if start == len(s):\n            res.append(path[:])\n            return\n        for end in range(start, n):\n            if pal[start][end]:\n                path.append(s[start : end + 1])\n                bt(end + 1)\n                path.pop()\n    bt(0)\n    return res',
+      note: 'pal[i][j] is true when the ends match and the inside was already a palindrome — an O(n²) table turns every is-palindrome check into a lookup.',
+    },
+  ],
+
+  // ── graphs ───────────────────────────────────────────────────────────────
+  'py-number-of-islands': [
+    {
+      name: 'BFS flood with a queue',
+      complexity: 'O(m·n) time, O(min(m, n)) queue space',
+      code: 'def num_islands(grid):\n    if not grid:\n        return 0\n    rows, cols = len(grid), len(grid[0])\n    seen = set()\n    def flood(sr, sc):\n        queue = deque([(sr, sc)])\n        seen.add((sr, sc))\n        while queue:\n            r, c = queue.popleft()\n            for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):\n                nr, nc = r + dr, c + dc\n                if 0 <= nr < rows and 0 <= nc < cols and (nr, nc) not in seen and grid[nr][nc] == "1":\n                    seen.add((nr, nc))\n                    queue.append((nr, nc))\n    count = 0\n    for r in range(rows):\n        for c in range(cols):\n            if grid[r][c] == "1" and (r, c) not in seen:\n                count += 1\n                flood(r, c)\n    return count',
+      note: 'Every unvisited land cell starts a new island; the flood claims everything connected. BFS keeps the recursion depth off the call stack.',
+    },
+    {
+      name: 'Recursive DFS sink',
+      complexity: 'O(m·n) time, O(m·n) space worst case',
+      code: 'def num_islands(grid):\n    if not grid:\n        return 0\n    rows, cols = len(grid), len(grid[0])\n    seen = set()\n    def sink(r, c):\n        if r < 0 or r >= rows or c < 0 or c >= cols:\n            return\n        if (r, c) in seen or grid[r][c] == "0":\n            return\n        seen.add((r, c))\n        sink(r + 1, c)\n        sink(r - 1, c)\n        sink(r, c + 1)\n        sink(r, c - 1)\n    count = 0\n    for r in range(rows):\n        for c in range(cols):\n            if grid[r][c] == "1" and (r, c) not in seen:\n                count += 1\n                sink(r, c)\n    return count',
+      note: 'The four recursive calls read like the problem statement. On a giant all-land grid the recursion can hit Python\'s stack limit — say that trade-off out loud.',
+    },
+  ],
+  'py-max-area-island': [
+    {
+      name: 'Iterative stack flood',
+      complexity: 'O(m·n) time, O(m·n) space',
+      code: 'def max_area_island(grid):\n    rows, cols = len(grid), len(grid[0])\n    seen = set()\n    best = 0\n    for r in range(rows):\n        for c in range(cols):\n            if grid[r][c] == 1 and (r, c) not in seen:\n                stack = [(r, c)]\n                seen.add((r, c))\n                size = 0\n                while stack:\n                    cr, cc = stack.pop()\n                    size += 1\n                    for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):\n                        nr, nc = cr + dr, cc + dc\n                        if 0 <= nr < rows and 0 <= nc < cols and (nr, nc) not in seen and grid[nr][nc] == 1:\n                            seen.add((nr, nc))\n                            stack.append((nr, nc))\n                best = max(best, size)\n    return best',
+      note: 'A DFS with an explicit stack — same order of exploration, immune to recursion limits, and the counting is a plain loop variable.',
+    },
+    {
+      name: 'Recursion that returns the area',
+      complexity: 'O(m·n) time, O(m·n) space worst case',
+      code: 'def max_area_island(grid):\n    rows, cols = len(grid), len(grid[0])\n    seen = set()\n    def area(r, c):\n        if r < 0 or r >= rows or c < 0 or c >= cols:\n            return 0\n        if (r, c) in seen or grid[r][c] == 0:\n            return 0\n        seen.add((r, c))\n        return 1 + area(r + 1, c) + area(r - 1, c) + area(r, c + 1) + area(r, c - 1)\n    return max(\n        (area(r, c) for r in range(rows) for c in range(cols)),\n        default=0,\n    )',
+      note: '"1 + the areas of my four neighbours" — the flood computes its own size on the way back up, no counter needed.',
+    },
+  ],
+  'py-rotting-oranges': [
+    {
+      name: 'Sweep the grid minute by minute',
+      complexity: 'O((m·n)²) time, O(m·n) space',
+      code: 'def oranges_rotting(grid):\n    grid = [row[:] for row in grid]\n    rows, cols = len(grid), len(grid[0])\n    minutes = 0\n    while True:\n        to_rot = [\n            (r, c)\n            for r in range(rows)\n            for c in range(cols)\n            if grid[r][c] == 1\n            and any(\n                0 <= r + dr < rows and 0 <= c + dc < cols and grid[r + dr][c + dc] == 2\n                for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1))\n            )\n        ]\n        if not to_rot:\n            break\n        for r, c in to_rot:\n            grid[r][c] = 2\n        minutes += 1\n    if any(cell == 1 for row in grid for cell in row):\n        return -1\n    return minutes',
+      note: 'Play the process forward: each minute, everything adjacent to rot rots. A full grid scan per minute is the cost of the literal simulation.',
+    },
+    {
+      name: 'Multi-source BFS',
+      complexity: 'O(m·n) time, O(m·n) space — BFS',
+      code: 'def oranges_rotting(grid):\n    rows, cols = len(grid), len(grid[0])\n    q = deque()\n    fresh = 0\n    for r in range(rows):\n        for c in range(cols):\n            if grid[r][c] == 2:\n                q.append((r, c, 0))\n            elif grid[r][c] == 1:\n                fresh += 1\n    rotted = set()\n    minutes = 0\n    while q:\n        r, c, m = q.popleft()\n        minutes = max(minutes, m)\n        for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):\n            nr, nc = r + dr, c + dc\n            if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] == 1 and (nr, nc) not in rotted:\n                rotted.add((nr, nc))\n                fresh -= 1\n                q.append((nr, nc, m + 1))\n    return minutes if fresh == 0 else -1',
+      note: 'Seed the queue with EVERY rotten orange at minute 0 — BFS from many sources at once computes each orange\'s rot time in one pass. "Simultaneous spread" is the multi-source cue.',
+    },
+  ],
+  'py-course-schedule': [
+    {
+      name: "Kahn's: peel courses with no prerequisites",
+      complexity: 'O(V + E) time, O(V + E) space',
+      code: 'def can_finish(num_courses, prerequisites):\n    graph = {i: [] for i in range(num_courses)}\n    indeg = [0] * num_courses\n    for course, pre in prerequisites:\n        graph[pre].append(course)\n        indeg[course] += 1\n    queue = deque(i for i in range(num_courses) if indeg[i] == 0)\n    done = 0\n    while queue:\n        node = queue.popleft()\n        done += 1\n        for nxt in graph[node]:\n            indeg[nxt] -= 1\n            if indeg[nxt] == 0:\n                queue.append(nxt)\n    return done == num_courses',
+      note: 'Repeatedly take any course whose prerequisites are all done. If a cycle exists, its courses never reach indegree 0 and the count falls short.',
+    },
+    {
+      name: 'DFS three-colour cycle detection',
+      complexity: 'O(V + E) time, O(V + E) space',
+      code: 'def can_finish(num_courses, prerequisites):\n    graph = {i: [] for i in range(num_courses)}\n    for course, pre in prerequisites:\n        graph[course].append(pre)\n    state = {}\n    def has_cycle(node):\n        if state.get(node) == 0:\n            return True\n        if state.get(node) == 1:\n            return False\n        state[node] = 0\n        for nxt in graph[node]:\n            if has_cycle(nxt):\n                return True\n        state[node] = 1\n        return False\n    return not any(has_cycle(i) for i in range(num_courses))',
+      note: 'Three states per node: unvisited / in-progress (0) / done (1). Meeting an in-progress node again means you walked back into your own path — a cycle.',
+    },
+  ],
+  'py-course-schedule-ii': [
+    {
+      name: 'Scan for the smallest ready course',
+      complexity: 'O(V²) time, O(V + E) space',
+      code: 'def find_order(num_courses, prerequisites):\n    graph = {i: [] for i in range(num_courses)}\n    indeg = [0] * num_courses\n    for course, pre in prerequisites:\n        graph[pre].append(course)\n        indeg[course] += 1\n    order = []\n    taken = [False] * num_courses\n    for _ in range(num_courses):\n        ready = [i for i in range(num_courses) if not taken[i] and indeg[i] == 0]\n        if not ready:\n            return []\n        node = min(ready)\n        taken[node] = True\n        order.append(node)\n        for nxt in graph[node]:\n            indeg[nxt] -= 1\n    return order',
+      note: 'Each round, rescan everything for a course with no remaining prerequisites. V scans of V courses — the heap exists to kill this rescan.',
+    },
+    {
+      name: "Kahn's with a min-heap",
+      complexity: 'O(V + E) time, O(V + E) space',
+      code: 'def find_order(num_courses, prerequisites):\n    graph = {i: [] for i in range(num_courses)}\n    indeg = [0] * num_courses\n    for course, pre in prerequisites:\n        graph[pre].append(course)\n        indeg[course] += 1\n    ready = [i for i in range(num_courses) if indeg[i] == 0]\n    heapq.heapify(ready)\n    order = []\n    while ready:\n        node = heapq.heappop(ready)\n        order.append(node)\n        for nxt in graph[node]:\n            indeg[nxt] -= 1\n            if indeg[nxt] == 0:\n                heapq.heappush(ready, nxt)\n    return order if len(order) == num_courses else []',
+      note: 'Same peeling, but ready courses wait in a heap (min-heap keeps the output deterministic; a plain deque is fine when any valid order is accepted). Short output = cycle = [].',
+    },
+  ],
+  'py-count-components': [
+    {
+      name: 'DFS from every unvisited node',
+      complexity: 'O(V + E) time, O(V + E) space',
+      code: 'def count_components(n, edges):\n    graph = {i: [] for i in range(n)}\n    for a, b in edges:\n        graph[a].append(b)\n        graph[b].append(a)\n    seen = set()\n    def visit(node):\n        stack = [node]\n        while stack:\n            cur = stack.pop()\n            for nxt in graph[cur]:\n                if nxt not in seen:\n                    seen.add(nxt)\n                    stack.append(nxt)\n    count = 0\n    for i in range(n):\n        if i not in seen:\n            seen.add(i)\n            count += 1\n            visit(i)\n    return count',
+      note: 'Every node that starts a fresh traversal is a new component. Build the adjacency list, flood, count the floods.',
+    },
+    {
+      name: 'Union-Find',
+      complexity: 'O(V + E) time, O(V + E) space',
+      code: 'def count_components(n, edges):\n    parent = list(range(n))\n    def find(x):\n        while parent[x] != x:\n            parent[x] = parent[parent[x]]\n            x = parent[x]\n        return x\n    count = n\n    for a, b in edges:\n        ra, rb = find(a), find(b)\n        if ra != rb:\n            parent[ra] = rb\n            count -= 1\n    return count',
+      note: 'Start with n components; every edge that joins two different roots merges one away. No adjacency list, no traversal — union-find counts by subtraction.',
+    },
+  ],
+  'py-pacific-atlantic': [
+    {
+      name: 'From every cell, try to reach both oceans',
+      complexity: 'O((m·n)²) time, O(m·n) space',
+      code: 'def pacific_atlantic(heights):\n    if not heights:\n        return []\n    rows, cols = len(heights), len(heights[0])\n    def reaches(sr, sc):\n        seen = {(sr, sc)}\n        stack = [(sr, sc)]\n        pac = atl = False\n        while stack:\n            r, c = stack.pop()\n            if r == 0 or c == 0:\n                pac = True\n            if r == rows - 1 or c == cols - 1:\n                atl = True\n            for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):\n                nr, nc = r + dr, c + dc\n                if 0 <= nr < rows and 0 <= nc < cols and (nr, nc) not in seen and heights[nr][nc] <= heights[r][c]:\n                    seen.add((nr, nc))\n                    stack.append((nr, nc))\n        return pac and atl\n    return sorted([r, c] for r in range(rows) for c in range(cols) if reaches(r, c))',
+      note: 'Simulate the water from each cell, flowing only downhill-or-level. Correct, and each cell repeats almost all of its neighbour\'s work.',
+    },
+    {
+      name: 'Flood inward from both coasts',
+      complexity: 'O(m·n) time, O(m·n) space',
+      code: 'def pacific_atlantic(heights):\n    if not heights:\n        return []\n    rows, cols = len(heights), len(heights[0])\n    pac, atl = set(), set()\n    def dfs(r, c, seen, prev):\n        if r < 0 or r >= rows or c < 0 or c >= cols or (r, c) in seen or heights[r][c] < prev:\n            return\n        seen.add((r, c))\n        for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):\n            dfs(r + dr, c + dc, seen, heights[r][c])\n    for c in range(cols):\n        dfs(0, c, pac, heights[0][c])\n        dfs(rows - 1, c, atl, heights[rows - 1][c])\n    for r in range(rows):\n        dfs(r, 0, pac, heights[r][0])\n        dfs(r, cols - 1, atl, heights[r][cols - 1])\n    return sorted([r, c] for r, c in (pac & atl))',
+      note: 'Reverse the flow: walk UPHILL from each ocean\'s shore, marking everything that could drain to it. Two floods and a set intersection replace mn simulations — inverting the direction of search is the transferable trick.',
+    },
+  ],
+
+  // ── tries ────────────────────────────────────────────────────────────────
+  'py-implement-trie': [
+    {
+      name: 'Word list + scans',
+      complexity: 'O(W · L) per query — W stored words',
+      code: 'def run_trie(ops):\n    words = []\n    out = []\n    for op in ops:\n        name, arg = op[0], op[1]\n        if name == "insert":\n            words.append(arg)\n        elif name == "search":\n            out.append(arg in words)\n        else:\n            out.append(any(w.startswith(arg) for w in words))\n    return out',
+      note: 'A list and startswith answer everything — each query rescans every stored word. Fine for ten words; the trie exists for ten million.',
+    },
+    {
+      name: 'Nested dicts',
+      complexity: 'O(L) per operation — L = word length',
+      code: 'def run_trie(ops):\n    root = {}\n    out = []\n    def walk(word):\n        node = root\n        for ch in word:\n            if ch not in node:\n                return None\n            node = node[ch]\n        return node\n    for op in ops:\n        name, arg = op[0], op[1]\n        if name == "insert":\n            node = root\n            for ch in arg:\n                node = node.setdefault(ch, {})\n            node["#"] = True\n        elif name == "search":\n            node = walk(arg)\n            out.append(node is not None and node.get("#", False))\n        else:\n            out.append(walk(arg) is not None)\n    return out',
+      note: 'One dict per node, one level per character, "#" marks a complete word. Cost depends only on the word\'s length, never on how many words are stored — that independence is the whole point of tries.',
+    },
+  ],
+
   // ── bit manipulation ─────────────────────────────────────────────────────
   'py-single-number': [
     {
