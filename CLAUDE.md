@@ -1,0 +1,104 @@
+# ZoroClaude Dojo — project map for AI assistants
+
+Personal, free, browser-only LeetCode-style trainer (Python 3 / pandas / SQL) whose
+purpose is passing Google/Anthropic-level coding interviews. No backend, no AI calls
+from the app, everything in localStorage. **All problem wording is original — never
+copy text from LeetCode/NeetCode.**
+
+## Commands
+
+```bash
+npm run dev / build / lint
+npm test                     # 16 unit suites, incl. run-seed-tests (runs EVERY solution
+                             # and EVERY alternative approach through real engines)
+# Browser smoke (~240 checks). CDN is blocked in the dev container:
+node tests/setup-local-pyodide.mjs         # once per container
+VITE_PYODIDE_BASE=/pyodide/ npm run build
+CHROMIUM_PATH=/opt/pw-browsers/chromium node tests/smoke.mjs
+```
+
+Full gates (lint + test + build + smoke) before every push, no exceptions.
+
+## Data layer — the merge pipeline (src/data/)
+
+`questions.js` composes SEED_QUESTIONS: RAW (inline python/pandas/sql + neetcode1–5.js)
+→ spread `LEARN[id]` (learn.js: why / insight / constraints / examples)
+→ set `unordered` from UNORDERED map (deep|outer — order-insensitive grading)
+→ set `complexity` from `COMPLEXITY[id]` (complexity.js) if absent
+→ set `approaches` from `APPROACHES[id]` (approaches.js) if absent.
+
+- questions: `{id, track, title, difficulty, pattern, description, examples[], starter_code,
+  hint, solution, approach?, tests[{args, expected}], function_name | sql_setup+expected_rows}`
+- trees encode as nested `[value, left, right]`, `null` = empty; lists as value arrays.
+- `roadmap.js` (path order, categoryKeyOf), `roadmapGraph.js` (algorithm map layout),
+  `trackGraphs.js` (pandas/SQL trees), `patternGuide.js` (16 templates), `patternHints.js`,
+  `warmups.js` (3×50 typing drills), `validateQuestion.js` (schema gate, also used by import).
+
+## Engine (src/engine/)
+
+`pyHarness.js` holds PY_PRELUDE (defaultdict, Counter, deque, heapq, `import bisect`,
+math, itertools, functools cache/lru_cache, inf, typing…) **injected into exec globals,
+never prepended** (keeps user line numbers). PY_HARNESS runs tests; PY_TRACE_HARNESS is
+the settrace visualizer with an AST narrator (`_narrate`, `_cond_text`, MAX_STEPS 400).
+Both run identically in the Pyodide module worker (5s kill switch) and in Node tests.
+Result comparison canonicalizes via `_canon`, honoring `unordered`.
+
+## State (src/state/) — pure modules, all unit-tested
+
+- `storage.js` — localStorage keys: `zoro.progress.v1` (solved/drafts/srs/streak/activity/
+  warmup/mock/notes/bigo), `zoro.customQuestions.v1`, `zoro.backup.v1`, `zoro.ui.v1`
+  (uiPrefs: divider split, editor font), `zoro.theme.v1`, `zoro.onboarded.v1`.
+- `progress.js` — SRS (stages [1,3,7,16,30]), recordSolve (keeps mistakes; first-solve
+  `firstSolveMs`), belts, weakSpots (≥2 mistakes), reviewForecast, backupStatus, recordBigO.
+- `readiness.js` — 0-100 score: coverage .3 / mastery .25 / mocks .25 / pace .2, plus a
+  Big-O dimension at 10% once ≥15 answers (others scale ×0.9). Pace targets 15/25/40 min,
+  median firstSolveMs, ≥3 samples per difficulty.
+- `bigo.js` — bigOBucket maps a complexity string's time part to 6 buckets; product forms
+  (O(m·n)), O(h), O(L) return null = reveal-don't-grade.
+- others: activity (daily goal + todayPulse), mockSession (formats, optimalComplexity =
+  last approach's complexity else question.complexity), practiceSession (review→new queue),
+  patternQuiz, celebrate, theme, uiPrefs, vizPointers (▲ markers from subscript scan).
+
+## INVARIANTS — edges that must stay in sync
+
+1. **Grading chain:** the LAST entry of `APPROACHES[id]` is the model; its `complexity`
+   string must be byte-identical to `COMPLEXITY[id]` (or replace it deliberately in both).
+   `bigOBucket` must parse it. The mock debrief and the after-solve Big-O check-in grade
+   against this via `optimalComplexity`.
+2. **Every approach code must pass the question's real tests** — run-seed-tests enforces.
+3. Result-order-insensitive ids live ONLY in the UNORDERED map (deep vs outer chosen so
+   wrong groupings still fail — permutations is `outer`, not `deep`).
+4. Smoke selectors are coupled to UI text/classes: changing a label means updating
+   tests/smoke.mjs in the same commit (Run/Submit are scoped `.pv-toolbar button`;
+   nav goes through `openLibrary(page, label)`).
+5. `validateQuestion` gates imports AND seeds; new question fields need a rule there.
+
+## UI shell (src/components/)
+
+App.jsx owns views: home (RoadmapGraph = the map), browse (Picker), track (TrackMap),
+problem/practice/drill (ProblemView / PracticeView), warmup, mock, patterns, quiz, stats,
+guide; modals: Settings, ImportModal, SearchPalette (⌘K), Onboarding, Celebration.
+All dialogs use `useFocusTrap`. Header: Search/Browse/Library▾(Stats·Patterns·Sensei)/
+theme/Settings; quiet UI — no decorative emojis, color carries state.
+
+ProblemView anatomy: pv-toolbar (back/title/Focus/Run/Submit) → pv-tabs (BOTTOM on
+<900px, swipe between panes; swipes ignore .cm-editor/.mkeys) → pv-body grid
+(draggable divider --pv-split desktop) → editor-bar (lang, reset, A−/A+, Visualize my
+code) → `.mkeys` mobile key strip (pointerdown+preventDefault keeps the phone keyboard
+open) → Results, solved banner (timed), BigOCheck, StuckLadder, Approaches (tabbed
+brute→optimal, each with Visualize), Notes. VisualizerModal: fixed height, hero
+narration, element-level diff highlights, pointer overlay, runs on ANY code.
+
+PWA: public/manifest.webmanifest + sw.js (nav network-first, assets cache-first),
+registered in prod only; icons in public/icons.
+
+## Assistant workflow (learned, keep using)
+
+- **Query, don't read:** Grep with context / targeted line-range reads; never full-read
+  styles.css, questions.js, smoke.mjs (they're huge — use this map + grep).
+- **Parallelize:** batch independent tool calls; run build/smoke in background while
+  authoring the next unit; content work ships in verified chunks (author → engine-verify
+  → gates → push per chunk).
+- Screenshot scripts live in the session scratchpad; import playwright via absolute
+  node_modules path, `CHROMIUM_PATH=/opt/pw-browsers/chromium`, dismiss `.onboard-skip`.
+- Verify UI work with screenshots at 1400×900 AND 390×844 (mobile is first-class).
