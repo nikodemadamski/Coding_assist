@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useFocusTrap } from './useFocusTrap.js';
 import Markdown from './Markdown.jsx';
 import { runPythonTrace } from '../engine/pyClient.js';
 import { scanSubscripts, computeMarkers, spanOf } from '../state/vizPointers.js';
@@ -156,6 +157,8 @@ export default function VisualizerModal({ question, code, label, note, onClose }
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
   const codeRef = useRef(null);
+  const trapRef = useRef(null);
+  useFocusTrap(trapRef);
 
   useEffect(() => {
     let cancelled = false;
@@ -263,7 +266,7 @@ export default function VisualizerModal({ question, code, label, note, onClose }
 
   return (
     <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal viz-modal" role="dialog" aria-modal="true" aria-label="Algorithm visualizer">
+      <div className="modal viz-modal" role="dialog" aria-modal="true" aria-label="Algorithm visualizer" ref={trapRef}>
         <div className="viz-head">
           <h2>
             Visualize — {question.title}

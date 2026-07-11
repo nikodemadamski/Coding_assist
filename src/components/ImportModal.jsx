@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { useFocusTrap } from './useFocusTrap.js';
 import { importPack } from '../questions/importPack.js';
 
 // The prompt you paste into a Claude Project/chat to generate a daily pack.
@@ -39,6 +40,8 @@ Rules:
 Make N questions on these topics/difficulties: [FILL IN — e.g. "3 easy python: contains-duplicate, valid-palindrome, group-anagrams"].`;
 
 export default function ImportModal({ existingIds, onImported, onClose }) {
+  const trapRef = useRef(null);
+  useFocusTrap(trapRef, { onEscape: onClose });
   const [text, setText] = useState('');
   const [status, setStatus] = useState('');
   const [result, setResult] = useState(null); // { accepted, rejected }
@@ -82,7 +85,7 @@ export default function ImportModal({ existingIds, onImported, onClose }) {
       className="modal-backdrop"
       onClick={(e) => e.target === e.currentTarget && !working && onClose()}
     >
-      <div className="modal" role="dialog" aria-modal="true" aria-label="Import questions">
+      <div className="modal" role="dialog" aria-modal="true" aria-label="Import questions" ref={trapRef}>
         <h2>＋ Import questions</h2>
         <p className="note">
           Ask Claude (in a Project or chat) for questions using the prompt below, paste the JSON it

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useFocusTrap } from './useFocusTrap.js';
 import { ROADMAP, categoryKeyOf, byPathOrder, pathStep, nextOnPath } from '../data/roadmap.js';
 import {
   isSolved,
@@ -37,6 +38,8 @@ export default function RoadmapGraph({
   onStats,
 }) {
   const [openCat, setOpenCat] = useState(null);
+  const catTrapRef = useRef(null);
+  useFocusTrap(catTrapRef, { active: !!openCat });
   const [scale, setScale] = useState(1);
   const fitRef = useRef(null);
   const today = todayStr();
@@ -335,7 +338,7 @@ export default function RoadmapGraph({
           className="modal-backdrop"
           onClick={(e) => e.target === e.currentTarget && setOpenCat(null)}
         >
-          <div className="modal cat-modal" role="dialog" aria-modal="true" aria-label={`${label(openCat)} questions`}>
+          <div className="modal cat-modal" role="dialog" aria-modal="true" aria-label={`${label(openCat)} questions`} ref={catTrapRef}>
             <div className="cat-modal-head">
               <div>
                 <h2>{label(openCat)}</h2>

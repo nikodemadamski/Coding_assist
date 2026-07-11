@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useFocusTrap } from './useFocusTrap.js';
+import { useEffect, useRef, useState } from 'react';
 
 // First-run orientation. A brand-new user lands on a map full of buttons and
 // asks "where do I begin?" — this answers that in four short cards, then gets
@@ -28,6 +29,8 @@ const STEPS = [
 ];
 
 export default function Onboarding({ onDone }) {
+  const trapRef = useRef(null);
+  useFocusTrap(trapRef);
   const [i, setI] = useState(0);
   const last = i === STEPS.length - 1;
   const step = STEPS[i];
@@ -44,7 +47,7 @@ export default function Onboarding({ onDone }) {
 
   return (
     <div className="modal-backdrop onboard-backdrop">
-      <div className="onboard" role="dialog" aria-modal="true" aria-label="Welcome to the dojo">
+      <div className="onboard" role="dialog" aria-modal="true" aria-label="Welcome to the dojo" ref={trapRef}>
         <button className="onboard-skip" onClick={onDone}>
           Skip
         </button>

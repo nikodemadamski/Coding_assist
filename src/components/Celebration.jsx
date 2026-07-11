@@ -1,4 +1,5 @@
-import { useEffect, useMemo } from 'react';
+import { useFocusTrap } from './useFocusTrap.js';
+import { useEffect, useMemo, useRef } from 'react';
 
 // A short, satisfying payoff moment for belt promotions and streak milestones —
 // the dopamine that makes a habit stick. Pure CSS confetti (no libraries, so it
@@ -40,6 +41,8 @@ function Confetti() {
 }
 
 export default function Celebration({ celebration, onClose }) {
+  const trapRef = useRef(null);
+  useFocusTrap(trapRef);
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
@@ -52,7 +55,7 @@ export default function Celebration({ celebration, onClose }) {
   return (
     <div className="modal-backdrop celebrate-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <Confetti />
-      <div className="celebration" role="dialog" aria-modal="true" aria-label="Milestone reached">
+      <div className="celebration" role="dialog" aria-modal="true" aria-label="Milestone reached" ref={trapRef}>
         {isBelt ? (
           <>
             <div className="celebrate-icon" aria-hidden="true">

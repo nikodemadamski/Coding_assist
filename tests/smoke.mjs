@@ -703,7 +703,22 @@ try {
   // Settings shows the recorded date
   await page.locator('.icon-btn[aria-label="Settings"]').click();
   check((await page.locator('.last-backup').innerText()).includes('Last backup:'), 'Settings shows the last-backup date');
-  await page.locator('.modal .btn-primary', { hasText: 'Done' }).click();
+  // a11y: the dialog traps Tab and closes on Esc
+  check(
+    await page.evaluate(() => document.querySelector('.modal').contains(document.activeElement)),
+    'opening a dialog moves focus inside it'
+  );
+  for (let i = 0; i < 12; i++) await page.keyboard.press('Tab');
+  check(
+    await page.evaluate(() => document.querySelector('.modal').contains(document.activeElement)),
+    'Tab cycles inside the dialog — focus never escapes behind it'
+  );
+  await page.keyboard.press('Escape');
+  check((await page.locator('.modal').count()) === 0, 'Esc closes the dialog');
+  check(
+    await page.evaluate(() => document.activeElement?.getAttribute('aria-label') === 'Settings'),
+    'closing returns focus to the button that opened it'
+  );
 
   // ---- weak-spot chips on the home map ----
   await page.evaluate(() => {

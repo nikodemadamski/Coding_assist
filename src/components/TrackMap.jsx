@@ -1,3 +1,4 @@
+import { useFocusTrap } from './useFocusTrap.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { isSolved, isDue, masteryLevel, todayStr } from '../state/progress.js';
 import { pathStep, byPathOrder } from '../data/roadmap.js';
@@ -12,6 +13,8 @@ const MASTERY_LABEL = { new: 'new', learning: 'learning', reviewing: 'reviewing'
 export default function TrackMap({ trackKey, questions, progress, onOpenQuestion, onBrowse, onBack }) {
   const graph = TRACK_GRAPHS[trackKey];
   const [openKey, setOpenKey] = useState(null);
+  const catTrapRef = useRef(null);
+  useFocusTrap(catTrapRef, { active: !!openKey });
   const [scale, setScale] = useState(1);
   const fitRef = useRef(null);
   const today = todayStr();
@@ -132,7 +135,7 @@ export default function TrackMap({ trackKey, questions, progress, onOpenQuestion
 
       {openKey && (
         <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && setOpenKey(null)}>
-          <div className="modal cat-modal" role="dialog" aria-modal="true" aria-label={`${labelOf(openKey)} questions`}>
+          <div className="modal cat-modal" role="dialog" aria-modal="true" aria-label={`${labelOf(openKey)} questions`} ref={catTrapRef}>
             <div className="cat-modal-head">
               <div>
                 <h2>{labelOf(openKey)}</h2>

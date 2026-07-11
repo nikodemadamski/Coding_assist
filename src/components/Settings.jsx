@@ -1,10 +1,13 @@
 import { useRef, useState } from 'react';
+import { useFocusTrap } from './useFocusTrap.js';
 import { parseImport, downloadExport, loadLastBackup } from '../state/storage.js';
 
 export default function Settings({ progress, customQuestions, onImport, onBackedUp, onClose }) {
   const [message, setMessage] = useState('');
   const [lastBackup, setLastBackup] = useState(loadLastBackup);
   const fileRef = useRef(null);
+  const trapRef = useRef(null);
+  useFocusTrap(trapRef, { onEscape: onClose });
 
   function handleExport() {
     const date = downloadExport(progress, customQuestions);
@@ -29,7 +32,7 @@ export default function Settings({ progress, customQuestions, onImport, onBacked
 
   return (
     <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal" role="dialog" aria-modal="true" aria-label="Settings">
+      <div className="modal" role="dialog" aria-modal="true" aria-label="Settings" ref={trapRef}>
         <h2>Settings</h2>
 
         <p className="note">
