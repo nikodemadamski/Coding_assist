@@ -7,7 +7,7 @@ walkthroughs, and a real in-browser code runner.
 Read a problem → write code in the browser → run tests → submit → get it graded → track
 mastery with spaced repetition. The learning loop is built around how you actually learn:
 
-- **A 123-step ordered path** covering essentially all of NeetCode-150 that fits an
+- **A 135-step ordered path** covering essentially all of NeetCode-150 that fits an
   in-browser runner. Every question has a step number, laid out in true teaching order:
   Python warm-ups → hashing → two pointers → windows → stack → binary search → pandas →
   SQL → linked lists → trees → tries → heaps → backtracking → graphs → DP → greedy →
@@ -22,9 +22,9 @@ mastery with spaced repetition. The learning loop is built around how you actual
 - **Check your understanding**, not just your output: after each correct answer you
   compare against the reference solution and an approach walkthrough, and the Stats page
   shows exactly which problems you get wrong most.
-- **Every question is a brute-force → optimal ladder.** All 123 questions carry multiple
-  named approaches (212 alternative solutions, every one machine-verified against the real
-  tests), each with its own complexity and a note on why the next rung is better — memoized
+- **Every Python question is a brute-force → optimal ladder.** All 107 algorithm questions
+  carry multiple named approaches (216 alternative solutions, every one machine-verified
+  against the real tests), each with its own complexity and a note on why the next rung is better — memoized
   recursion → rolling variables, delete-pairs → stack, sort-per-window → rolling counts,
   seen-set → Floyd. You don't just see the clever answer; you see what it replaced.
 
@@ -170,7 +170,7 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
   **A− / A+** — both remembered across sessions.
 - **Big-O check on every solve**: the moment your code passes, the interviewer's
   favourite follow-up appears — "what's the time complexity?" One tap from six buckets,
-  instant verdict against the model solution's bound. All 123 questions now carry a
+  instant verdict against the model solution's bound. All 135 questions now carry a
   verified complexity string (written against the actual reference code), so the mock
   debrief always has a reference too. Grid-style bounds like O(m·n) are revealed rather
   than graded — no misleading verdicts.

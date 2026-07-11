@@ -63,6 +63,20 @@ export const APPROACHES = {
       note: 'Counter defines + as element-wise addition. Know this exists; write the manual version if asked to avoid libraries.',
     },
   ],
+  'py-fizzbuzz': [
+    {
+      name: 'Chained conditions',
+      complexity: 'O(n) time, O(n) space',
+      code: 'def fizzbuzz(n):\n    out = []\n    for i in range(1, n + 1):\n        if i % 15 == 0:\n            out.append("FizzBuzz")\n        elif i % 3 == 0:\n            out.append("Fizz")\n        elif i % 5 == 0:\n            out.append("Buzz")\n        else:\n            out.append(str(i))\n    return out',
+      note: 'The classic. Order matters: test 15 first, or the 3-branch swallows it — the bug this question exists to catch.',
+    },
+    {
+      name: 'Build the word, or fall back',
+      complexity: 'O(n) time, O(n) space',
+      code: 'def fizzbuzz(n):\n    out = []\n    for i in range(1, n + 1):\n        word = "Fizz" * (i % 3 == 0) + "Buzz" * (i % 5 == 0)\n        out.append(word or str(i))\n    return out',
+      note: 'String-times-boolean concatenates the pieces, and `or` supplies the number when the word is empty — no branch ordering to get wrong, and it extends to a third divisor without new elifs.',
+    },
+  ],
   'py-char-frequency': [
     {
       name: 'Manual dict',
@@ -305,6 +319,20 @@ export const APPROACHES = {
       complexity: 'O(n + m) time, O(n + m) space — serialize with null markers',
       code: 'def is_subtree(root, sub):\n    def ser(node):\n        if node is None:\n            return "#"\n        return "[" + str(node[0]) + "," + ser(node[1]) + "," + ser(node[2]) + "]"\n    return ser(sub) in ser(root)',
       note: 'A bracketed serialization with explicit null markers makes every subtree a unique substring — tree containment becomes string containment.',
+    },
+  ],
+  'py-max-path-sum': [
+    {
+      name: 'Best downward gain per node, separately',
+      complexity: 'O(n²) time, O(h) space',
+      code: "def max_path_sum(root):\n    def down(node):\n        if node is None:\n            return float('-inf')\n        l = down(node[1])\n        r = down(node[2])\n        return node[0] + max(0, l, r)\n    def walk(node):\n        if node is None:\n            return float('-inf')\n        through = node[0] + max(0, down(node[1])) + max(0, down(node[2]))\n        return max(through, walk(node[1]), walk(node[2]))\n    return walk(root)",
+      note: 'The best path through a node = its value + the best non-negative downward gain on each side. Computing those gains fresh per node repeats work — the diameter problem\'s O(n²) trap again.',
+    },
+    {
+      name: 'One post-order pass',
+      complexity: 'O(n) time, O(h) space',
+      code: "def max_path_sum(root):\n    best = float('-inf')\n    def gain(node):\n        nonlocal best\n        if node is None:\n            return 0\n        l = max(gain(node[1]), 0)\n        r = max(gain(node[2]), 0)\n        best = max(best, node[0] + l + r)\n        return node[0] + max(l, r)\n    gain(root)\n    return best",
+      note: 'gain() returns the best single-arm extension a parent could use, while the arch through the node updates a nonlocal best on the side — return one thing, track another, computed once per node.',
     },
   ],
   'py-kth-smallest-bst': [
