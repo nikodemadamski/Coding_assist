@@ -494,6 +494,178 @@ export const APPROACHES = {
     },
   ],
 
+  // ── bit manipulation ─────────────────────────────────────────────────────
+  'py-single-number': [
+    {
+      name: 'Count occurrences',
+      complexity: 'O(n) time, O(n) space',
+      code: 'def single_number(nums):\n    counts = Counter(nums)\n    for n, c in counts.items():\n        if c == 1:\n            return n',
+      note: 'Count everything, return the loner. Works — but the problem whispers "O(1) space" and this is not it.',
+    },
+    {
+      name: 'XOR everything',
+      complexity: 'O(n) time, O(1) space',
+      code: 'def single_number(nums):\n    result = 0\n    for n in nums:\n        result ^= n\n    return result',
+      note: 'x ^ x = 0 and x ^ 0 = x, so every pair annihilates itself and only the single survives. The most famous bit trick in interviews.',
+    },
+  ],
+  'py-missing-number': [
+    {
+      name: 'Set lookup',
+      complexity: 'O(n) time, O(n) space',
+      code: 'def missing_number(nums):\n    have = set(nums)\n    for i in range(len(nums) + 1):\n        if i not in have:\n            return i',
+      note: 'Check 0..n against a set of what you have. Simple, linear — and O(n) extra memory.',
+    },
+    {
+      name: 'XOR indices against values',
+      complexity: 'O(n) time, O(1) space',
+      code: 'def missing_number(nums):\n    result = len(nums)\n    for i, v in enumerate(nums):\n        result ^= i ^ v\n    return result',
+      note: 'XOR all indices 0..n with all values: everything present cancels, the missing number remains. (The Gauss sum n(n+1)/2 − sum works too.)',
+    },
+  ],
+  'py-count-bits': [
+    {
+      name: 'Count each number separately',
+      complexity: 'O(n log n) time, O(n) space',
+      code: 'def count_bits(n):\n    return [bin(i).count("1") for i in range(n + 1)]',
+      note: 'One bin() and count per number — each costs the bit-length, hence the log factor.',
+    },
+    {
+      name: 'DP on the shifted value',
+      complexity: 'O(n) time, O(n) space',
+      code: 'def count_bits(n):\n    ans = [0] * (n + 1)\n    for i in range(1, n + 1):\n        ans[i] = ans[i >> 1] + (i & 1)\n    return ans',
+      note: 'i has exactly the bits of i>>1 plus its own last bit — an answer you already computed plus one AND. DP hiding inside a bits problem.',
+    },
+  ],
+  'py-hamming-weight': [
+    {
+      name: 'Check all 32 positions',
+      complexity: 'O(32) time, O(1) space',
+      code: 'def hamming_weight(n):\n    count = 0\n    for i in range(32):\n        if n & (1 << i):\n            count += 1\n    return count',
+      note: 'Probe every bit position with a mask. Fixed 32 iterations no matter the input.',
+    },
+    {
+      name: 'Drop the lowest set bit',
+      complexity: 'O(k) time — k set bits, O(1) space',
+      code: 'def hamming_weight(n):\n    count = 0\n    while n:\n        n &= n - 1\n        count += 1\n    return count',
+      note: 'n & (n−1) erases exactly the lowest 1-bit, so the loop runs once per set bit — Kernighan\'s trick, and a favourite follow-up.',
+    },
+  ],
+  'py-reverse-bits': [
+    {
+      name: 'String reversal',
+      complexity: 'O(32) time, O(32) space',
+      code: 'def reverse_bits(n):\n    return int(f"{n:032b}"[::-1], 2)',
+      note: 'Format to a 32-char binary string, flip it, parse it back. Pythonic and honest — just not the bit-level answer they are probing for.',
+    },
+    {
+      name: 'Shift out, shift in',
+      complexity: 'O(32) ≈ O(1) time, O(1) space',
+      code: 'def reverse_bits(n):\n    result = 0\n    for _ in range(32):\n        result = (result << 1) | (n & 1)\n        n >>= 1\n    return result',
+      note: 'Pull the lowest bit off n and push it onto the result, 32 times — a conveyor belt reversing the order.',
+    },
+  ],
+  'py-sum-two-integers': [
+    {
+      name: 'Full adder, bit by bit',
+      complexity: 'O(32) time, O(1) space',
+      code: 'def get_sum(a, b):\n    result = 0\n    carry = 0\n    for i in range(32):\n        x = (a >> i) & 1\n        y = (b >> i) & 1\n        s = x ^ y ^ carry\n        carry = (x & y) | (x & carry) | (y & carry)\n        result |= s << i\n    return result if result <= 0x7FFFFFFF else ~(result ^ 0xFFFFFFFF)',
+      note: 'Hardware addition in slow motion: per bit, sum = x^y^carry and a new carry from any two ones. This is literally the circuit.',
+    },
+    {
+      name: 'XOR + shifted carry until it clears',
+      complexity: 'O(32) ≈ O(1) time, O(1) space',
+      code: 'def get_sum(a, b):\n    mask = 0xFFFFFFFF\n    while b & mask:\n        a, b = (a ^ b) & mask, ((a & b) << 1) & mask\n    a &= mask\n    return a if a <= 0x7FFFFFFF else ~(a ^ mask)',
+      note: 'XOR is addition without carries; AND<<1 is the carries alone. Repeat until the carries die out. The mask fakes 32-bit overflow because Python ints never overflow on their own.',
+    },
+  ],
+
+  // ── math & geometry ──────────────────────────────────────────────────────
+  'py-rotate-image': [
+    {
+      name: 'Build a rotated copy',
+      complexity: 'O(n²) time, O(n²) space',
+      code: 'def rotate(matrix):\n    n = len(matrix)\n    rotated = [[matrix[n - 1 - c][r] for c in range(n)] for r in range(n)]\n    for r in range(n):\n        matrix[r] = rotated[r]\n    return matrix',
+      note: 'Row r of the result is column r of the original, read bottom-up. Easy to write — but the problem says in place.',
+    },
+    {
+      name: 'Transpose, then reverse each row',
+      complexity: 'O(n²) time, O(1) space — in place',
+      code: 'def rotate(matrix):\n    n = len(matrix)\n    for i in range(n):\n        for j in range(i + 1, n):\n            matrix[i][j], matrix[j][i] = matrix[j][i], matrix[i][j]\n    for row in matrix:\n        row.reverse()\n    return matrix',
+      note: 'A 90° rotation decomposes into two mirror flips, both trivially in place. Decomposing transforms beats juggling four-way index gymnastics.',
+    },
+  ],
+  'py-spiral-matrix': [
+    {
+      name: 'Peel the top row, rotate the rest',
+      complexity: 'O((m·n)²) time worst case — repeated copies, O(m·n) space',
+      code: 'def spiral_order(matrix):\n    out = []\n    grid = [list(row) for row in matrix]\n    while grid:\n        out.extend(grid.pop(0))\n        grid = [list(row) for row in zip(*grid)][::-1]\n    return out',
+      note: 'Take the top row, rotate what is left counter-clockwise, repeat. Three lines of pure Python elegance — each rotation copies the whole remaining grid.',
+    },
+    {
+      name: 'Walk the four boundaries',
+      complexity: 'O(m·n) time, O(1) extra space',
+      code: 'def spiral_order(matrix):\n    if not matrix:\n        return []\n    res = []\n    top, bottom = 0, len(matrix) - 1\n    left, right = 0, len(matrix[0]) - 1\n    while top <= bottom and left <= right:\n        for c in range(left, right + 1):\n            res.append(matrix[top][c])\n        top += 1\n        for r in range(top, bottom + 1):\n            res.append(matrix[r][right])\n        right -= 1\n        if top <= bottom:\n            for c in range(right, left - 1, -1):\n                res.append(matrix[bottom][c])\n            bottom -= 1\n        if left <= right:\n            for r in range(bottom, top - 1, -1):\n                res.append(matrix[r][left])\n            left += 1\n    return res',
+      note: 'Four shrinking boundary indices; the two if-guards stop single rows/columns being read twice. Boring, linear, correct — the interview answer.',
+    },
+  ],
+  'py-happy-number': [
+    {
+      name: 'Remember what you have seen',
+      complexity: 'O(log n) per step, O(log n) space for seen',
+      code: 'def is_happy(n):\n    def sq(x):\n        return sum(int(d) ** 2 for d in str(x))\n    seen = set()\n    while n != 1 and n not in seen:\n        seen.add(n)\n        n = sq(n)\n    return n == 1',
+      note: 'Unhappy numbers loop forever — a seen-set catches the cycle the first time it repeats.',
+    },
+    {
+      name: 'Floyd slow/fast pointers',
+      complexity: 'O(log n) per step, O(1) space — Floyd cycle detection',
+      code: 'def is_happy(n):\n    def sq(x):\n        return sum(int(d) ** 2 for d in str(x))\n    slow = n\n    fast = sq(n)\n    while fast != 1 and slow != fast:\n        slow = sq(slow)\n        fast = sq(sq(fast))\n    return fast == 1',
+      note: 'The sequence is a hidden linked list, so cycle detection works without memory: the tortoise and hare meet inside any loop. Same trick as Linked List Cycle.',
+    },
+  ],
+  'py-plus-one': [
+    {
+      name: 'Convert to int and back',
+      complexity: 'O(n) time, O(n) space',
+      code: 'def plus_one(digits):\n    n = int("".join(map(str, digits))) + 1\n    return [int(d) for d in str(n)]',
+      note: 'Only legal because Python ints are unbounded — say so out loud, because the digit-array framing exists to forbid exactly this in other languages.',
+    },
+    {
+      name: 'Carry walk from the right',
+      complexity: 'O(n) time, O(1) extra space',
+      code: 'def plus_one(digits):\n    digits = digits[:]\n    for i in range(len(digits) - 1, -1, -1):\n        if digits[i] < 9:\n            digits[i] += 1\n            return digits\n        digits[i] = 0\n    return [1] + digits',
+      note: 'A non-9 digit absorbs the carry and you are done; 9s roll to 0 and pass it on. All-nines falls out the bottom and grows the number.',
+    },
+  ],
+  'py-pow': [
+    {
+      name: 'Multiply n times',
+      complexity: 'O(n) time, O(1) space',
+      code: 'def my_pow(x, n):\n    if n < 0:\n        x = 1 / x\n        n = -n\n    result = 1.0\n    for _ in range(n):\n        result *= x\n    return result',
+      note: 'The definition, verbatim. For n in the billions this is the answer that fails the follow-up.',
+    },
+    {
+      name: 'Square-and-multiply',
+      complexity: 'O(log n) time, O(1) space — fast exponentiation',
+      code: 'def my_pow(x, n):\n    if n < 0:\n        x = 1 / x\n        n = -n\n    result = 1.0\n    while n:\n        if n & 1:\n            result *= x\n        x *= x\n        n >>= 1\n    return result',
+      note: 'Read n in binary: square x for every bit, multiply it in when the bit is 1. x¹⁰ costs four squarings instead of ten multiplies.',
+    },
+  ],
+  'py-rotate-array': [
+    {
+      name: 'Rotate one step, k times',
+      complexity: 'O(n·k) time, O(1) extra space',
+      code: 'def rotate_array(nums, k):\n    nums = list(nums)\n    for _ in range(k % len(nums) if nums else 0):\n        nums.insert(0, nums.pop())\n    return nums',
+      note: 'Pop the tail onto the front, k times. Every insert(0, …) shifts the whole list — k full shuffles.',
+    },
+    {
+      name: 'Slice at the split point',
+      complexity: 'O(n) time, O(n) space — slicing copies',
+      code: 'def rotate_array(nums, k):\n    n = len(nums)\n    if n == 0:\n        return nums\n    k %= n\n    return nums[-k:] + nums[:-k] if k else nums[:]',
+      note: 'The rotated array is just the last k elements followed by the rest. (The O(1)-space in-place version is the triple-reverse trick — worth knowing by name.)',
+    },
+  ],
+
   // ── sliding window ───────────────────────────────────────────────────────
   'py-char-replacement': [
     {

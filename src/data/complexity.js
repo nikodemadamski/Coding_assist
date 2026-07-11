@@ -117,7 +117,7 @@ export const COMPLEXITY = {
   // ---- math / matrix ----
   'py-rotate-image': 'O(n²) time, O(1) space — in place',
   'py-spiral-matrix': 'O(m·n) time, O(1) extra space',
-  'py-happy-number': 'O(log n) per step, O(log n) space for seen',
+  'py-happy-number': 'O(log n) per step, O(1) space — Floyd cycle detection',
   'py-plus-one': 'O(n) time, O(1) extra space',
   'py-pow': 'O(log n) time, O(1) space — fast exponentiation',
   'py-rotate-array': 'O(n) time, O(n) space — slicing copies',
