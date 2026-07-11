@@ -494,6 +494,218 @@ export const APPROACHES = {
     },
   ],
 
+  // ── dynamic programming: memoized recursion -> the tight loop ────────────
+  'py-climbing-stairs': [
+    {
+      name: 'Memoized recursion',
+      complexity: 'O(n) time, O(n) space — memo + recursion stack',
+      code: 'def climb_stairs(n):\n    @cache\n    def ways(k):\n        if k <= 1:\n            return 1\n        return ways(k - 1) + ways(k - 2)\n    return ways(n)',
+      note: 'Write the recurrence you would say out loud — ways(n) = ways(n−1) + ways(n−2) — and let @cache kill the exponential blowup. This is step one of every DP.',
+    },
+    {
+      name: 'Two rolling values',
+      complexity: 'O(n) time, O(1) space',
+      code: 'def climb_stairs(n):\n    a, b = 1, 1\n    for _ in range(n):\n        a, b = b, a + b\n    return a',
+      note: 'The recursion only ever looks two steps back, so two variables replace the whole cache. It is Fibonacci wearing a costume.',
+    },
+  ],
+  'py-house-robber': [
+    {
+      name: 'Memoized recursion',
+      complexity: 'O(n) time, O(n) space',
+      code: 'def rob(nums):\n    @cache\n    def best(i):\n        if i >= len(nums):\n            return 0\n        return max(nums[i] + best(i + 2), best(i + 1))\n    return best(0)',
+      note: 'At each house: rob it and skip a neighbour, or walk past. The max of those two choices IS the recurrence.',
+    },
+    {
+      name: 'Rolling pair',
+      complexity: 'O(n) time, O(1) space',
+      code: 'def rob(nums):\n    prev, prev2 = 0, 0\n    for n in nums:\n        prev, prev2 = max(prev, prev2 + n), prev\n    return prev',
+      note: 'Only best-so-far and best-two-back matter; the tuple assignment advances both in one line.',
+    },
+  ],
+  'py-house-robber-ii': [
+    {
+      name: 'Memoized recursion on the circle',
+      complexity: 'O(n) time, O(n) space',
+      code: 'def rob2(nums):\n    n = len(nums)\n    if n == 1:\n        return nums[0]\n    @cache\n    def best(i, took_first):\n        if i >= n:\n            return 0\n        take = 0 if (i == n - 1 and took_first) else nums[i] + best(i + 2, took_first or i == 0)\n        skip = best(i + 1, took_first)\n        return max(take, skip)\n    return best(0, False)',
+      note: 'Carry one bit of state — "did I rob house 0?" — so the last house knows whether it is allowed. State-in-the-recursion is a move worth practising.',
+    },
+    {
+      name: 'Run House Robber twice',
+      complexity: 'O(n) time, O(1) space',
+      code: 'def rob2(nums):\n    if len(nums) == 1:\n        return nums[0]\n    def rob_line(vals):\n        prev, prev2 = 0, 0\n        for v in vals:\n            prev, prev2 = max(prev, prev2 + v), prev\n        return prev\n    return max(rob_line(nums[1:]), rob_line(nums[:-1]))',
+      note: 'The circle only forbids taking BOTH ends — so solve the line without the first house, the line without the last, and take the better. Reduce to a solved problem.',
+    },
+  ],
+  'py-coin-change': [
+    {
+      name: 'Memoized recursion',
+      complexity: 'O(amount · coins) time, O(amount) space',
+      code: 'def coin_change(coins, amount):\n    @cache\n    def best(rem):\n        if rem == 0:\n            return 0\n        if rem < 0:\n            return inf\n        return min((1 + best(rem - c) for c in coins), default=inf)\n    ans = best(amount)\n    return -1 if ans == inf else ans',
+      note: 'Fewest coins for rem = 1 + fewest for (rem − some coin). Greedy fails here ([1,3,4] for 6) — that failure is why this is DP.',
+    },
+    {
+      name: 'Bottom-up table',
+      complexity: 'O(amount · coins) time, O(amount) space',
+      code: 'def coin_change(coins, amount):\n    best = [0] + [float("inf")] * amount\n    for a in range(1, amount + 1):\n        for coin in coins:\n            if coin <= a:\n                best[a] = min(best[a], 1 + best[a - coin])\n    return best[amount] if best[amount] != float("inf") else -1',
+      note: 'Same recurrence, filled smallest-amount-first so every lookup is already computed. No recursion limit, no cache magic.',
+    },
+  ],
+  'py-longest-increasing-subseq': [
+    {
+      name: 'DP over pairs',
+      complexity: 'O(n²) time, O(n) space — DP over pairs',
+      code: 'def length_of_lis(nums):\n    if not nums:\n        return 0\n    dp = [1] * len(nums)\n    for i in range(len(nums)):\n        for j in range(i):\n            if nums[j] < nums[i]:\n                dp[i] = max(dp[i], dp[j] + 1)\n    return max(dp)',
+      note: 'dp[i] = longest subsequence ending at i: check every earlier smaller element. Clean, quadratic, and the version to write first.',
+    },
+    {
+      name: 'Patience piles + bisect',
+      complexity: 'O(n log n) time — patience piles, O(n) space',
+      code: 'def length_of_lis(nums):\n    piles = []\n    for n in nums:\n        i = bisect.bisect_left(piles, n)\n        if i == len(piles):\n            piles.append(n)\n        else:\n            piles[i] = n\n    return len(piles)',
+      note: 'piles[i] holds the smallest possible tail of an increasing run of length i+1 — each number replaces the first tail ≥ it. The pile count is the answer; the follow-up interviewers save for strong candidates.',
+    },
+  ],
+  'py-unique-paths': [
+    {
+      name: 'Memoized recursion',
+      complexity: 'O(m·n) time, O(m·n) space',
+      code: 'def unique_paths(m, n):\n    @cache\n    def ways(r, c):\n        if r == 0 or c == 0:\n            return 1\n        return ways(r - 1, c) + ways(r, c - 1)\n    return ways(m - 1, n - 1)',
+      note: 'Paths to a cell = paths from above + paths from the left; the edges have exactly one way in.',
+    },
+    {
+      name: 'One rolling row',
+      complexity: 'O(m·n) time, O(n) space — one rolling row',
+      code: 'def unique_paths(m, n):\n    row = [1] * n\n    for _ in range(m - 1):\n        for c in range(1, n):\n            row[c] += row[c - 1]\n    return row[n - 1]',
+      note: 'Each row only reads the row above — overwrite in place and the grid collapses to one array.',
+    },
+  ],
+  'py-longest-common-subseq': [
+    {
+      name: 'Memoized recursion',
+      complexity: 'O(n·m) time, O(n·m) space',
+      code: 'def lcs(a, b):\n    @cache\n    def go(i, j):\n        if i == len(a) or j == len(b):\n            return 0\n        if a[i] == b[j]:\n            return 1 + go(i + 1, j + 1)\n        return max(go(i + 1, j), go(i, j + 1))\n    return go(0, 0)',
+      note: 'Match → both pointers advance; mismatch → try skipping either side. Three lines of logic is the whole problem.',
+    },
+    {
+      name: 'Bottom-up table',
+      complexity: 'O(n·m) time, O(n·m) space',
+      code: 'def lcs(a, b):\n    m, n = len(a), len(b)\n    dp = [[0] * (n + 1) for _ in range(m + 1)]\n    for i in range(1, m + 1):\n        for j in range(1, n + 1):\n            if a[i - 1] == b[j - 1]:\n                dp[i][j] = 1 + dp[i - 1][j - 1]\n            else:\n                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])\n    return dp[m][n]',
+      note: 'The 2D-string-DP template — edit distance, distinct subsequences and friends are this same table with a different cell rule.',
+    },
+  ],
+  'py-longest-palindrome-substr': [
+    {
+      name: 'Check every substring',
+      complexity: 'O(n³) time, O(n) space',
+      code: 'def longest_palindrome(s):\n    best = ""\n    for i in range(len(s)):\n        for j in range(i, len(s)):\n            sub = s[i : j + 1]\n            if len(sub) > len(best) and sub == sub[::-1]:\n                best = sub\n    return best',
+      note: 'n² substrings, each reversed to check — honest, cubic, and the baseline to beat.',
+    },
+    {
+      name: 'Expand around centers',
+      complexity: 'O(n²) time, O(1) space — expand around centers',
+      code: 'def longest_palindrome(s):\n    if not s:\n        return ""\n    start, end = 0, 0\n    def expand(l, r):\n        while l >= 0 and r < len(s) and s[l] == s[r]:\n            l -= 1\n            r += 1\n        return l + 1, r - 1\n    for i in range(len(s)):\n        for lo, hi in (expand(i, i), expand(i, i + 1)):\n            if hi - lo > end - start:\n                start, end = lo, hi\n    return s[start : end + 1]',
+      note: 'Every palindrome has a center — 2n−1 of them (letters and gaps). Growing outward from each checks all palindromes without re-checking any.',
+    },
+  ],
+  'py-count-palindromic-substrings': [
+    {
+      name: 'Check every substring',
+      complexity: 'O(n³) time, O(n) space',
+      code: 'def count_substrings(s):\n    total = 0\n    for i in range(len(s)):\n        for j in range(i, len(s)):\n            sub = s[i : j + 1]\n            if sub == sub[::-1]:\n                total += 1\n    return total',
+      note: 'Same shape as the longest-palindrome brute force — count instead of keep.',
+    },
+    {
+      name: 'Expand around centers',
+      complexity: 'O(n²) time, O(1) space',
+      code: 'def count_substrings(s):\n    total = 0\n    def expand(l, r):\n        cnt = 0\n        while l >= 0 and r < len(s) and s[l] == s[r]:\n            cnt += 1\n            l -= 1\n            r += 1\n        return cnt\n    for i in range(len(s)):\n        total += expand(i, i) + expand(i, i + 1)\n    return total',
+      note: 'Each successful expansion step IS one palindrome — count as you grow.',
+    },
+  ],
+  'py-decode-ways': [
+    {
+      name: 'Memoized recursion',
+      complexity: 'O(n) time, O(n) space',
+      code: 'def num_decodings(s):\n    @cache\n    def ways(i):\n        if i == len(s):\n            return 1\n        if s[i] == "0":\n            return 0\n        total = ways(i + 1)\n        if i + 1 < len(s) and 10 <= int(s[i : i + 2]) <= 26:\n            total += ways(i + 2)\n        return total\n    return ways(0)',
+      note: 'Take one digit (if not "0") or two (if 10–26). The zeros are the whole difficulty — the recursion states the rules plainly.',
+    },
+    {
+      name: 'Two rolling values',
+      complexity: 'O(n) time, O(1) space — two rolling values',
+      code: 'def num_decodings(s):\n    if not s:\n        return 0\n    prev2, prev1 = 1, (0 if s[0] == "0" else 1)\n    for i in range(1, len(s)):\n        cur = 0\n        if s[i] != "0":\n            cur += prev1\n        two = int(s[i - 1 : i + 1])\n        if 10 <= two <= 26:\n            cur += prev2\n        prev2, prev1 = prev1, cur\n    return prev1',
+      note: 'Climbing-stairs with entry rules: each position sums the one-step and two-step ways in, gated by validity.',
+    },
+  ],
+  'py-word-break': [
+    {
+      name: 'Memoized recursion',
+      complexity: 'O(n²) time, O(n) space',
+      code: 'def word_break(s, word_dict):\n    words = set(word_dict)\n    @cache\n    def can(i):\n        if i == len(s):\n            return True\n        return any(s[i:j] in words and can(j) for j in range(i + 1, len(s) + 1))\n    return can(0)',
+      note: 'Can I break the rest? Try every prefix that is a word. Without @cache the "aaaa…b" adversarial input is exponential.',
+    },
+    {
+      name: 'Bottom-up table',
+      complexity: 'O(n²) time, O(n) space',
+      code: 'def word_break(s, word_dict):\n    words = set(word_dict)\n    dp = [False] * (len(s) + 1)\n    dp[0] = True\n    for i in range(1, len(s) + 1):\n        for j in range(i):\n            if dp[j] and s[j:i] in words:\n                dp[i] = True\n                break\n    return dp[len(s)]',
+      note: 'dp[i] = "the first i characters break cleanly". Each position looks back for a True followed by a dictionary word.',
+    },
+  ],
+  'py-can-partition': [
+    {
+      name: 'Memoized recursion',
+      complexity: 'O(n · target) time, O(n · target) space',
+      code: 'def can_partition(nums):\n    total = sum(nums)\n    if total % 2 == 1:\n        return False\n    target = total // 2\n    @cache\n    def can(i, rem):\n        if rem == 0:\n            return True\n        if i == len(nums) or rem < 0:\n            return False\n        return can(i + 1, rem - nums[i]) or can(i + 1, rem)\n    return can(0, target)',
+      note: 'Subset-sum in disguise: hit total/2 by taking or skipping each number. Take-or-skip over an index + budget is THE knapsack shape.',
+    },
+    {
+      name: 'Reachable-sums set',
+      complexity: 'O(n · target) time, O(target) space',
+      code: 'def can_partition(nums):\n    total = sum(nums)\n    if total % 2 == 1:\n        return False\n    target = total // 2\n    reachable = {0}\n    for n in nums:\n        reachable |= {r + n for r in reachable if r + n <= target}\n    return target in reachable',
+      note: 'Keep the set of sums you can build; each number doubles the candidates (capped at target). A set comprehension replaces the whole DP table.',
+    },
+  ],
+  'py-min-path-sum': [
+    {
+      name: 'Memoized recursion',
+      complexity: 'O(m·n) time, O(m·n) space',
+      code: 'def min_path_sum(grid):\n    rows, cols = len(grid), len(grid[0])\n    @cache\n    def best(r, c):\n        if r == 0 and c == 0:\n            return grid[0][0]\n        if r < 0 or c < 0:\n            return inf\n        return grid[r][c] + min(best(r - 1, c), best(r, c - 1))\n    return best(rows - 1, cols - 1)',
+      note: 'Cheapest way into a cell = its cost + the cheaper of the two ways in. Out-of-bounds returns infinity so edges handle themselves.',
+    },
+    {
+      name: 'One rolling row',
+      complexity: 'O(m·n) time, O(n) space — one rolling row',
+      code: 'def min_path_sum(grid):\n    rows, cols = len(grid), len(grid[0])\n    dp = [0] * cols\n    for r in range(rows):\n        for c in range(cols):\n            if r == 0 and c == 0:\n                dp[c] = grid[r][c]\n            elif r == 0:\n                dp[c] = dp[c - 1] + grid[r][c]\n            elif c == 0:\n                dp[c] = dp[c] + grid[r][c]\n            else:\n                dp[c] = min(dp[c], dp[c - 1]) + grid[r][c]\n    return dp[cols - 1]',
+      note: 'dp[c] still holds the row above when you read it, and the row you are building to its left — the standard grid-DP compression.',
+    },
+  ],
+  'py-edit-distance': [
+    {
+      name: 'Memoized recursion',
+      complexity: 'O(n·m) time, O(n·m) space',
+      code: 'def min_distance(a, b):\n    @cache\n    def go(i, j):\n        if i == len(a):\n            return len(b) - j\n        if j == len(b):\n            return len(a) - i\n        if a[i] == b[j]:\n            return go(i + 1, j + 1)\n        return 1 + min(go(i + 1, j), go(i, j + 1), go(i + 1, j + 1))\n    return go(0, 0)',
+      note: 'Match → free; otherwise 1 + the best of delete / insert / replace. The three recursive calls ARE the three edit operations.',
+    },
+    {
+      name: 'Bottom-up table',
+      complexity: 'O(n·m) time, O(n·m) space — full table',
+      code: 'def min_distance(a, b):\n    m, n = len(a), len(b)\n    dp = [[0] * (n + 1) for _ in range(m + 1)]\n    for i in range(m + 1):\n        dp[i][0] = i\n    for j in range(n + 1):\n        dp[0][j] = j\n    for i in range(1, m + 1):\n        for j in range(1, n + 1):\n            if a[i - 1] == b[j - 1]:\n                dp[i][j] = dp[i - 1][j - 1]\n            else:\n                dp[i][j] = 1 + min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1])\n    return dp[m][n]',
+      note: 'The first row/column say "turning nothing into a prefix costs its length" — get those bases right and the fill is mechanical.',
+    },
+  ],
+  'py-max-product-subarray': [
+    {
+      name: 'Try every subarray',
+      complexity: 'O(n²) time, O(1) space',
+      code: 'def max_product(nums):\n    best = nums[0]\n    for i in range(len(nums)):\n        prod = 1\n        for j in range(i, len(nums)):\n            prod *= nums[j]\n            best = max(best, prod)\n    return best',
+      note: 'Extend the product from each start — quadratic but honest, and it shows why negatives make running-max alone insufficient.',
+    },
+    {
+      name: 'Track max AND min',
+      complexity: 'O(n) time, O(1) space',
+      code: 'def max_product(nums):\n    best = nums[0]\n    cur_max = cur_min = nums[0]\n    for n in nums[1:]:\n        cands = (n, cur_max * n, cur_min * n)\n        cur_max = max(cands)\n        cur_min = min(cands)\n        best = max(best, cur_max)\n    return best',
+      note: 'A huge negative times a negative becomes the new maximum — so carry the running minimum too. One extra variable fixes the whole sign problem.',
+    },
+  ],
+
   // ── two pointers ─────────────────────────────────────────────────────────
   'py-valid-palindrome': [
     {

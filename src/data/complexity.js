@@ -92,7 +92,7 @@ export const COMPLEXITY = {
   'py-house-robber': 'O(n) time, O(1) space',
   'py-house-robber-ii': 'O(n) time, O(1) space',
   'py-coin-change': 'O(amount · coins) time, O(amount) space',
-  'py-longest-increasing-subseq': 'O(n²) time, O(n) space — DP over pairs',
+  'py-longest-increasing-subseq': 'O(n log n) time — patience piles, O(n) space',
   'py-unique-paths': 'O(m·n) time, O(n) space — one rolling row',
   'py-longest-common-subseq': 'O(n·m) time, O(n·m) space',
   'py-longest-palindrome-substr': 'O(n²) time, O(1) space — expand around centers',
