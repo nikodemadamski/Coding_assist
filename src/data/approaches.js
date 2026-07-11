@@ -494,6 +494,238 @@ export const APPROACHES = {
     },
   ],
 
+  // ── sliding window ───────────────────────────────────────────────────────
+  'py-char-replacement': [
+    {
+      name: 'Check every substring',
+      complexity: 'O(n²) time, O(26) space',
+      code: 'def character_replacement(s, k):\n    best = 0\n    for i in range(len(s)):\n        counts = {}\n        maxf = 0\n        for j in range(i, len(s)):\n            counts[s[j]] = counts.get(s[j], 0) + 1\n            maxf = max(maxf, counts[s[j]])\n            if (j - i + 1) - maxf <= k:\n                best = max(best, j - i + 1)\n    return best',
+      note: 'A substring works if (length − most frequent letter) ≤ k. Testing every start makes that condition visible before you optimise it.',
+    },
+    {
+      name: 'Sliding window',
+      complexity: 'O(n) time, O(26) space',
+      code: 'def character_replacement(s, k):\n    counts = {}\n    start = 0\n    best = 0\n    maxf = 0\n    for i, ch in enumerate(s):\n        counts[ch] = counts.get(ch, 0) + 1\n        maxf = max(maxf, counts[ch])\n        while (i - start + 1) - maxf > k:\n            counts[s[start]] -= 1\n            start += 1\n        best = max(best, i - start + 1)\n    return best',
+      note: 'Grow the right edge; shrink the left only when the window breaks the ≤ k rule. maxf never needs to decrease — a stale value only makes the window too cautious, never wrong.',
+    },
+  ],
+  'py-permutation-in-string': [
+    {
+      name: 'Sort every window',
+      complexity: 'O(n · k log k) time, O(k) space',
+      code: 'def check_inclusion(s1, s2):\n    key = sorted(s1)\n    k = len(s1)\n    for i in range(len(s2) - k + 1):\n        if sorted(s2[i : i + k]) == key:\n            return True\n    return False',
+      note: 'A permutation sorts to the same string — so sort each window and compare. Correct, but re-sorts overlapping windows from scratch.',
+    },
+    {
+      name: 'Rolling counts',
+      complexity: 'O(n) time, O(26) space',
+      code: 'def check_inclusion(s1, s2):\n    if len(s1) > len(s2):\n        return False\n    need = Counter(s1)\n    window = Counter(s2[: len(s1)])\n    if window == need:\n        return True\n    for i in range(len(s1), len(s2)):\n        window[s2[i]] += 1\n        left = s2[i - len(s1)]\n        window[left] -= 1\n        if window[left] == 0:\n            del window[left]\n        if window == need:\n            return True\n    return False',
+      note: 'Slide the window one character at a time: +1 for the letter entering, −1 for the one leaving. Counts equal ⇒ permutation found.',
+    },
+  ],
+  'py-min-window-substring': [
+    {
+      name: 'Expand from every start',
+      complexity: 'O(n²) time, O(m) space',
+      code: 'def min_window(s, t):\n    if not t or not s:\n        return ""\n    best = ""\n    for i in range(len(s)):\n        need = Counter(t)\n        missing = len(t)\n        for j in range(i, len(s)):\n            if need[s[j]] > 0:\n                missing -= 1\n            need[s[j]] -= 1\n            if missing == 0:\n                if not best or j - i + 1 < len(best):\n                    best = s[i : j + 1]\n                break\n    return best',
+      note: 'From each start, extend until every needed letter is covered. Each start rebuilds the tally — that repetition is what the real window removes.',
+    },
+    {
+      name: 'Shrinking window with a missing counter',
+      complexity: 'O(n + m) time, O(m) space',
+      code: 'def min_window(s, t):\n    if not t or not s:\n        return ""\n    need = Counter(t)\n    missing = len(t)\n    best = ""\n    lo = 0\n    for hi, ch in enumerate(s):\n        if need[ch] > 0:\n            missing -= 1\n        need[ch] -= 1\n        while missing == 0:\n            if not best or hi - lo + 1 < len(best):\n                best = s[lo : hi + 1]\n            need[s[lo]] += 1\n            if need[s[lo]] > 0:\n                missing += 1\n            lo += 1\n    return best',
+      note: 'One `missing` integer stands in for comparing whole Counters. When it hits zero, shrink from the left until the window breaks — every character enters and leaves at most once.',
+    },
+  ],
+  'py-sliding-window-max': [
+    {
+      name: 'Max of every window',
+      complexity: 'O(n·k) time, O(1) extra space',
+      code: 'def max_sliding_window(nums, k):\n    return [max(nums[i : i + k]) for i in range(len(nums) - k + 1)]',
+      note: 'One line, honest, and rescans k elements per window — the interviewer will ask what happens when k is huge.',
+    },
+    {
+      name: 'Monotonic deque',
+      complexity: 'O(n) time, O(k) space — monotonic deque',
+      code: 'def max_sliding_window(nums, k):\n    dq = deque()\n    res = []\n    for i, n in enumerate(nums):\n        while dq and nums[dq[-1]] < n:\n            dq.pop()\n        dq.append(i)\n        if dq[0] <= i - k:\n            dq.popleft()\n        if i >= k - 1:\n            res.append(nums[dq[0]])\n    return res',
+      note: 'Keep indices whose values are decreasing: a new element evicts everything smaller (they can never be a max again), the front expires when it leaves the window. Front = current max, always.',
+    },
+  ],
+
+  // ── heap ─────────────────────────────────────────────────────────────────
+  'py-kth-largest': [
+    {
+      name: 'Sort and index',
+      complexity: 'O(n log n) time, O(n) space',
+      code: 'def find_kth_largest(nums, k):\n    return sorted(nums, reverse=True)[k - 1]',
+      note: 'Sorting answers a harder question than asked — you only need ONE position, not total order.',
+    },
+    {
+      name: 'Heap capped at k',
+      complexity: 'O(n log k) time, O(k) space',
+      code: 'def find_kth_largest(nums, k):\n    heap = []\n    for n in nums:\n        heapq.heappush(heap, n)\n        if len(heap) > k:\n            heapq.heappop(heap)\n    return heap[0]',
+      note: 'A min-heap of size k holds the k largest seen so far; its root is exactly the k-th largest. log k beats log n whenever k is small.',
+    },
+  ],
+  'py-last-stone-weight': [
+    {
+      name: 'Re-sort every round',
+      complexity: 'O(n² log n) time, O(n) space',
+      code: 'def last_stone_weight(stones):\n    stones = list(stones)\n    while len(stones) > 1:\n        stones.sort()\n        a = stones.pop()\n        b = stones.pop()\n        if a != b:\n            stones.append(a - b)\n    return stones[0] if stones else 0',
+      note: 'Sort, smash the top two, repeat. Each round pays a full sort just to find two elements.',
+    },
+    {
+      name: 'Max-heap via negation',
+      complexity: 'O(n log n) time, O(n) space',
+      code: 'def last_stone_weight(stones):\n    heap = [-s for s in stones]\n    heapq.heapify(heap)\n    while len(heap) > 1:\n        a = -heapq.heappop(heap)\n        b = -heapq.heappop(heap)\n        if a != b:\n            heapq.heappush(heap, -(a - b))\n    return -heap[0] if heap else 0',
+      note: '"Repeatedly take the largest" is the heap use-case sentence. Python only ships a min-heap — store negatives, the classic workaround.',
+    },
+  ],
+  'py-task-scheduler': [
+    {
+      name: 'Simulate with a heap + cooldown queue',
+      complexity: 'O(n log 26) time, O(26) space',
+      code: 'def least_interval(tasks, n):\n    counts = Counter(tasks)\n    heap = [-c for c in counts.values()]\n    heapq.heapify(heap)\n    time = 0\n    cooling = deque()\n    while heap or cooling:\n        time += 1\n        if heap:\n            c = heapq.heappop(heap) + 1\n            if c:\n                cooling.append((time + n, c))\n        if cooling and cooling[0][0] == time:\n            heapq.heappush(heap, cooling[0][1])\n            cooling.popleft()\n    return time',
+      note: 'Tick a clock: run the most-frequent available task, park it in a cooldown queue for n ticks. Simulation always works — and shows what the formula shortcuts.',
+    },
+    {
+      name: 'Count the idle slots directly',
+      complexity: 'O(n) time, O(26) space — counting, no simulation',
+      code: 'def least_interval(tasks, n):\n    counts = Counter(tasks)\n    max_count = max(counts.values())\n    max_tasks = sum(1 for v in counts.values() if v == max_count)\n    return max(len(tasks), (max_count - 1) * (n + 1) + max_tasks)',
+      note: 'The busiest task forces a frame of (max_count−1) blocks of size n+1, plus one slot per tied task. Everything else fills the gaps — unless there are so many tasks the schedule is simply len(tasks).',
+    },
+  ],
+
+  // ── greedy ───────────────────────────────────────────────────────────────
+  'py-jump-game': [
+    {
+      name: 'DP reachability',
+      complexity: 'O(n²) time, O(n) space',
+      code: 'def can_jump(nums):\n    n = len(nums)\n    reach = [False] * n\n    reach[0] = True\n    for i in range(n):\n        if reach[i]:\n            for j in range(i + 1, min(n, i + nums[i] + 1)):\n                reach[j] = True\n    return reach[n - 1]',
+      note: 'Mark everything reachable from every reachable index. Works, but re-marks the same cells over and over.',
+    },
+    {
+      name: 'Greedy furthest reach',
+      complexity: 'O(n) time, O(1) space',
+      code: 'def can_jump(nums):\n    furthest = 0\n    for i, n in enumerate(nums):\n        if i > furthest:\n            return False\n        furthest = max(furthest, i + n)\n    return True',
+      note: 'Only one number matters: the furthest index reachable so far. Fall behind it and you are stranded; keep it ≥ i and everything before it is reachable too.',
+    },
+  ],
+  'py-jump-game-ii': [
+    {
+      name: 'BFS over indices',
+      complexity: 'O(n²) time, O(n) space',
+      code: 'def jump(nums):\n    n = len(nums)\n    dist = [None] * n\n    dist[0] = 0\n    queue = deque([0])\n    while queue:\n        i = queue.popleft()\n        if i == n - 1:\n            return dist[i]\n        for j in range(i + 1, min(n, i + nums[i] + 1)):\n            if dist[j] is None:\n                dist[j] = dist[i] + 1\n                queue.append(j)\n    return dist[n - 1]',
+      note: 'Fewest jumps = shortest path, and shortest path says BFS. Naming that mapping out loud scores points even before you optimise.',
+    },
+    {
+      name: 'Greedy level windows',
+      complexity: 'O(n) time, O(1) space',
+      code: 'def jump(nums):\n    jumps = 0\n    cur_end = 0\n    farthest = 0\n    for i in range(len(nums) - 1):\n        farthest = max(farthest, i + nums[i])\n        if i == cur_end:\n            jumps += 1\n            cur_end = farthest\n    return jumps',
+      note: 'This IS the BFS, compressed: [cur_end..farthest] is the next BFS level, and crossing cur_end means one more jump. Same levels, two variables.',
+    },
+  ],
+  'py-gas-station': [
+    {
+      name: 'Try every start',
+      complexity: 'O(n²) time, O(1) space',
+      code: 'def can_complete_circuit(gas, cost):\n    n = len(gas)\n    for start in range(n):\n        tank = 0\n        for step in range(n):\n            i = (start + step) % n\n            tank += gas[i] - cost[i]\n            if tank < 0:\n                break\n        else:\n            return start\n    return -1',
+      note: 'Simulate the loop from each station. The for/else is doing real work here: else runs only if the lap never went negative.',
+    },
+    {
+      name: 'One pass with restart',
+      complexity: 'O(n) time, O(1) space',
+      code: 'def can_complete_circuit(gas, cost):\n    if sum(gas) < sum(cost):\n        return -1\n    tank = 0\n    start = 0\n    for i in range(len(gas)):\n        tank += gas[i] - cost[i]\n        if tank < 0:\n            start = i + 1\n            tank = 0\n    return start',
+      note: 'If you run dry at i, no station between your start and i can work either (they would arrive with even less). So restart at i+1 — and total gas ≥ total cost guarantees the survivor is valid.',
+    },
+  ],
+  'py-hand-of-straights': [
+    {
+      name: 'Repeatedly pull the minimum',
+      complexity: 'O(n²) time, O(n) space',
+      code: 'def is_n_straight_hand(hand, group_size):\n    if len(hand) % group_size != 0:\n        return False\n    counts = Counter(hand)\n    while counts:\n        start = min(counts)\n        for x in range(start, start + group_size):\n            if counts[x] <= 0:\n                return False\n            counts[x] -= 1\n            if counts[x] == 0:\n                del counts[x]\n    return True',
+      note: 'The smallest remaining card MUST start a straight — nothing else can absorb it. min() over the dict every round is the cost.',
+    },
+    {
+      name: 'Sort the keys once',
+      complexity: 'O(n log n) time, O(n) space',
+      code: 'def is_n_straight_hand(hand, group_size):\n    if len(hand) % group_size != 0:\n        return False\n    counts = Counter(hand)\n    for card in sorted(counts):\n        need = counts[card]\n        if need > 0:\n            for x in range(card, card + group_size):\n                if counts[x] < need:\n                    return False\n                counts[x] -= need\n    return True',
+      note: 'Same greedy, but one sort replaces all the min() scans — and taking `need` copies at once batches identical straights.',
+    },
+  ],
+
+  // ── intervals ────────────────────────────────────────────────────────────
+  'py-merge-intervals': [
+    {
+      name: 'Merge pairs until stable',
+      complexity: 'O(n²) time, O(n) space',
+      code: 'def merge_intervals(intervals):\n    items = [list(iv) for iv in intervals]\n    changed = True\n    while changed:\n        changed = False\n        out = []\n        for iv in items:\n            for m in out:\n                if iv[0] <= m[1] and m[0] <= iv[1]:\n                    m[0] = min(m[0], iv[0])\n                    m[1] = max(m[1], iv[1])\n                    changed = True\n                    break\n            else:\n                out.append(iv)\n        items = out\n    return sorted(items)',
+      note: 'Keep folding overlapping pairs together until nothing changes. It terminates and it is correct — and it screams for a sort.',
+    },
+    {
+      name: 'Sort, then sweep',
+      complexity: 'O(n log n) time, O(n) space',
+      code: 'def merge_intervals(intervals):\n    intervals = sorted(intervals, key=lambda x: x[0])\n    merged = [intervals[0][:]]\n    for start, end in intervals[1:]:\n        if start <= merged[-1][1]:\n            merged[-1][1] = max(merged[-1][1], end)\n        else:\n            merged.append([start, end])\n    return merged',
+      note: 'Sorted by start, an interval can only overlap the LAST merged one — extend it or start fresh. Sort-then-sweep is the intervals category in one sentence.',
+    },
+  ],
+  'py-meeting-rooms': [
+    {
+      name: 'Compare every pair',
+      complexity: 'O(n²) time, O(1) space',
+      code: 'def can_attend_all(intervals):\n    for i in range(len(intervals)):\n        for j in range(i + 1, len(intervals)):\n            a, b = intervals[i], intervals[j]\n            if a[0] < b[1] and b[0] < a[1]:\n                return False\n    return True',
+      note: 'Two meetings clash if each starts before the other ends. Checking all pairs works — n² comparisons for what sorting exposes adjacently.',
+    },
+    {
+      name: 'Sort, check neighbours',
+      complexity: 'O(n log n) time, O(1) space',
+      code: 'def can_attend_all(intervals):\n    intervals = sorted(intervals, key=lambda x: x[0])\n    for i in range(1, len(intervals)):\n        if intervals[i][0] < intervals[i - 1][1]:\n            return False\n    return True',
+      note: 'After sorting by start, any clash must be between neighbours — one linear scan settles it.',
+    },
+  ],
+  'py-insert-interval': [
+    {
+      name: 'Append, then re-merge everything',
+      complexity: 'O(n log n) time, O(n) space',
+      code: 'def insert_interval(intervals, new_interval):\n    items = sorted([list(iv) for iv in intervals] + [list(new_interval)])\n    merged = [items[0]]\n    for start, end in items[1:]:\n        if start <= merged[-1][1]:\n            merged[-1][1] = max(merged[-1][1], end)\n        else:\n            merged.append([start, end])\n    return merged',
+      note: 'Reduce to the problem you already solved: drop the new interval in and run merge-intervals. Honest, and it wastes the fact the list was ALREADY sorted.',
+    },
+    {
+      name: 'Three linear phases',
+      complexity: 'O(n) time, O(n) space',
+      code: 'def insert_interval(intervals, new_interval):\n    res = []\n    i = 0\n    n = len(intervals)\n    while i < n and intervals[i][1] < new_interval[0]:\n        res.append(intervals[i])\n        i += 1\n    start, end = new_interval\n    while i < n and intervals[i][0] <= end:\n        start = min(start, intervals[i][0])\n        end = max(end, intervals[i][1])\n        i += 1\n    res.append([start, end])\n    while i < n:\n        res.append(intervals[i])\n        i += 1\n    return res',
+      note: 'Copy everything strictly before, absorb everything that touches, copy the rest. Sorted input means one pass, no sort.',
+    },
+  ],
+  'py-non-overlapping': [
+    {
+      name: 'DP: max compatible set',
+      complexity: 'O(n²) time, O(n) space',
+      code: 'def erase_overlap_intervals(intervals):\n    if not intervals:\n        return 0\n    items = sorted(intervals, key=lambda x: x[1])\n    n = len(items)\n    dp = [1] * n\n    for i in range(n):\n        for j in range(i):\n            if items[j][1] <= items[i][0]:\n                dp[i] = max(dp[i], dp[j] + 1)\n    return n - max(dp)',
+      note: 'Fewest removals = n − the largest non-overlapping set, found LIS-style. Correct — and the O(n²) hints the greedy exists.',
+    },
+    {
+      name: 'Greedy by earliest end',
+      complexity: 'O(n log n) time, O(1) space',
+      code: 'def erase_overlap_intervals(intervals):\n    intervals = sorted(intervals, key=lambda x: x[1])\n    removed = 0\n    prev_end = float("-inf")\n    for start, end in intervals:\n        if start >= prev_end:\n            prev_end = end\n        else:\n            removed += 1\n    return removed',
+      note: 'Always keep the interval that ends first — it leaves the most room for everything after. The classic exchange-argument greedy.',
+    },
+  ],
+  'py-min-meeting-rooms': [
+    {
+      name: 'Count overlaps at each start',
+      complexity: 'O(n²) time, O(1) space',
+      code: 'def min_meeting_rooms(intervals):\n    best = 0\n    for a in intervals:\n        rooms = 0\n        for b in intervals:\n            if b[0] <= a[0] < b[1]:\n                rooms += 1\n        best = max(best, rooms)\n    return best',
+      note: 'Peak occupancy happens at some meeting start — count how many meetings are live at each one.',
+    },
+    {
+      name: 'Two sorted sweeps',
+      complexity: 'O(n log n) time, O(n) space',
+      code: 'def min_meeting_rooms(intervals):\n    if not intervals:\n        return 0\n    starts = sorted(i[0] for i in intervals)\n    ends = sorted(i[1] for i in intervals)\n    rooms = 0\n    best = 0\n    e = 0\n    for s in starts:\n        if s < ends[e]:\n            rooms += 1\n            best = max(best, rooms)\n        else:\n            e += 1\n    return best',
+      note: 'Sort starts and ends separately and walk them together: a start before the next end needs a new room; otherwise one just freed up. You never need to know WHICH meeting — only the counts.',
+    },
+  ],
+
   // ── dynamic programming: memoized recursion -> the tight loop ────────────
   'py-climbing-stairs': [
     {
