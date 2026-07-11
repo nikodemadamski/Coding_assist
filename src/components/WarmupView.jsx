@@ -30,6 +30,7 @@ export default function WarmupView({ progress, onResult, onExit }) {
   const endedRef = useRef(false);
 
   const levelDef = WARMUP_LEVELS.find((l) => l.key === level);
+  const [track, setTrack] = useState('python');
   const limitMs = (levelDef?.seconds ?? 0) * 1000;
   const running = level && !result;
   const item = queue[idx];
@@ -81,7 +82,7 @@ export default function WarmupView({ progress, onResult, onExit }) {
 
   function submit() {
     if (!input.trim() || !item) return; // a stray Enter shouldn't end the run
-    if (checkAnswer(item, input)) {
+    if (checkAnswer(item, input, { foldCase: levelDef?.track === 'sql' })) {
       const ms = Date.now() - qStartRef.current;
       setCorrect((c) => [...c, { prompt: item.prompt, answer: item.answer, ms }]);
       setInput('');
@@ -101,21 +102,29 @@ export default function WarmupView({ progress, onResult, onExit }) {
       <div className="stats warmup">
         <h1>Warm-up</h1>
         <p className="wu-intro">
-          Like stretching before the gym: quick one-line Python drills to get the brain juices
-          flowing. Type the answer, hit Enter, beat the clock. One mistake — or one expired
-          timer — ends the run. How far down the 50 can you get?
+          Like stretching before the gym: quick one-line drills to get the brain juices
+          flowing. Pick a track, type the answer, hit Enter, beat the clock. One mistake — or
+          one expired timer — ends the run. How far down the 50 can you get?
         </p>
         <div className="wu-tracks" role="group" aria-label="Warm-up track">
-          <span className="chip active">python</span>
+          <button
+            className={`chip ${track === 'python' ? 'active' : ''}`}
+            onClick={() => setTrack('python')}
+          >
+            python
+          </button>
+          <button
+            className={`chip ${track === 'sql' ? 'active' : ''}`}
+            onClick={() => setTrack('sql')}
+          >
+            sql
+          </button>
           <span className="chip disabled" title="Coming soon">
             pandas · soon
           </span>
-          <span className="chip disabled" title="Coming soon">
-            sql · soon
-          </span>
         </div>
         <div className="wu-levels">
-          {WARMUP_LEVELS.map((l) => {
+          {WARMUP_LEVELS.filter((l) => l.track === track).map((l) => {
             const best = progress.warmup?.[l.key]?.best ?? 0;
             const runs = progress.warmup?.[l.key]?.runs ?? 0;
             return (
@@ -158,7 +167,7 @@ export default function WarmupView({ progress, onResult, onExit }) {
 
     return (
       <div className="stats warmup">
-        <h1>Warm-up — {levelDef.label}</h1>
+        <h1>Warm-up — {levelDef.track === 'sql' ? 'SQL ' : ''}{levelDef.label}</h1>
         {result.reason === 'finished' && (
           <div className="solved-banner">Perfect run — all {total} answered. Fully warm.</div>
         )}

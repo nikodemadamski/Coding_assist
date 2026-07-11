@@ -1,6 +1,6 @@
 // Warm-up bank gate: 50 questions per level, unique prompts, every accepted
 // answer passes its own checker, the normalizer is quote/whitespace-forgiving
-// but not sloppy — and every single answer compiles as real Python.
+// but not sloppy — every python answer compiles, every SQL answer executes.
 import './proxy-shim.mjs';
 import { WARMUP_SETS, WARMUP_LEVELS, checkAnswer, normalizeAnswer } from '../src/data/warmups.js';
 
@@ -13,15 +13,25 @@ const check = (cond, label, detail = '') => {
 console.log('Warm-up tests\n');
 
 // ---- bank shape ----
+const foldOf = (level) => ({ foldCase: level.track === 'sql' });
 for (const level of WARMUP_LEVELS) {
   const set = WARMUP_SETS[level.key];
   check(set?.length === 50, `${level.key}: exactly 50 questions (${set?.length})`);
   const prompts = new Set(set.map((i) => i.prompt));
   check(prompts.size === set.length, `${level.key}: no duplicate prompts`);
-  const canonicals = set.filter((i) => checkAnswer(i, i.answer)).length;
+  const canonicals = set.filter((i) => checkAnswer(i, i.answer, foldOf(level))).length;
   check(canonicals === set.length, `${level.key}: every canonical answer passes its own check`);
-  const badAccept = set.flatMap((i) => (i.accept ?? []).filter((a) => !checkAnswer(i, a)));
+  const badAccept = set.flatMap((i) => (i.accept ?? []).filter((a) => !checkAnswer(i, a, foldOf(level))));
   check(badAccept.length === 0, `${level.key}: every accept variant passes`, badAccept.join(' | '));
+}
+
+// ---- SQL case folding ----
+{
+  const item = { prompt: '', answer: 'select name from crew' };
+  check(checkAnswer(item, 'SELECT name FROM crew', { foldCase: true }), 'SQL keywords are case-insensitive');
+  check(!checkAnswer(item, 'SELECT NAME FROM CREW', { foldCase: false }), 'python stays case-sensitive');
+  const lit = { prompt: '', answer: "select * from crew where name = 'zoro'" };
+  check(!checkAnswer(lit, "SELECT * FROM crew WHERE name = 'ZORO'", { foldCase: true }), 'case inside SQL string literals still matters');
 }
 
 // ---- normalizer behaviour ----
@@ -74,7 +84,7 @@ const compiles = (code) => {
   return pyodide.runPython('__import__("builtins").compile(_wrapped, "<warmup>", "exec") and True');
 };
 
-for (const level of WARMUP_LEVELS) {
+for (const level of WARMUP_LEVELS.filter((l) => l.track === 'python')) {
   const bad = [];
   for (const item of WARMUP_SETS[level.key]) {
     for (const ans of [item.answer, ...(item.accept ?? [])]) {
@@ -88,6 +98,30 @@ for (const level of WARMUP_LEVELS) {
   check(bad.length === 0, `${level.key}: every answer compiles as Python`, bad.slice(0, 3).join(' | '));
 }
 
+// ---- every SQL answer executes against the warm-up schema ----
+{
+  const initSqlJs = (await import('sql.js')).default;
+  const { WARMUP_SQL_SCHEMA } = await import('../src/data/warmups-sql.js');
+  const SQL = await initSqlJs();
+  for (const level of WARMUP_LEVELS.filter((l) => l.track === 'sql')) {
+    const bad = [];
+    for (const item of WARMUP_SETS[level.key]) {
+      for (const ans of [item.answer, ...(item.accept ?? [])]) {
+        const db = new SQL.Database();
+        try {
+          db.run(WARMUP_SQL_SCHEMA);
+          db.exec(ans);
+        } catch (err) {
+          bad.push(`${ans}  (${String(err).split('\n')[0]})`);
+        } finally {
+          db.close();
+        }
+      }
+    }
+    check(bad.length === 0, `${level.key}: every answer executes as real SQLite`, bad.slice(0, 3).join(' | '));
+  }
+}
+
 // ---- no two questions in a level collide after normalization ----
 // (a shuffled run must never show a prompt whose accepted answer also
 // satisfies a different prompt's canonical answer exactly)
@@ -96,7 +130,7 @@ for (const level of WARMUP_LEVELS) {
   const collisions = [];
   for (let i = 0; i < set.length; i++) {
     for (let j = 0; j < set.length; j++) {
-      if (i !== j && checkAnswer(set[j], set[i].answer)) {
+      if (i !== j && checkAnswer(set[j], set[i].answer, foldOf(level))) {
         collisions.push(`"${set[i].answer}" also answers "${set[j].prompt}"`);
       }
     }

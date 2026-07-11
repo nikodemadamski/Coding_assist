@@ -879,6 +879,32 @@ try {
     (await page.locator('.wu-level-card', { hasText: 'Beginner' }).innerText()).includes('best 3/50'),
     'best streak persists on the level card'
   );
+
+  // ---- SQL warm-up track ----
+  await page.locator('.wu-tracks button', { hasText: 'sql' }).click();
+  check((await page.locator('.wu-level-card').count()) === 3, 'sql track offers 3 levels');
+  check(
+    (await page.locator('.wu-level-card').first().innerText()).includes('50 questions'),
+    'sql levels carry a full 50-question bank'
+  );
+  await page.locator('.wu-level-card', { hasText: 'Beginner' }).click();
+  await page.locator('.wu-prompt').waitFor({ timeout: 10000 });
+  {
+    const prompt = (await page.locator('.wu-prompt').innerText()).trim();
+    const wuItem = WARMUP_SETS['sql-beginner'].find((it) => it.prompt === prompt);
+    check(!!wuItem, 'sql warm-up question comes from the sql bank');
+    // type it in UPPERCASE: SQL answers must be case-insensitive outside quotes
+    await page.fill('.wu-input', wuItem.answer.toUpperCase());
+    await page.keyboard.press('Enter');
+    check(
+      (await page.locator('.wu-run-streak').innerText()).includes('1'),
+      'an UPPERCASE answer is accepted — SQL checking folds case'
+    );
+  }
+  await page.fill('.wu-input', 'select definitely wrong');
+  await page.keyboard.press('Enter');
+  await page.locator('.wu-miss').waitFor({ timeout: 5000 });
+  await page.locator('button', { hasText: 'Change level' }).click();
   await page.locator('button', { hasText: '← Back to the dojo' }).click();
 
   // ---- mock interview: timed, hints locked, debrief ----

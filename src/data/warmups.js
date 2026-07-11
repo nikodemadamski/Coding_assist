@@ -5,31 +5,57 @@
 // whitespace (outside string literals) and quote style, so `x=[]`, `x = []`
 // and "double quotes" all count.
 
+import { WARMUP_SQL_SETS } from './warmups-sql.js';
+
 export const WARMUP_LEVELS = [
   {
     key: 'beginner',
+    track: 'python',
     label: 'Beginner',
     blurb: 'The absolute basics — lists, dicts, loops, ifs. Start here if Python is new.',
     seconds: 20,
   },
   {
     key: 'intermediate',
+    track: 'python',
     label: 'Intermediate',
     blurb: 'Comprehensions, slices, enumerate/zip, dict tricks — the everyday toolbox.',
     seconds: 15,
   },
   {
     key: 'hard',
+    track: 'python',
     label: 'Hard',
     blurb: 'Interview idioms — heaps, deques, lambdas as keys, unpacking, walrus.',
     seconds: 10,
+  },
+  {
+    key: 'sql-beginner',
+    track: 'sql',
+    label: 'Beginner',
+    blurb: 'SELECT, WHERE, ORDER BY, LIMIT — reading tables without thinking.',
+    seconds: 25,
+  },
+  {
+    key: 'sql-intermediate',
+    track: 'sql',
+    label: 'Intermediate',
+    blurb: 'Aggregates, GROUP BY/HAVING, joins, CASE WHEN — the everyday query kit.',
+    seconds: 20,
+  },
+  {
+    key: 'sql-hard',
+    track: 'sql',
+    label: 'Hard',
+    blurb: 'Window functions, CTEs, anti-joins, correlated subqueries — interview SQL.',
+    seconds: 15,
   },
 ];
 
 // Collapse a typed answer to a canonical form: drop all whitespace OUTSIDE
 // string literals (spaces inside quotes are meaningful — ' '.join!), and
 // normalize both quote styles to single quotes.
-export function normalizeAnswer(text) {
+export function normalizeAnswer(text, { foldCase = false } = {}) {
   let out = '';
   let quote = null;
   for (const ch of String(text)) {
@@ -38,22 +64,24 @@ export function normalizeAnswer(text) {
         out += "'";
         quote = null;
       } else {
-        out += ch;
+        out += ch; // inside quotes: case and spaces are meaningful
       }
     } else if (ch === "'" || ch === '"') {
       quote = ch;
       out += "'";
     } else if (!/\s/.test(ch)) {
-      out += ch;
+      out += foldCase ? ch.toLowerCase() : ch;
     }
   }
   return out;
 }
 
-export function checkAnswer(item, input) {
-  const typed = normalizeAnswer(input);
+// SQL keywords are case-insensitive outside string literals; Python is not.
+export function checkAnswer(item, input, { foldCase = false } = {}) {
+  const opts = { foldCase };
+  const typed = normalizeAnswer(input, opts);
   if (!typed) return false;
-  return [item.answer, ...(item.accept ?? [])].some((a) => normalizeAnswer(a) === typed);
+  return [item.answer, ...(item.accept ?? [])].some((a) => normalizeAnswer(a, opts) === typed);
 }
 
 const q = (prompt, answer, ...accept) => ({ prompt, answer, accept });
@@ -215,4 +243,5 @@ export const WARMUP_SETS = {
     q('Sort words alphabetically, ignoring case', 'sorted(words, key=str.lower)'),
     q('First line of a while loop that runs while the deque dq is non-empty', 'while dq:', 'while len(dq) > 0:', 'while len(dq):'),
   ],
+  ...WARMUP_SQL_SETS,
 };
