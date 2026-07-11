@@ -122,6 +122,220 @@ export const APPROACHES = {
     },
   ],
 
+  // ── linked list (value arrays here; notes name the real-node version) ────
+  'py-merge-sorted-lists': [
+    {
+      name: 'Concatenate and sort',
+      complexity: 'O((n + m) log(n + m)) time, O(n + m) space',
+      code: 'def merge_sorted_lists(a, b):\n    return sorted(a + b)',
+      note: 'Throws away the one thing you were given — both inputs are already sorted.',
+    },
+    {
+      name: 'Two-pointer merge',
+      complexity: 'O(n + m) time, O(1) extra space',
+      code: 'def merge_sorted_lists(a, b):\n    out = []\n    i = j = 0\n    while i < len(a) and j < len(b):\n        if a[i] <= b[j]:\n            out.append(a[i])\n            i += 1\n        else:\n            out.append(b[j])\n            j += 1\n    out.extend(a[i:])\n    out.extend(b[j:])\n    return out',
+      note: 'Always take the smaller head — the merge step of merge sort. On real ListNodes you splice pointers instead of appending, which is where the O(1) space comes from.',
+    },
+  ],
+  'py-reverse-list': [
+    {
+      name: 'Recursive',
+      complexity: 'O(n) recursion depth — the slices make it O(n²) on arrays',
+      code: 'def reverse_list(vals):\n    if not vals:\n        return []\n    return reverse_list(vals[1:]) + [vals[0]]',
+      note: 'Reverse the rest, put the head at the end. Elegant, but every call slices a copy and recursion costs stack.',
+    },
+    {
+      name: 'Pointer flip',
+      complexity: 'O(n) time, O(1) space',
+      code: 'def reverse_list(vals):\n    return vals[::-1]',
+      note: 'On real ListNodes this is the prev/cur/next loop — flip each .next as you walk, three variables, no extra memory. Practice writing that loop until it is automatic.',
+    },
+  ],
+  'py-reorder-list': [
+    {
+      name: 'Deque: alternate ends',
+      complexity: 'O(n) time, O(n) space',
+      code: 'def reorder_list(vals):\n    dq = deque(vals)\n    out = []\n    while dq:\n        out.append(dq.popleft())\n        if dq:\n            out.append(dq.pop())\n    return out',
+      note: 'Take from the front, then the back, alternating. Clear, but needs the whole list copied into a deque.',
+    },
+    {
+      name: 'Two indices walking inward',
+      complexity: 'O(n) time, O(1) space',
+      code: 'def reorder_list(vals):\n    out = []\n    lo, hi = 0, len(vals) - 1\n    take_front = True\n    while lo <= hi:\n        if take_front:\n            out.append(vals[lo])\n            lo += 1\n        else:\n            out.append(vals[hi])\n            hi -= 1\n        take_front = not take_front\n    return out',
+      note: 'On real ListNodes the same idea is: find the middle (slow/fast), reverse the second half, interleave — the three-step combo interviewers want to see.',
+    },
+  ],
+  'py-remove-nth-end': [
+    {
+      name: 'Two passes: count, then cut',
+      complexity: 'O(n) time, O(1) space — two passes',
+      code: 'def remove_nth_from_end(vals, n):\n    idx = len(vals) - n\n    return vals[:idx] + vals[idx + 1:]',
+      note: 'Measure the length first, then the target is position len − n. Two walks over the data.',
+    },
+    {
+      name: 'One pass: two pointers n apart',
+      complexity: 'O(n) time, O(1) space',
+      code: 'def remove_nth_from_end(vals, n):\n    lead = n\n    trail = 0\n    while lead < len(vals):\n        lead += 1\n        trail += 1\n    return vals[:trail] + vals[trail + 1:]',
+      note: 'Send the lead pointer n steps ahead; when it falls off the end, the trailing pointer stands on the node to delete. One walk, no length needed.',
+    },
+  ],
+  'py-add-two-numbers': [
+    {
+      name: 'Convert to ints and back',
+      complexity: 'O(n + m) time, O(n + m) space',
+      code: 'def add_two_numbers(a, b):\n    x = int("".join(map(str, reversed(a))))\n    y = int("".join(map(str, reversed(b))))\n    return [int(d) for d in str(x + y)][::-1]',
+      note: 'Works because Python ints are unbounded — say that out loud, because in most languages (and with real ListNodes) this overflows and you must carry.',
+    },
+    {
+      name: 'Digit-by-digit with carry',
+      complexity: 'O(max(n, m)) time, O(max(n, m)) space',
+      code: 'def add_two_numbers(a, b):\n    out = []\n    carry = 0\n    i = 0\n    while i < len(a) or i < len(b) or carry:\n        s = carry\n        if i < len(a):\n            s += a[i]\n        if i < len(b):\n            s += b[i]\n        out.append(s % 10)\n        carry = s // 10\n        i += 1\n    return out',
+      note: 'Grade-school addition: sum the digits, keep s % 10, carry s // 10. The while condition including `carry` handles the final 1 for free.',
+    },
+  ],
+  'py-merge-k-lists': [
+    {
+      name: 'Flatten and sort',
+      complexity: 'O(N log N) time, O(N) space',
+      code: 'def merge_k_lists(lists):\n    out = []\n    for lst in lists:\n        out.extend(lst)\n    return sorted(out)',
+      note: 'Dump everything into one list and sort. Ignores that each list is already sorted — that order is worth a log factor.',
+    },
+    {
+      name: 'Min-heap of list heads',
+      complexity: 'O(N log k) time — N total nodes, k lists; O(k) space',
+      code: 'def merge_k_lists(lists):\n    heap = []\n    for i, lst in enumerate(lists):\n        if lst:\n            heapq.heappush(heap, (lst[0], i, 0))\n    out = []\n    while heap:\n        val, i, j = heapq.heappop(heap)\n        out.append(val)\n        if j + 1 < len(lists[i]):\n            heapq.heappush(heap, (lists[i][j + 1], i, j + 1))\n    return out',
+      note: 'Only k candidates can be the next smallest — one head per list. A heap hands you the winner in log k instead of log N.',
+    },
+  ],
+
+  // ── trees (encoded [value, left, right], None = empty) ───────────────────
+  'py-max-depth-tree': [
+    {
+      name: 'BFS: count the levels',
+      complexity: 'O(n) time, O(w) space — w = widest level',
+      code: 'def max_depth(tree):\n    if tree is None:\n        return 0\n    depth = 0\n    level = [tree]\n    while level:\n        depth += 1\n        level = [kid for node in level for kid in (node[1], node[2]) if kid is not None]\n    return depth',
+      note: 'Peel the tree one level at a time and count the peels.',
+    },
+    {
+      name: 'One-line recursion',
+      complexity: 'O(n) time, O(h) space — h = tree height',
+      code: 'def max_depth(tree):\n    if tree is None:\n        return 0\n    return 1 + max(max_depth(tree[1]), max_depth(tree[2]))',
+      note: 'The tree-recursion template: answer at a node = combine(answers of children) — this shape solves half the tree category.',
+    },
+  ],
+  'py-invert-tree': [
+    {
+      name: 'BFS: swap with a queue',
+      complexity: 'O(n) time, O(w) space',
+      code: 'def invert_tree(tree):\n    def copy(node):\n        if node is None:\n            return None\n        return [node[0], copy(node[1]), copy(node[2])]\n    root = copy(tree)\n    if root is None:\n        return None\n    queue = deque([root])\n    while queue:\n        node = queue.popleft()\n        node[1], node[2] = node[2], node[1]\n        for kid in (node[1], node[2]):\n            if kid is not None:\n                queue.append(kid)\n    return root',
+      note: 'Visit every node, swap its children. The queue version proves you do not NEED recursion — but look how much shorter the recursive one is.',
+    },
+    {
+      name: 'Recursive swap',
+      complexity: 'O(n) time, O(h) space',
+      code: 'def invert_tree(tree):\n    if tree is None:\n        return None\n    return [tree[0], invert_tree(tree[2]), invert_tree(tree[1])]',
+      note: 'Build each node with its children inverted and swapped. Three lines — the famous "Homebrew author" interview question.',
+    },
+  ],
+  'py-same-tree': [
+    {
+      name: 'BFS: compare in lockstep',
+      complexity: 'O(n) time, O(w) space',
+      code: 'def same_tree(p, q):\n    queue = deque([(p, q)])\n    while queue:\n        a, b = queue.popleft()\n        if a is None and b is None:\n            continue\n        if a is None or b is None or a[0] != b[0]:\n            return False\n        queue.append((a[1], b[1]))\n        queue.append((a[2], b[2]))\n    return True',
+      note: 'Walk both trees together, pair by pair; any mismatch ends it.',
+    },
+    {
+      name: 'Recursive compare',
+      complexity: 'O(n) time, O(h) space',
+      code: 'def same_tree(p, q):\n    if p is None and q is None:\n        return True\n    if p is None or q is None or p[0] != q[0]:\n        return False\n    return same_tree(p[1], q[1]) and same_tree(p[2], q[2])',
+      note: 'Same value here, same left subtrees, same right subtrees. The base cases carry all the logic.',
+    },
+  ],
+  'py-validate-bst': [
+    {
+      name: 'Inorder must come out sorted',
+      complexity: 'O(n) time, O(n) space',
+      code: 'def is_valid_bst(tree):\n    order = []\n    def inorder(node):\n        if node is None:\n            return\n        inorder(node[1])\n        order.append(node[0])\n        inorder(node[2])\n    inorder(tree)\n    return all(a < b for a, b in zip(order, order[1:]))',
+      note: 'A BST inorder traversal is strictly increasing — collect it and check. Costs a full O(n) list.',
+    },
+    {
+      name: 'Pass down (lo, hi) bounds',
+      complexity: 'O(n) time, O(h) space',
+      code: 'def is_valid_bst(tree):\n    def check(node, lo, hi):\n        if node is None:\n            return True\n        v = node[0]\n        if not (lo < v < hi):\n            return False\n        return check(node[1], lo, v) and check(node[2], v, hi)\n    return check(tree, float("-inf"), float("inf"))',
+      note: 'The classic trap is checking only parent vs child. Every node must respect bounds inherited from ALL ancestors — carry them down.',
+    },
+  ],
+  'py-tree-diameter': [
+    {
+      name: 'Height per node, separately',
+      complexity: 'O(n²) time, O(h) space',
+      code: 'def diameter(tree):\n    def height(node):\n        if node is None:\n            return 0\n        return 1 + max(height(node[1]), height(node[2]))\n    def walk(node):\n        if node is None:\n            return 0\n        through = height(node[1]) + height(node[2])\n        return max(through, walk(node[1]), walk(node[2]))\n    return walk(tree)',
+      note: 'The longest path through a node is left height + right height. Recomputing heights at every node repeats work all the way down.',
+    },
+    {
+      name: 'One post-order pass',
+      complexity: 'O(n) time, O(h) space',
+      code: 'def diameter(tree):\n    best = 0\n    def height(node):\n        nonlocal best\n        if node is None:\n            return 0\n        lh = height(node[1])\n        rh = height(node[2])\n        best = max(best, lh + rh)\n        return 1 + max(lh, rh)\n    height(tree)\n    return best',
+      note: 'Compute height once per node and update the diameter as a side effect on the way back up — the "return one thing, track another" trick shows up all over tree problems.',
+    },
+  ],
+  'py-level-order': [
+    {
+      name: 'Recursion with a depth index',
+      complexity: 'O(n) time, O(n) space',
+      code: 'def level_order(tree):\n    levels = []\n    def walk(node, d):\n        if node is None:\n            return\n        if d == len(levels):\n            levels.append([])\n        levels[d].append(node[0])\n        walk(node[1], d + 1)\n        walk(node[2], d + 1)\n    walk(tree, 0)\n    return levels',
+      note: 'DFS can fake BFS: carry the depth and file each value into its level bucket.',
+    },
+    {
+      name: 'BFS queue',
+      complexity: 'O(n) time, O(n) space',
+      code: 'def level_order(tree):\n    if tree is None:\n        return []\n    levels = []\n    queue = deque([tree])\n    while queue:\n        row = []\n        for _ in range(len(queue)):\n            node = queue.popleft()\n            row.append(node[0])\n            for kid in (node[1], node[2]):\n                if kid is not None:\n                    queue.append(kid)\n        levels.append(row)\n    return levels',
+      note: 'The canonical version: snapshot the queue length so each while-iteration drains exactly one level.',
+    },
+  ],
+  'py-subtree': [
+    {
+      name: 'Match at every node',
+      complexity: 'O(n·m) time, O(h) space',
+      code: 'def is_subtree(root, sub):\n    def same(a, b):\n        if a is None and b is None:\n            return True\n        if a is None or b is None or a[0] != b[0]:\n            return False\n        return same(a[1], b[1]) and same(a[2], b[2])\n    def walk(node):\n        if node is None:\n            return sub is None\n        if same(node, sub):\n            return True\n        return walk(node[1]) or walk(node[2])\n    return walk(root)',
+      note: 'Try a full same-tree comparison rooted at every node. Worst case each of n nodes pays an m-node check.',
+    },
+    {
+      name: 'Serialize with null markers + substring',
+      complexity: 'O(n + m) time, O(n + m) space — serialize with null markers',
+      code: 'def is_subtree(root, sub):\n    def ser(node):\n        if node is None:\n            return "#"\n        return "[" + str(node[0]) + "," + ser(node[1]) + "," + ser(node[2]) + "]"\n    return ser(sub) in ser(root)',
+      note: 'A bracketed serialization with explicit null markers makes every subtree a unique substring — tree containment becomes string containment.',
+    },
+  ],
+  'py-kth-smallest-bst': [
+    {
+      name: 'Full inorder, then index',
+      complexity: 'O(n) time, O(n) space',
+      code: 'def kth_smallest(tree, k):\n    order = []\n    def inorder(node):\n        if node is None:\n            return\n        inorder(node[1])\n        order.append(node[0])\n        inorder(node[2])\n    inorder(tree)\n    return order[k - 1]',
+      note: 'Inorder gives the sorted order; take element k−1. Simple, but traverses everything even when k = 1.',
+    },
+    {
+      name: 'Iterative inorder, stop at k',
+      complexity: 'O(h + k) time, O(h) space',
+      code: 'def kth_smallest(tree, k):\n    stack = []\n    node = tree\n    while True:\n        while node is not None:\n            stack.append(node)\n            node = node[1]\n        node = stack.pop()\n        k -= 1\n        if k == 0:\n            return node[0]\n        node = node[2]',
+      note: 'Drive the inorder traversal by hand with a stack and bail the moment the k-th value pops — no wasted visits.',
+    },
+  ],
+  'py-lca-bst': [
+    {
+      name: 'Generic LCA (ignores the BST)',
+      complexity: 'O(n) time, O(h) space',
+      code: 'def lca_bst(root, p, q):\n    def path(node, target):\n        if node is None:\n            return None\n        if node[0] == target:\n            return [node[0]]\n        for kid in (node[1], node[2]):\n            rest = path(kid, target)\n            if rest is not None:\n                return [node[0]] + rest\n    pa, pb = path(root, p), path(root, q)\n    ans = pa[0]\n    for a, b in zip(pa, pb):\n        if a == b:\n            ans = a\n    return ans',
+      note: 'Find the root-to-node path for each and take the last common entry. Works on any tree — which means it wastes the BST ordering.',
+    },
+    {
+      name: 'Walk down using the ordering',
+      complexity: 'O(h) time, O(1) space',
+      code: 'def lca_bst(root, p, q):\n    node = root\n    while node:\n        if p < node[0] and q < node[0]:\n            node = node[1]\n        elif p > node[0] and q > node[0]:\n            node = node[2]\n        else:\n            return node[0]',
+      note: 'The first node where p and q fall on different sides (or one equals it) IS the split point — the BST tells you which way to walk.',
+    },
+  ],
+
   // ── binary search ────────────────────────────────────────────────────────
   'py-binary-search': [
     {

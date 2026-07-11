@@ -58,7 +58,7 @@ export const COMPLEXITY = {
   'py-validate-bst': 'O(n) time, O(h) space',
   'py-tree-diameter': 'O(n) time, O(h) space',
   'py-level-order': 'O(n) time, O(n) space',
-  'py-subtree': 'O(n·m) time, O(h) space',
+  'py-subtree': 'O(n + m) time, O(n + m) space — serialize with null markers',
   'py-kth-smallest-bst': 'O(h + k) time, O(h) space',
   'py-lca-bst': 'O(h) time, O(1) space',
   'py-max-path-sum': 'O(n) time, O(h) space',
