@@ -7,7 +7,7 @@ walkthroughs, and a real in-browser code runner.
 Read a problem → write code in the browser → run tests → submit → get it graded → track
 mastery with spaced repetition. The learning loop is built around how you actually learn:
 
-- **A 135-step ordered path** covering essentially all of NeetCode-150 that fits an
+- **A 147-step ordered path** covering essentially all of NeetCode-150 that fits an
   in-browser runner. Every question has a step number, laid out in true teaching order:
   Python warm-ups → hashing → two pointers → windows → stack → binary search → pandas →
   SQL → linked lists → trees → tries → heaps → backtracking → graphs → DP → greedy →
@@ -87,7 +87,7 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
 
 ### Staying on pace for a Google / Anthropic loop
 
-- **120+ verified questions** across the full NeetCode-150 roadmap: arrays & hashing, two
+- **147 verified questions** across the full NeetCode-150 roadmap: arrays & hashing, two
   pointers, sliding window, stack, binary search, linked list, trees, tries, heap,
   backtracking, graphs, dynamic programming, greedy, intervals, math & geometry, and bit
   manipulation — plus pandas and SQL. The Browse list is ordered as a **syllabus**,
@@ -174,7 +174,7 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
   **A− / A+** — both remembered across sessions.
 - **Big-O check on every solve**: the moment your code passes, the interviewer's
   favourite follow-up appears — "what's the time complexity?" One tap from six buckets,
-  instant verdict against the model solution's bound. All 135 questions now carry a
+  instant verdict against the model solution's bound. All 147 questions now carry a
   verified complexity string (written against the actual reference code), so the mock
   debrief always has a reference too. Grid-style bounds like O(m·n) are revealed rather
   than graded — no misleading verdicts.
