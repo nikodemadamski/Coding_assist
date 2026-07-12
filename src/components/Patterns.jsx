@@ -19,6 +19,17 @@ export default function Patterns({ questions, progress, onOpenQuestion, onQuiz, 
     return m;
   }, [questions]);
 
+  // Algorithm cards link problems via their roadmap category; data-track
+  // cards list the raw question patterns they teach.
+  const probsOf = (p) =>
+    p.patterns ? questions.filter((q) => p.patterns.includes(q.pattern)) : byPattern.get(p.key) || [];
+
+  const sections = [
+    { label: 'Algorithms', cards: PATTERN_GUIDE.filter((p) => !p.track) },
+    { label: 'pandas', cards: PATTERN_GUIDE.filter((p) => p.track === 'pandas') },
+    { label: 'SQL', cards: PATTERN_GUIDE.filter((p) => p.track === 'sql') },
+  ];
+
   return (
     <div className="stats patterns">
       <h1>Patterns — the templates you must know</h1>
@@ -33,9 +44,12 @@ export default function Patterns({ questions, progress, onOpenQuestion, onQuiz, 
         </button>
       )}
 
+      {sections.map((section) => (
+      <div className="pattern-section" key={section.label}>
+        <h2 className="pattern-section-head">{section.label}</h2>
       <div className="pattern-cards">
-        {PATTERN_GUIDE.map((p) => {
-          const probs = byPattern.get(p.key) || [];
+        {section.cards.map((p) => {
+          const probs = probsOf(p);
           const solved = probs.filter((q) => isSolved(progress.solved[q.id])).length;
           const isOpen = open === p.key;
           return (
@@ -99,6 +113,8 @@ export default function Patterns({ questions, progress, onOpenQuestion, onQuiz, 
           );
         })}
       </div>
+      </div>
+      ))}
     </div>
   );
 }

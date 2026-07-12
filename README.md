@@ -127,11 +127,14 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
   scales to fit any screen, phone included. Clicking a topic pops up its question list;
   click any question to open it. The daily loop (reviews due, Continue the path, Warm-up,
   Drill) sits right on top. The classic list view lives in the **📋 Browse** tab.
-- **🧩 Patterns reference** (header): the "templates you must know" cheat-sheet. One card per
-  algorithm pattern — how to *recognise* it, the recognition cues, the reusable code skeleton,
-  its complexity, and links to the problems in your bank that drill it. Every template is
-  machine-checked to be valid Python syntax. The Stuck ladder's "which pattern is this?" rung
-  links straight here.
+- **🧩 Patterns reference** (header): the "templates you must know" cheat-sheet, in three
+  sections — 16 algorithm patterns plus 5 pandas and 5 SQL template cards (boolean masks,
+  groupby-vs-transform, merges, conditional aggregation, anti-joins, window functions…).
+  Each card: how to *recognise* it, the recognition cues, the reusable code skeleton, its
+  complexity, and links to the problems in your bank that drill it. Python and pandas
+  templates are machine-checked to be valid Python syntax, and the pattern quiz draws from
+  all three tracks with same-track options only. The Stuck ladder's "which pattern is
+  this?" rung links straight here — for SQL and pandas problems too.
 - **📝 Personal notes — "note to future you"**: every problem has an auto-saving notebook
   ("what tripped me, what's the key idea"). The payoff is at review time: when spaced
   repetition brings the question back and you solve it, **your past note resurfaces** right

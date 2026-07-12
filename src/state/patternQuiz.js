@@ -1,25 +1,26 @@
 // Pure helpers for the pattern-recognition quiz. Kept out of the component so
 // the option-building logic is unit-testable.
 import { shuffle } from './progress.js';
-import { PATTERN_GUIDE } from '../data/patternGuide.js';
-import { categoryKeyOf } from '../data/roadmap.js';
+import { PATTERN_GUIDE, guideKeyOf } from '../data/patternGuide.js';
 
-const QUIZ_KEYS = PATTERN_GUIDE.map((p) => p.key);
 const NAME_BY_KEY = Object.fromEntries(PATTERN_GUIDE.map((p) => [p.key, p.name]));
+// Algorithm cards carry no track field; data cards say 'pandas' | 'sql'.
+const TRACK_BY_KEY = Object.fromEntries(PATTERN_GUIDE.map((p) => [p.key, p.track ?? 'python']));
 
-// A question qualifies if its pattern maps to a category the Patterns page
-// actually teaches (so the correct answer is always a real option).
+// A question qualifies if some guide card actually teaches its pattern (so
+// the correct answer is always a real option). All three tracks play.
 export function isQuizzable(question) {
-  return question.track === 'python' && QUIZ_KEYS.includes(categoryKeyOf(question.pattern));
+  return guideKeyOf(question) !== null;
 }
 
-// Build one quiz item: the correct pattern plus 3 distractors, shuffled.
+// Build one quiz item: the correct pattern plus 3 distractors from the SAME
+// track (an SQL question with algorithm distractors would answer itself).
 export function buildQuizItem(question, seed = (Math.random() * 2 ** 32) >>> 0) {
-  const correctKey = categoryKeyOf(question.pattern);
-  const distractors = shuffle(
-    QUIZ_KEYS.filter((k) => k !== correctKey),
-    seed
-  ).slice(0, 3);
+  const correctKey = guideKeyOf(question);
+  const sameTrack = PATTERN_GUIDE.map((p) => p.key).filter(
+    (k) => k !== correctKey && TRACK_BY_KEY[k] === TRACK_BY_KEY[correctKey]
+  );
+  const distractors = shuffle(sameTrack, seed).slice(0, 3);
   const optionKeys = shuffle([correctKey, ...distractors], seed ^ 0x9e3779b9);
   return {
     id: question.id,

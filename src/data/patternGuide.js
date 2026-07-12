@@ -1,8 +1,10 @@
-// The interview "templates you must know" reference. For each algorithm
-// pattern: how to recognise it, the reusable code skeleton, and its typical
-// complexity. Keyed by roadmap category so the Patterns page can link straight
-// to the problems that drill each one. Templates are illustrative skeletons
-// (they parse as valid Python) — the point is the shape, not a runnable copy.
+// The interview "templates you must know" reference. For each pattern: how to
+// recognise it, the reusable code skeleton, and its typical complexity.
+// Algorithm cards are keyed by roadmap category; pandas/SQL cards carry
+// `track` and a `patterns` list of raw question patterns instead. Templates
+// are illustrative skeletons (python/pandas ones parse as valid Python) — the
+// point is the shape, not a runnable copy.
+import { categoryKeyOf } from './roadmap.js';
 
 export const PATTERN_GUIDE = [
   {
@@ -259,4 +261,177 @@ for row in matrix:
     row.reverse()
 # the general move: find the index formula, then shuffle values in place`,
   },
+
+  // ---- pandas track ----------------------------------------------------
+  // Data-track cards carry `track` and a `patterns` list of the raw question
+  // pattern keys they teach (the whole track shares one roadmap category, so
+  // the category key can't identify a card).
+  {
+    key: 'pd-select-filter',
+    track: 'pandas',
+    name: 'Select & filter',
+    when: 'You want a subset of rows or columns — the boolean mask is the whole game.',
+    cues: ['"rows where …"', 'combine conditions', 'pick these columns', 'isin / between / str.startswith'],
+    complexity: 'O(n) — one vectorized pass',
+    patterns: ['selection', 'filtering'],
+    template: `out = df[df['bounty'] > 500]              # mask: a boolean Series aligned to rows
+out = df[(df['a'] > 1) & (df['b'] == 'x')]  # AND/OR are & and | — parenthesize!
+out = df[df['role'].isin(wanted)]         # membership; ~mask negates
+out = df[['name', 'bounty']]              # double brackets -> DataFrame of columns
+out = out.reset_index(drop=True)          # tidy row labels after filtering`,
+  },
+  {
+    key: 'pd-sort-rank',
+    track: 'pandas',
+    name: 'Sort & top-N',
+    when: 'The answer is "the best K rows" or a required display order.',
+    cues: ['top / bottom N', 'sort by two keys', 'largest per …', 'rank with ties'],
+    complexity: 'O(n log n) — the sort dominates',
+    patterns: ['sorting'],
+    template: `out = df.sort_values('bounty', ascending=False)      # one key, biggest first
+out = df.sort_values(['role', 'bounty'],              # two keys,
+                     ascending=[True, False])         # each with its own direction
+top = df.nlargest(3, 'bounty')                        # faster than sort+head for top-N
+df['pos'] = df['bounty'].rank(method='dense', ascending=False)  # ties share, no gaps`,
+  },
+  {
+    key: 'pd-transform',
+    track: 'pandas',
+    name: 'Computed columns & reshaping',
+    when: 'You derive new columns from old ones, or the table is the wrong shape (wide vs long).',
+    cues: ['add a derived column', 'bin numbers into labels', 'wide -> long (melt)', 'rolling / cumulative'],
+    complexity: 'O(n) vectorized; O(n log n) when a sort is involved',
+    patterns: ['transform'],
+    template: `df['total'] = df['price'] * df['qty']            # arithmetic is column-at-a-time
+df['tier'] = pd.cut(df['bounty'], bins=bins, labels=labels)  # number -> bucket
+long = df.melt(id_vars='name',                   # wide -> long: columns become rows
+               var_name='stat', value_name='value')
+df['avg3'] = df['gold'].rolling(3, min_periods=1).mean()     # sort first — windows
+df['so_far'] = df['gold'].cumsum()                           # follow ROW order`,
+  },
+  {
+    key: 'pd-groupby',
+    track: 'pandas',
+    name: 'Group & aggregate',
+    when: 'A per-category number — or a per-row value that depends on the row’s whole group.',
+    cues: ['"per role / per crew"', 'count / mean by group', 'running total within group', 'group total on every row'],
+    complexity: 'O(n) to group; O(n log n) with sorting',
+    patterns: ['groupby'],
+    template: `per = df.groupby('role')['bounty'].mean()        # aggregate: one row PER GROUP
+per = df.groupby('role').agg(total=('bounty', 'sum'))        # named columns
+df['grp_sum'] = df.groupby('role')['bounty'].transform('sum')  # transform: keeps
+df['so_far'] = df.groupby('role')['gold'].cumsum()             # every row (window-like)
+grid = df.pivot_table(index='month', columns='region',       # groupby + unstack
+                      values='gold', aggfunc='sum', fill_value=0)`,
+  },
+  {
+    key: 'pd-join-missing',
+    track: 'pandas',
+    name: 'Merge & missing data',
+    when: 'Two tables must line up — and the holes (NaN) that joins or raw data create need a policy.',
+    cues: ['combine two DataFrames', 'keep everyone from the left', 'fill or drop NaN', 'latest row per key'],
+    complexity: 'O(n + m) with hash join',
+    patterns: ['merge', 'missing-data'],
+    template: `out = df.merge(ships, on='name')                 # inner: matches only
+out = df.merge(ships, on='name', how='left')     # left: keep every df row (NaN holes)
+out['ship'] = out['ship'].fillna('none')         # patch the manufactured NaNs
+out = out.dropna(subset=['bounty'])              # or drop rows missing a key field
+latest = df.sort_values('day').drop_duplicates('name', keep='last')  # 1 row per key`,
+  },
+
+  // ---- SQL track --------------------------------------------------------
+  {
+    key: 'sql-query-shape',
+    track: 'sql',
+    name: 'Query shape',
+    when: 'Plain reading: filter rows, order them deterministically, cut to N.',
+    cues: ['"first / top N rows"', 'WHERE conditions', 'deduplicate', 'sort by two keys'],
+    complexity: 'O(n log n) — the sort dominates',
+    patterns: ['select-where', 'order-limit'],
+    template: `SELECT DISTINCT sea, island     -- DISTINCT dedupes the whole row tuple
+FROM sightings
+WHERE sea = 'east'              -- filter BEFORE sort and cut
+  AND island IS NOT NULL        -- NULL never equals anything: use IS (NOT) NULL
+ORDER BY sea, island            -- multi-key = lexicographic; always order before
+LIMIT 4;                        -- LIMIT, or "top N" is nondeterministic`,
+  },
+  {
+    key: 'sql-aggregation',
+    track: 'sql',
+    name: 'GROUP BY & conditional aggregation',
+    when: 'One number per category — or several category counts pivoted onto one row.',
+    cues: ['count / sum per group', 'filter on an aggregate (HAVING)', 'wins AND losses in one row', 'rates from raw rows'],
+    complexity: 'O(n) scan + O(g log g) for g groups',
+    patterns: ['group-by', 'having'],
+    template: `SELECT dojo,
+       COUNT(*)                                        AS duels,
+       SUM(CASE WHEN result = 'win' THEN 1 ELSE 0 END) AS wins,   -- CASE inside the
+       AVG(CASE WHEN result = 'win' THEN 1.0 ELSE 0 END) AS rate  -- aggregate = pivot
+FROM duels
+GROUP BY dojo
+HAVING COUNT(*) >= 2;   -- WHERE filters rows; HAVING filters finished groups`,
+  },
+  {
+    key: 'sql-joins',
+    track: 'sql',
+    name: 'Joins',
+    when: 'The answer needs columns from two tables — or two rows of the same table.',
+    cues: ['combine two tables', '"everyone, even without …" (LEFT)', 'employee -> manager (self-join)', 'default for no match'],
+    complexity: 'O(n + m) with a hash/index join',
+    patterns: ['join'],
+    template: `SELECT c.name, COALESCE(b.amount, 0) AS bounty  -- patch the NULLs a LEFT
+FROM crew c                                     -- JOIN manufactures
+LEFT JOIN bounties b ON b.crew_id = c.id;       -- LEFT keeps every crew row
+
+SELECT s.name AS student, m.name AS mentor      -- self-join: alias the table
+FROM members s                                  -- twice, join rows to rows
+JOIN members m ON s.mentor_id = m.id;`,
+  },
+  {
+    key: 'sql-anti-join',
+    track: 'sql',
+    name: 'Subqueries & anti-joins',
+    when: 'Rows of A with NO match in B — or a filter that depends on another query’s answer.',
+    cues: ['"never …" / "without any …"', 'above the overall average', 'NOT EXISTS vs NOT IN', 'correlated condition'],
+    complexity: 'O(n + m) with a hash/index; O(n·m) naive',
+    patterns: ['subquery'],
+    template: `SELECT name FROM islands i
+WHERE NOT EXISTS (                    -- anti-join: NULL-safe, reads as the question
+  SELECT 1 FROM visits v
+  WHERE v.island_id = i.id            -- correlated: inner query sees the outer row
+);
+-- trap: NOT IN (subquery) returns ZERO rows if the subquery yields a NULL
+SELECT name FROM crew
+WHERE bounty > (SELECT AVG(bounty) FROM crew);  -- scalar subquery as a threshold`,
+  },
+  {
+    key: 'sql-window',
+    track: 'sql',
+    name: 'Window functions',
+    when: 'Every row needs a value computed from its group — rank, running total, neighbour, share.',
+    cues: ['top N per group', 'running / cumulative total', 'compare to previous row (LAG)', 'percent of total'],
+    complexity: 'O(n log n) — partition sort, then one pass',
+    patterns: ['window-functions'],
+    template: `SELECT crew, day, gold,
+  ROW_NUMBER() OVER (PARTITION BY crew ORDER BY gold DESC) AS rn,  -- nth per group:
+  SUM(gold)    OVER (PARTITION BY crew ORDER BY day)  AS so_far,   -- filter rn in an
+  gold - LAG(gold) OVER (PARTITION BY crew ORDER BY day) AS delta, -- outer query
+  gold * 100.0 / SUM(gold) OVER ()                    AS pct       -- empty OVER =
+FROM haul;                                                         -- whole set
+-- ORDER BY inside OVER changes SUM from "group total" to "total so far"`,
+  },
 ];
+
+// Map a question to the guide card that teaches it: data-track cards list
+// their raw question patterns; algorithm cards are keyed by roadmap category.
+const CARD_BY_PATTERN = (() => {
+  const m = {};
+  for (const p of PATTERN_GUIDE) if (p.patterns) for (const raw of p.patterns) m[raw] = p.key;
+  return m;
+})();
+
+export function guideKeyOf(question) {
+  if (CARD_BY_PATTERN[question.pattern]) return CARD_BY_PATTERN[question.pattern];
+  const key = categoryKeyOf(question.pattern);
+  return PATTERN_GUIDE.some((p) => p.key === key) ? key : null;
+}

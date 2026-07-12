@@ -605,6 +605,28 @@ try {
     (await page.locator('.pattern-cue').count()) >= 2,
     'the pattern shows recognition cues'
   );
+
+  // data-track template sections: pandas and SQL cards live alongside algorithms
+  check(
+    (await page.locator('.pattern-section-head').allInnerTexts()).join(' ').includes('SQL'),
+    'the guide has a SQL section'
+  );
+  await page.locator('.pattern-card-head', { hasText: 'Window functions' }).click();
+  check(
+    (await page.locator('.pattern-card.open .pattern-template').innerText()).includes('OVER'),
+    'the SQL window card shows an OVER template'
+  );
+  check(
+    (await page.locator('.pattern-card.open .pattern-drill-q').count()) >= 2,
+    'the window card links its drill problems'
+  );
+  await page.locator('.pattern-card-head', { hasText: 'Group & aggregate' }).click();
+  check(
+    (await page.locator('.pattern-card.open .pattern-template').innerText()).includes('groupby'),
+    'the pandas groupby card shows a groupby template'
+  );
+
+  await page.locator('.pattern-card-head', { hasText: 'Hashing' }).click();
   await page.locator('.pattern-drill-q', { hasText: 'Two Sum' }).first().click();
   check(
     (await page.locator('.pv-title').innerText()).includes('Two Sum'),

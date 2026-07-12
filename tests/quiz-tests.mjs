@@ -46,13 +46,33 @@ const twoSum = SEED_QUESTIONS.find((q) => q.id === 'py-two-sum');
   );
 }
 
-// ---- only quizzable (algorithm) questions are used ----
+// ---- all three tracks play, with same-track options ----
 {
-  const sql = SEED_QUESTIONS.find((q) => q.track === 'sql');
-  check(sql && !isQuizzable(sql), 'SQL questions are excluded from the quiz');
   const quizzable = SEED_QUESTIONS.filter(isQuizzable);
-  check(quizzable.length >= 80, `plenty of quizzable questions (${quizzable.length})`);
-  check(quizzable.every((q) => q.track === 'python'), 'all quizzable questions are python');
+  check(quizzable.length >= 100, `plenty of quizzable questions (${quizzable.length})`);
+  for (const track of ['python', 'pandas', 'sql']) {
+    check(
+      quizzable.some((q) => q.track === track),
+      `${track} questions are quizzable`
+    );
+  }
+
+  // A data-track item must never leak algorithm distractors (or vice versa):
+  // cross-track options would give the answer away by elimination.
+  const sql = SEED_QUESTIONS.find((q) => q.id === 'sql-running-total');
+  const pd = SEED_QUESTIONS.find((q) => q.id === 'pd-groupby-agg');
+  const py = SEED_QUESTIONS.find((q) => q.id === 'py-two-sum');
+  let sameTrack = true;
+  for (let seed = 1; seed <= 30; seed++) {
+    for (const [q, prefix] of [[sql, 'sql-'], [pd, 'pd-']]) {
+      const item = buildQuizItem(q, seed);
+      if (!item.options.every((o) => o.key.startsWith(prefix))) sameTrack = false;
+      if (item.options.length !== 4 || !item.options.some((o) => o.key === item.correctKey)) sameTrack = false;
+    }
+    const pyItem = buildQuizItem(py, seed);
+    if (pyItem.options.some((o) => o.key.startsWith('sql-') || o.key.startsWith('pd-'))) sameTrack = false;
+  }
+  check(sameTrack, 'quiz options always come from the question’s own track');
 }
 
 console.log(failures === 0 ? '\nAll quiz tests green.' : `\n${failures} FAILURE(S).`);
