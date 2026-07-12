@@ -22,11 +22,13 @@ mastery with spaced repetition. The learning loop is built around how you actual
 - **Check your understanding**, not just your output: after each correct answer you
   compare against the reference solution and an approach walkthrough, and the Stats page
   shows exactly which problems you get wrong most.
-- **Every Python question is a brute-force → optimal ladder.** All 107 algorithm questions
-  carry multiple named approaches (216 alternative solutions, every one machine-verified
-  against the real tests), each with its own complexity and a note on why the next rung is better — memoized
-  recursion → rolling variables, delete-pairs → stack, sort-per-window → rolling counts,
-  seen-set → Floyd. You don't just see the clever answer; you see what it replaced.
+- **Nearly every question is a brute-force → optimal ladder.** All 107 algorithm questions
+  and 35 pandas/SQL questions carry multiple named approaches (286 alternative solutions,
+  every one machine-verified against the real tests and engines), each with its own
+  complexity and a note on why the next rung is better — memoized recursion → rolling
+  variables, delete-pairs → stack, seen-set → Floyd, correlated subquery → window
+  function, Python loop → vectorized column, dict map → merge. You don't just see the
+  clever answer; you see what it replaced.
 
 **The app never connects to any AI service.** New questions come from *you*: you ask
 Claude (in a Claude Project or chat) for a batch using the built-in prompt, paste the

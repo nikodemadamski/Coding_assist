@@ -1141,6 +1141,7 @@ import { NEETCODE_5 } from './neetcode5.js';
 import { LEARN } from './learn.js';
 import { COMPLEXITY } from './complexity.js';
 import { APPROACHES } from './approaches.js';
+import { APPROACHES_DATA } from './approaches-data.js';
 import { SQL_QUESTIONS_2 } from './sql2.js';
 import { SQL_QUESTIONS_3 } from './sql3.js';
 import { PANDAS_QUESTIONS_2 } from './pandas2.js';
@@ -1198,7 +1199,8 @@ export const SEED_QUESTIONS = RAW_QUESTIONS.map((q) => {
   let out = LEARN[q.id] ? { ...q, ...LEARN[q.id] } : q;
   if (UNORDERED[q.id]) out = { ...out, unordered: UNORDERED[q.id] };
   if (COMPLEXITY[q.id] && !out.complexity) out = { ...out, complexity: COMPLEXITY[q.id] };
-  if (APPROACHES[q.id] && !out.approaches) out = { ...out, approaches: APPROACHES[q.id] };
+  const ladder = APPROACHES[q.id] ?? APPROACHES_DATA[q.id];
+  if (ladder && !out.approaches) out = { ...out, approaches: ladder };
   if (out.starter_code?.includes('...')) out = { ...out, starter_code: cleanStarter(out.starter_code) };
   return out;
 });
