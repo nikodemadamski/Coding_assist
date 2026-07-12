@@ -76,6 +76,7 @@ export default function PracticeView({
       practiceMode
       practiceInfo={{ phase, reviewsLeft: reviewLeft, newLeft }}
       onNext={handleNext}
+      freshStart={phase === 'review' || phase === 'drill'}
     />
   );
 }

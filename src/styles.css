@@ -3540,6 +3540,13 @@ details.hint[open] summary {
   margin: 6px 0 18px;
   line-height: 1.55;
 }
+/* Guidance sits below the question proper, behind a quiet divider. */
+.pv-extras {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
 .pattern-section + .pattern-section {
   margin-top: 26px;
 }

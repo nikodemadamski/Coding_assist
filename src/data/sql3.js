@@ -6,7 +6,7 @@ export const SQL_QUESTIONS_3 = [
     difficulty: 'medium',
     pattern: 'window-functions',
     description:
-      'The table `haul(crew, day, gold)` logs how much gold each crew hauled on each day.\n\nReturn `crew`, `day`, `gold`, and `delta` — how much **more (or less)** the crew hauled than on its **previous day**. Each crew’s first day has no previous day, so its `delta` is NULL.\n\nOrder the result by `crew` ascending, then `day` ascending.\n\n`LAG(col) OVER (PARTITION BY ... ORDER BY ...)` reaches one row back **within the partition** — the window version of "look at the row before me".',
+      'The table `haul(crew, day, gold)` logs how much gold each crew hauled on each day.\n\nReturn `crew`, `day`, `gold`, and `delta` — how much **more (or less)** the crew hauled than on its **previous day**. Each crew’s first day has no previous day, so its `delta` is NULL.\n\nOrder the result by `crew` ascending, then `day` ascending.',
     examples: [
       'Result columns: crew, day, gold, delta — first day per crew shows NULL.',
     ],
@@ -43,7 +43,7 @@ export const SQL_QUESTIONS_3 = [
     difficulty: 'medium',
     pattern: 'window-functions',
     description:
-      'The table `bounties(name, amount)` holds current bounty postings; several pirates can share the **same amount**.\n\nReturn `name`, `amount`, and `rnk` — the leaderboard position by `amount` descending, where **equal amounts share a position and no positions are skipped** (two pirates tied at the top are both 1, and the next amount is 2, not 3).\n\nOrder the result by `amount` descending, then `name` ascending.\n\nThat "no gaps after ties" rule is exactly the difference between `RANK()` and `DENSE_RANK()`.',
+      'The table `bounties(name, amount)` holds current bounty postings; several pirates can share the **same amount**.\n\nReturn `name`, `amount`, and `rnk` — the leaderboard position by `amount` descending, where **equal amounts share a position and no positions are skipped** (two pirates tied at the top are both 1, and the next amount is 2, not 3).\n\nOrder the result by `amount` descending, then `name` ascending.',
     examples: [
       'Result columns: name, amount, rnk — ties share a rank, next rank is not skipped.',
     ],
@@ -79,7 +79,7 @@ export const SQL_QUESTIONS_3 = [
     difficulty: 'hard',
     pattern: 'window-functions',
     description:
-      'The table `pirates(sea, name, bounty)` lists pirates and the sea they sail; bounties are unique **within** a sea.\n\nReturn the `sea` and the `name` of the pirate with the **second-highest** bounty in that sea. A sea with only one pirate produces **no row**. Row order does not matter.\n\nYou already picked the #1 per group with `MAX`; MAX cannot say who is #2. Number the rows inside each sea, then keep the row numbered 2.',
+      'The table `pirates(sea, name, bounty)` lists pirates and the sea they sail; bounties are unique **within** a sea.\n\nReturn the `sea` and the `name` of the pirate with the **second-highest** bounty in that sea. A sea with only one pirate produces **no row**. Row order does not matter.',
     examples: ['Result columns: sea, name — one row per sea that has at least 2 pirates.'],
     function_name: '',
     starter_code:
@@ -111,7 +111,7 @@ export const SQL_QUESTIONS_3 = [
     difficulty: 'hard',
     pattern: 'window-functions',
     description:
-      'The table `sales(day, gold)` logs one row per day.\n\nReturn `day`, `gold`, and `avg3` — the average of that day and the **two days before it**. Days 1 and 2 average whatever exists so far (day 1 averages just itself).\n\nOrder the result by `day` ascending.\n\nThis is an explicit window **frame**: `ROWS BETWEEN 2 PRECEDING AND CURRENT ROW` tells AVG exactly which neighbours to include.',
+      'The table `sales(day, gold)` logs one row per day.\n\nReturn `day`, `gold`, and `avg3` — the average of that day and the **two days before it**. Days 1 and 2 average whatever exists so far (day 1 averages just itself).\n\nOrder the result by `day` ascending.',
     examples: [
       'Result columns: day, gold, avg3 — avg3 covers at most 3 rows ending at that day.',
     ],
@@ -147,7 +147,7 @@ export const SQL_QUESTIONS_3 = [
     difficulty: 'medium',
     pattern: 'window-functions',
     description:
-      'The table `haul(crew, gold)` holds each crew’s total gold — one row per crew.\n\nReturn `crew` and `pct` — that crew’s gold as a **percentage of all gold in the table** (e.g. 200 out of 400 total → `50.0`).\n\nOrder the result by `pct` descending.\n\nAn `OVER ()` with nothing inside is a window covering the **whole result set** — the grand total on every row, without collapsing the rows the way GROUP BY would.',
+      'The table `haul(crew, gold)` holds each crew’s total gold — one row per crew.\n\nReturn `crew` and `pct` — that crew’s gold as a **percentage of all gold in the table** (e.g. 200 out of 400 total → `50.0`).\n\nOrder the result by `pct` descending — and produce it in a **single query over the table**, without hard-coding the total.',
     examples: ['Result columns: crew, pct — percentages across all rows sum to 100.'],
     function_name: '',
     starter_code: '-- haul(crew TEXT, gold INTEGER)\nSELECT ...\n',
@@ -180,7 +180,7 @@ export const SQL_QUESTIONS_3 = [
     difficulty: 'hard',
     pattern: 'window-functions',
     description:
-      'The table `pirates(sea, name, bounty)` lists pirates by sea.\n\nReturn `sea`, `name`, and `gap` — how far each pirate’s bounty is **below the highest bounty in their own sea** (the leader shows `0`).\n\nOrder the result by `sea` ascending, then `bounty` descending.\n\nNo self-join needed: a windowed `MAX` (or `FIRST_VALUE` over a descending order) puts each sea’s peak on every row of that sea.',
+      'The table `pirates(sea, name, bounty)` lists pirates by sea.\n\nReturn `sea`, `name`, and `gap` — how far each pirate’s bounty is **below the highest bounty in their own sea** (the leader shows `0`).\n\nOrder the result by `sea` ascending, then `bounty` descending.',
     examples: ['Result columns: sea, name, gap — the leader of each sea has gap 0.'],
     function_name: '',
     starter_code:

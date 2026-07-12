@@ -6,7 +6,7 @@ export const SQL_QUESTIONS_2 = [
     difficulty: 'medium',
     pattern: 'join',
     description:
-      'The table `members(id, name, mentor_id)` lists everyone in the dojo; `mentor_id` points at another row in the **same table** (the head instructor has `mentor_id` NULL).\n\nReturn each student’s `name` alongside their mentor’s `name` — one row per member **who has a mentor**. Row order does not matter.\n\nJoining a table to itself needs two aliases: think of it as two copies, one playing "student", one playing "mentor".',
+      'The table `members(id, name, mentor_id)` lists everyone in the dojo; `mentor_id` points at another row in the **same table** (the head instructor has `mentor_id` NULL).\n\nReturn each student’s `name` alongside their mentor’s `name` — one row per member **who has a mentor**. Row order does not matter.',
     examples: ['Result columns: student, mentor — one row per member with a mentor.'],
     function_name: '',
     starter_code:
@@ -40,7 +40,7 @@ export const SQL_QUESTIONS_2 = [
     difficulty: 'medium',
     pattern: 'group-by',
     description:
-      'The table `duels(dojo, result)` records one row per duel, where `result` is either `win` or `loss`.\n\nFor each `dojo` return three columns: the dojo, its number of **wins**, and its number of **losses** — both counts on the **same row**. Row order does not matter.\n\nA plain `GROUP BY dojo, result` would give you two rows per dojo; the trick is a `CASE WHEN` **inside** the aggregate so one pass produces both counts.',
+      'The table `duels(dojo, result)` records one row per duel, where `result` is either `win` or `loss`.\n\nFor each `dojo` return three columns: the dojo, its number of **wins**, and its number of **losses** — both counts on the **same row**. Row order does not matter.',
     examples: ['Result columns: dojo, wins, losses — one row per dojo.'],
     function_name: '',
     starter_code: '-- duels(dojo TEXT, result TEXT)\nSELECT ...\n',
@@ -101,7 +101,7 @@ export const SQL_QUESTIONS_2 = [
     difficulty: 'hard',
     pattern: 'window-functions',
     description:
-      'The table `haul(crew, day, gold)` logs how much gold each crew hauled on each day.\n\nReturn `crew`, `day`, `gold`, and `total_so_far` — the **running total** of that crew’s gold from day 1 up to and including that day. Each crew’s tally starts fresh at its own day 1.\n\nOrder the result by `crew` ascending, then `day` ascending.\n\nThis is `SUM(...) OVER (PARTITION BY ... ORDER BY ...)`: adding ORDER BY inside the window changes SUM from "whole-partition total" to "cumulative total up to this row".',
+      'The table `haul(crew, day, gold)` logs how much gold each crew hauled on each day.\n\nReturn `crew`, `day`, `gold`, and `total_so_far` — the **running total** of that crew’s gold from day 1 up to and including that day. Each crew’s tally starts fresh at its own day 1.\n\nOrder the result by `crew` ascending, then `day` ascending.',
     examples: [
       'Result columns: crew, day, gold, total_so_far — ordered by crew, then day.',
     ],
@@ -171,7 +171,7 @@ export const SQL_QUESTIONS_2 = [
     difficulty: 'easy',
     pattern: 'join',
     description:
-      'Tables: `crew(id, name)` and `bounties(crew_id, amount)` — not every crew member has a posted bounty yet.\n\nReturn **every** crew member’s `name` and their bounty `amount`, showing `0` instead of NULL for members with no bounty. Row order does not matter.\n\nLEFT JOIN keeps everyone; `COALESCE` fills the hole.',
+      'Tables: `crew(id, name)` and `bounties(crew_id, amount)` — not every crew member has a posted bounty yet.\n\nReturn **every** crew member’s `name` and their bounty `amount`, showing `0` instead of NULL for members with no bounty. Row order does not matter.',
     examples: ['Result columns: name, bounty — one row per crew member, 0 when unposted.'],
     function_name: '',
     starter_code:

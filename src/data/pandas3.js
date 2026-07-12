@@ -74,7 +74,7 @@ export const PANDAS_QUESTIONS_3 = [
     difficulty: 'medium',
     pattern: 'transform',
     description:
-      'The stat sheet `df` is **wide**: one row per fighter with columns `name`, `strength`, `speed`.\n\nReshape it to **long** format: one row per (fighter, stat) pair, with columns `name`, `stat`, `value`.\n\nSort the result by `name` ascending, then `stat` ascending, and reset the index.\n\nWide→long is `melt`: the id column stays put, every other column becomes a (column-name, cell-value) row pair.',
+      'The stat sheet `df` is **wide**: one row per fighter with columns `name`, `strength`, `speed`.\n\nReshape it to **long** format: one row per (fighter, stat) pair, with columns `name`, `stat`, `value`.\n\nSort the result by `name` ascending, then `stat` ascending, and reset the index.',
     examples: [
       'to_long(df) for 2 fighters × 2 stats  ->  4 rows: name, stat, value',
     ],
@@ -148,7 +148,7 @@ export const PANDAS_QUESTIONS_3 = [
     difficulty: 'medium',
     pattern: 'transform',
     description:
-      'The log `df` has columns `day` and `gold`, one row per day (rows may arrive **out of day order**).\n\nReturn the DataFrame sorted by `day` with a new column `avg3`: the average of that day and the two days before it. The first two days average whatever exists so far — day 1 averages just itself, never NaN.\n\nReset the index. `rolling(3)` gives the window; the trap is what it does to the first two rows.',
+      'The log `df` has columns `day` and `gold`, one row per day (rows may arrive **out of day order**).\n\nReturn the DataFrame sorted by `day` with a new column `avg3`: the average of that day and the two days before it. The first two days average whatever exists so far — day 1 averages just itself, never NaN.\n\nReset the index.',
     examples: [
       'rolling_gold(df) for gold 90,30,60 by day  ->  avg3 90,60,60',
     ],
@@ -218,7 +218,7 @@ export const PANDAS_QUESTIONS_3 = [
     difficulty: 'medium',
     pattern: 'groupby',
     description:
-      'The log `df` has columns `crew`, `day`, `gold` — one row per crew per day, possibly unsorted.\n\nReturn the DataFrame sorted by `crew` then `day`, with a new column `total_so_far`: the **running total** of that crew’s gold up to and including that day. Each crew’s tally starts fresh.\n\nReset the index. This is the pandas spelling of the SQL running total you wrote with `SUM(...) OVER (PARTITION BY ...)` — here the partition is a `groupby` and the frame is `cumsum`.',
+      'The log `df` has columns `crew`, `day`, `gold` — one row per crew per day, possibly unsorted.\n\nReturn the DataFrame sorted by `crew` then `day`, with a new column `total_so_far`: the **running total** of that crew’s gold up to and including that day. Each crew’s tally starts fresh.\n\nReset the index. (You solved this exact shape in SQL — this is the pandas spelling of it.)',
     examples: [
       'running_gold(df): strawhat 100,50  ->  total_so_far 100,150',
     ],
@@ -294,7 +294,7 @@ export const PANDAS_QUESTIONS_3 = [
     difficulty: 'hard',
     pattern: 'transform',
     description:
-      'The ledger `df` has columns `name` and `bounty`.\n\nAdd a column `tier` that bins each bounty: below 100 is `rookie`, from 100 up to (but not including) 1000 is `veteran`, and 1000 or more is `legend`. Return the DataFrame with the new column as **plain strings**, keeping the original row order.\n\nYou could chain conditions by hand — but `pd.cut` is the vectorized tool built exactly for "number → labeled bucket", and it is what this question wants.',
+      'The ledger `df` has columns `name` and `bounty`.\n\nAdd a column `tier` that bins each bounty: below 100 is `rookie`, from 100 up to (but not including) 1000 is `veteran`, and 1000 or more is `legend`. Return the DataFrame with the new column as **plain strings**, keeping the original row order.\n\nSolve it without chaining if/elif conditions by hand — pandas has a vectorized tool for exactly this.',
     examples: [
       'bounty_tier(df) for bounties 30, 500, 3000  ->  tiers rookie, veteran, legend',
     ],
@@ -352,7 +352,7 @@ export const PANDAS_QUESTIONS_3 = [
     hint: "`pd.cut(out['bounty'], bins=[0, 100, 1000, float('inf')], right=False, labels=['rookie', 'veteran', 'legend'])` — `right=False` makes bins [low, high), so 100 lands in veteran and 1000 in legend. Cast the result with `.astype(str)`.",
     solution:
       "import pandas as pd\n\ndef bounty_tier(df):\n    out = df.copy()\n    out['tier'] = pd.cut(\n        out['bounty'],\n        bins=[0, 100, 1000, float('inf')],\n        right=False,\n        labels=['rookie', 'veteran', 'legend'],\n    ).astype(str)\n    return out\n",
-    why: 'Binning continuous values into named buckets (age groups, price bands, score grades) is everywhere in analytics, and `pd.cut` is its vectorized spelling — no loops, no nested np.where. The interview signal is boundary discipline: whether 100 falls in rookie or veteran is decided by one flag, and sloppy boundary handling is how off-by-one bugs ship to dashboards.',
+    why: 'Binning continuous values into named buckets (age groups, price bands, score grades) is everywhere in analytics, and pandas has a vectorized spelling for it — no loops, no nested conditionals. The interview signal is boundary discipline: whether 100 falls in rookie or veteran is decided by one flag, and sloppy boundary handling is how off-by-one bugs ship to dashboards.',
     insight: 'The transferable idea: bins are **edges, one more edge than labels**, and `right=` picks which side is closed — the default `right=True` means (low, high] intervals, which would drop bounty 0 out of every bin entirely (NaN!); `right=False` gives the [low, high) intervals this spec needs. `pd.cut` returns a Categorical, memory-cheap and order-aware (it knows rookie < veteran < legend, so sorting by tier just works) — the `.astype(str)` here is only for a plain-string contract. Cousin worth knowing: `pd.qcut` bins by *quantiles* (equal row counts) instead of fixed edges.',
     constraints: [
       'bounty ≥ 0',
@@ -368,7 +368,7 @@ export const PANDAS_QUESTIONS_3 = [
     difficulty: 'hard',
     pattern: 'groupby',
     description:
-      'The log `df` has columns `month`, `region`, `gold` — possibly **several rows** per (month, region) pair, and some pairs missing entirely.\n\nBuild the report grid: one row per `month`, one column per region (`east` and `west`, alphabetical), each cell holding that pair’s **total** gold, with `0` where a pair has no rows.\n\nReturn columns `month`, `east`, `west`, sorted by `month`, index reset. This is long→wide: `pivot_table` with an aggregator and a fill value.',
+      'The log `df` has columns `month`, `region`, `gold` — possibly **several rows** per (month, region) pair, and some pairs missing entirely.\n\nBuild the report grid: one row per `month`, one column per region (`east` and `west`, alphabetical), each cell holding that pair’s **total** gold, with `0` where a pair has no rows.\n\nReturn columns `month`, `east`, `west`, sorted by `month`, index reset.',
     examples: [
       'gold_grid(df)  ->  one row per month with east and west totals, 0-filled',
     ],

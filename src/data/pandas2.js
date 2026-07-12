@@ -78,7 +78,7 @@ export const PANDAS_QUESTIONS_2 = [
     hint: 'The `.str` accessor lifts string methods onto a whole column: `df["name"].str.startswith(prefix)` gives a boolean mask. Finish with `.reset_index(drop=True)`.',
     solution:
       'import pandas as pd\n\ndef name_prefix(df, prefix):\n    mask = df["name"].str.startswith(prefix)\n    return df[mask].reset_index(drop=True)\n',
-    why: 'Text filtering with `.str` methods (startswith / contains / lower) is the everyday cleanup move — pulling out one product line, one log level, one name pattern — without ever writing a loop.',
+    why: 'Text filtering — pulling out one product line, one log level, one name pattern — is the everyday cleanup move, and pandas can do it across a whole column without a single loop.',
     insight:
       'The `.str` accessor is the bridge between Python string methods and vectorised pandas: anything you would call on one string, `.str` calls on the whole column and hands back a boolean mask you can index with. The reflex to build is "condition on a column → mask → `df[mask]`" — the same shape works for `.str.contains`, numeric comparisons, and `.isin`.',
     constraints: [
@@ -435,7 +435,7 @@ export const PANDAS_QUESTIONS_2 = [
     hint: 'Sort by `day` ascending so the latest reading is the *last* occurrence of each name, then `drop_duplicates("name", keep="last")`. Finish with a sort by `name` and a reset.',
     solution:
       'import pandas as pd\n\ndef latest_reading(df):\n    out = df.sort_values("day").drop_duplicates("name", keep="last")\n    return out.sort_values("name").reset_index(drop=True)\n',
-    why: 'Sort-then-dedupe is how you collapse an event log into a snapshot: latest status per ticket, last login per user, current price per product. `drop_duplicates` with `keep=` only makes sense once you control the row order first.',
+    why: 'Collapsing an event log into a snapshot — latest status per ticket, last login per user, current price per product — is a daily-driver operation, and getting it right hinges on controlling row order before you deduplicate.',
     insight:
       'The insight is that `drop_duplicates` is order-sensitive: `keep="last"` means last *in the current row order*, so the sort is not decoration — it is what gives "last" its meaning. Sort ascending by the recency key, dedupe keeping the last, and every survivor is the newest row for its key. The same two-step also answers "first purchase per customer" (`keep="first"`) and pairs with a multi-key sort for tie-breaking.',
     constraints: [

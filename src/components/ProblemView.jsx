@@ -68,9 +68,14 @@ export default function ProblemView({
   // free-mode continuation (optional): the next unsolved path question
   nextUp = null,
   onOpenNext = null,
+  // start from a clean slate, ignoring any saved draft (reviews, drills, mocks
+  // — re-deriving the answer is the whole point; browsing keeps your draft)
+  freshStart = false,
 }) {
-  const [code, setCode] = useState(
-    () => progress.drafts[question.id] ?? question.starter_code ?? ''
+  const [code, setCode] = useState(() =>
+    freshStart || mockMode
+      ? question.starter_code ?? ''
+      : progress.drafts[question.id] ?? question.starter_code ?? ''
   );
   const [tab, setTab] = useState('problem');
   const [focusCode, setFocusCode] = useState(false); // desktop: hide problem, widen editor
@@ -380,13 +385,10 @@ export default function ProblemView({
         onTouchEnd={onSwipeEnd}
       >
         <section className={`pv-pane pane-problem ${tab === 'problem' ? 'visible' : ''}`}>
+          {/* The question itself comes first — description, examples,
+              constraints — exactly what you'd see in the interview. All
+              guidance (why, stuck ladder, go-deeper, notes) waits below. */}
           <Markdown text={question.description} />
-          {!mockMode && question.why && (
-            <div className="why-card">
-              <span className="why-card-label">Why this one</span>
-              <Markdown text={question.why} />
-            </div>
-          )}
           {question.examples?.length > 0 && (
             <>
               <h3 style={{ marginTop: 16 }}>Examples</h3>
@@ -418,7 +420,15 @@ export default function ProblemView({
               </ol>
             </div>
           ) : (
-            <StuckLadder question={question} onVisualize={openVisualizer} onSeePattern={onSeePattern} />
+            <div className="pv-extras">
+              {question.why && (
+                <div className="why-card">
+                  <span className="why-card-label">Why this one</span>
+                  <Markdown text={question.why} />
+                </div>
+              )}
+              <StuckLadder question={question} onVisualize={openVisualizer} onSeePattern={onSeePattern} />
+            </div>
           )}
           {!mockMode && question.insight && (
             <details className="go-deeper">

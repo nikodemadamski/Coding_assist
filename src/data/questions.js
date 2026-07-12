@@ -60,7 +60,7 @@ const PYTHON_QUESTIONS = [
     difficulty: 'easy',
     pattern: 'dict-items',
     description:
-      'Given a dict `d` whose values are unique, return a new dict swapping keys and values.\n\nPractice iterating with `.items()` — you will use it constantly with pandas groupby results and JSON payloads.',
+      'Given a dict `d` whose values are unique, return a new dict swapping keys and values.\n\nBecause every value is unique, no information is lost in the swap.',
     examples: ['invert_dict({"a": 1, "b": 2})  ->  {1: "a", 2: "b"}'],
     function_name: 'invert_dict',
     starter_code: 'def invert_dict(d):\n    # values are unique — swap keys and values\n    ...\n',
@@ -80,7 +80,7 @@ const PYTHON_QUESTIONS = [
     difficulty: 'easy',
     pattern: 'strings',
     description:
-      'Return the string `s` reversed.\n\nKnow the slice idiom cold — `s[::-1]` — and understand why strings need it (they are immutable, so no `.reverse()`).',
+      'Return the string `s` reversed.\n\nStrings are immutable in Python — there is no in-place `.reverse()` — so you must build and return a new string.',
     examples: ['reverse_string("dojo")  ->  "ojod"'],
     function_name: 'reverse_string',
     starter_code: 'def reverse_string(s):\n    ...\n',
@@ -400,7 +400,7 @@ const PYTHON_QUESTIONS = [
     difficulty: 'medium',
     pattern: 'binary-search',
     description:
-      'Given a **sorted** list `nums` and a `target`, return the index of `target`, or `-1` if it is not present. Write the classic `O(log n)` loop — no `list.index`, no linear scan.\n\nGet the boundaries right: `lo <= hi`, and move past `mid` on both sides.',
+      'Given a **sorted** list `nums` and a `target`, return the index of `target`, or `-1` if it is not present. Your solution must run in `O(log n)` time — no `list.index`, no linear scan.',
     examples: ['binary_search([-1, 0, 3, 5, 9, 12], 9)  ->  4', 'binary_search([-1, 0, 3], 2)  ->  -1'],
     function_name: 'binary_search',
     starter_code: 'def binary_search(nums, target):\n    # O(log n), return index or -1\n    ...\n',
@@ -569,7 +569,7 @@ const PANDAS_QUESTIONS = [
     difficulty: 'easy',
     pattern: 'groupby',
     description:
-      'Given a DataFrame `df` with a `style` column, return a **dict** mapping each style to how many rows have it.\n\n`value_counts()` is the shortcut; `groupby(...).size()` is the general tool. Either way, finish with `.to_dict()`.',
+      'Given a DataFrame `df` with a `style` column, return a **dict** (a plain Python dict, not a Series) mapping each style to how many rows have it.',
     examples: ['count_styles(df with styles [a, b, a])  ->  {"a": 2, "b": 1}'],
     function_name: 'count_styles',
     starter_code: 'import pandas as pd\n\ndef count_styles(df):\n    # return {style: count}\n    ...\n',
@@ -626,7 +626,7 @@ const PANDAS_QUESTIONS = [
     difficulty: 'medium',
     pattern: 'groupby',
     description:
-      'Given a DataFrame `df` with columns `team` and `score`, return a DataFrame with one row per team and columns `team` and `avg_score` (the mean score), sorted by `team` ascending.\n\nThis is the #1 pandas interview pattern. `as_index=False` keeps `team` as a column.',
+      'Given a DataFrame `df` with columns `team` and `score`, return a DataFrame with one row per team and columns `team` and `avg_score` (the mean score), sorted by `team` ascending.\n\nNote the required shape: `team` must be a regular **column** in the result, not the index.',
     examples: [
       'team_averages(df) for red:[80, 90], blue:[90]  ->  [{team: "blue", avg_score: 90}, {team: "red", avg_score: 85}]',
     ],
@@ -1114,7 +1114,7 @@ const SQL_QUESTIONS = [
     difficulty: 'hard',
     pattern: 'window-functions',
     description:
-      'The table `crew(name, role, salary)` lists crew members. Return `name`, `role`, and `salary` of the **highest-paid member of each role**. Row order does not matter (salaries within a role are unique).\n\nUse a window function — `ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ...)` in a subquery — the single most-asked hard SQL pattern in DS interviews.',
+      'The table `crew(name, role, salary)` lists crew members. Return `name`, `role`, and `salary` of the **highest-paid member of each role**. Row order does not matter (salaries within a role are unique).\n\nSolve it with a window function — this is the single most-asked hard SQL pattern in DS interviews.',
     examples: ['Result columns: name, role, salary — one row per role.'],
     function_name: '',
     starter_code: '-- crew(name TEXT, role TEXT, salary INTEGER)\nSELECT ...\n',
@@ -1181,10 +1181,24 @@ const UNORDERED = {
 
 // Merge the premium learning layer (why / constraints / insight), the
 // order-sensitivity flag, and the model complexity onto each question by id.
+// Starter code should be a clean slate, not a `...` placeholder the user has
+// to delete every time. Drop lines that are ONLY the Ellipsis (keeping their
+// indentation as the empty line the cursor lands on).
+function cleanStarter(code = '') {
+  return code
+    .split('\n')
+    .map((line) => {
+      if (/^\s*\.\.\.\s*$/.test(line)) return line.replace(/\.\.\.\s*$/, ''); // keep the indent
+      return line.replace(/[ \t]+\.\.\.[ \t]*$/, ''); // 'SELECT ...' -> 'SELECT'
+    })
+    .join('\n');
+}
+
 export const SEED_QUESTIONS = RAW_QUESTIONS.map((q) => {
   let out = LEARN[q.id] ? { ...q, ...LEARN[q.id] } : q;
   if (UNORDERED[q.id]) out = { ...out, unordered: UNORDERED[q.id] };
   if (COMPLEXITY[q.id] && !out.complexity) out = { ...out, complexity: COMPLEXITY[q.id] };
   if (APPROACHES[q.id] && !out.approaches) out = { ...out, approaches: APPROACHES[q.id] };
+  if (out.starter_code?.includes('...')) out = { ...out, starter_code: cleanStarter(out.starter_code) };
   return out;
 });

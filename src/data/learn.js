@@ -12,7 +12,7 @@
 export const LEARN = {
   // ── Python warm-ups ────────────────────────────────────────────────────
   'py-reverse-string': {
-    why: 'Your first taste of Python slicing. `s[::-1]` reversing a string is the kind of one-liner that shows you the language rewards knowing its tools.',
+    why: 'Your first taste of how Python rewards knowing its tools: this one has a famous one-line spelling. If you cannot produce it instantly, repeat the rep until you can.',
     constraints: ['0 ≤ len(s) ≤ 10⁴', 's contains printable ASCII characters'],
     examples: [
       'reverse_string("dojo")  ->  "ojod"',
@@ -39,7 +39,7 @@ export const LEARN = {
     ],
   },
   'py-invert-dict': {
-    why: 'Dict comprehensions over `.items()` are everyday Python. You will reach for this shape reshaping JSON, counts, and pandas results for years.',
+    why: 'Turning a dict inside-out is everyday Python — you will reach for this shape reshaping JSON, counts, and pandas results for years. There is a one-line spelling worth owning.',
     constraints: ['values in the input dict are unique (so the inverse is well-defined)'],
     examples: [
       'invert_dict({"a": 1, "b": 2})  ->  {1: "a", 2: "b"}',
