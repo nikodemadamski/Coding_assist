@@ -94,8 +94,9 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
   foundations first.
 - **🎤 Mock interview** (home screen): the closest this app gets to the real thing, and the
   feature that turns practice into preparation. Pick a round — Warm-up (easy, 20 min),
-  Standard (medium, 35), Onsite (hard, 45) or Surprise — and get one problem, a live
-  countdown, and **no hints or solution** until you're done. When you submit or the clock
+  Standard (medium, 35), Onsite (hard, 45), Surprise, or the **Data round** (one pandas or
+  SQL problem, 30 min — the analytics screen) — and get one problem, a live countdown, and
+  **no hints or solution** until you're done. When you submit or the clock
   stops, a debrief grades the things a real interviewer grades: did you clarify the problem,
   can you state your solution's time/space complexity (typed and compared against the
   model), and how clearly did you talk through it — *before* the model solution is revealed.

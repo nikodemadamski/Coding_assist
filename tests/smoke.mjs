@@ -988,6 +988,31 @@ try {
   );
   await page.locator('.header-logo').click();
 
+  // ---- mock data round: a timed pandas/SQL screen ----
+  await page.locator('.btn-mock').click();
+  const dataCard = page.locator('.mock-format-card', { hasText: 'Data round' });
+  check(
+    (await dataCard.innerText()).includes('pandas · sql'),
+    'the mock brief offers a pandas/SQL data round'
+  );
+  await dataCard.click();
+  await page.locator('.mock-timer').waitFor({ timeout: 10000 });
+  check(await page.locator('.mock-timer').isVisible(), 'the data round runs on the clock');
+  check(
+    (await page.locator('.pane-problem .hint').count()) === 0,
+    'hints stay locked in the data round'
+  );
+  await page.locator('.icon-btn[aria-label="End interview"]').click();
+  await page.locator('.mock-verdict').waitFor({ timeout: 5000 });
+  check(
+    await page.locator('.mock-rubric').isVisible(),
+    'the data round debrief asks the same interviewer rubric'
+  );
+  await page.locator('.mock-q', { hasText: 'clarify' }).locator('.seg-btn', { hasText: 'partly' }).click();
+  await page.locator('.mock-q', { hasText: 'talk through' }).locator('.seg-btn', { hasText: 'Okay' }).click();
+  await page.locator('button', { hasText: 'Record & finish' }).click();
+  await page.locator('.graph-node').first().waitFor({ timeout: 5000 });
+
   // ---- celebration: crossing a belt threshold pops a milestone ----
   await page.evaluate(() => {
     const today = new Date().toISOString().slice(0, 10);

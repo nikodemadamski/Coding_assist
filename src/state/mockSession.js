@@ -1,6 +1,7 @@
 // Mock interview logic: pure functions over the question bank + progress.
-// A mock is ONE python problem, timed, with hints and the solution locked
-// away until the debrief — the closest this app gets to the real thing.
+// A mock is ONE timed problem, with hints and the solution locked away until
+// the debrief — the closest this app gets to the real thing. Formats draw
+// from the python track unless they name their own `tracks`.
 import { isSolved, shuffle } from './progress.js';
 
 export const MOCK_FORMATS = [
@@ -32,19 +33,29 @@ export const MOCK_FORMATS = [
     minutes: 35,
     blurb: "Random difficulty, 35 minutes — you don't get to pick in real life.",
   },
+  {
+    key: 'data',
+    label: 'Data round',
+    difficulty: null,
+    minutes: 30,
+    tracks: ['pandas', 'sql'],
+    blurb: 'One pandas or SQL problem, 30 minutes — the analytics screen for data-flavored loops.',
+  },
 ];
 
 export function formatByKey(key) {
   return MOCK_FORMATS.find((f) => f.key === key) || null;
 }
 
-// Choose the problem for a mock. Interviews are algorithmic, so we draw from
-// the python track only. Prefer problems you HAVEN'T solved (a mock you've
-// already seen the answer to isn't a real test); fall back to the whole pool
-// once you've solved everything at that difficulty.
+// Choose the problem for a mock. Coding rounds draw from the python track;
+// a format can name its own `tracks` (the data round mixes pandas + SQL).
+// Prefer problems you HAVEN'T solved (a mock you've already seen the answer
+// to isn't a real test); fall back to the whole pool once you've solved
+// everything at that difficulty.
 export function pickMockProblem(questions, progress, format, seed = (Math.random() * 2 ** 32) >>> 0) {
+  const tracks = format.tracks ?? ['python'];
   const pool = questions.filter(
-    (q) => q.track === 'python' && (!format.difficulty || q.difficulty === format.difficulty)
+    (q) => tracks.includes(q.track) && (!format.difficulty || q.difficulty === format.difficulty)
   );
   if (pool.length === 0) return null;
   const unsolved = pool.filter((q) => !isSolved(progress.solved[q.id]));

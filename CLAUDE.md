@@ -59,8 +59,8 @@ Result comparison canonicalizes via `_canon`, honoring `unordered`.
   median firstSolveMs, ≥3 samples per difficulty.
 - `bigo.js` — bigOBucket maps a complexity string's time part to 6 buckets; product forms
   (O(m·n)), O(h), O(L) return null = reveal-don't-grade.
-- others: activity (daily goal + todayPulse), mockSession (formats, optimalComplexity =
-  last approach's complexity else question.complexity), practiceSession (review→new queue),
+- others: activity (daily goal + todayPulse), mockSession (formats incl. data round via
+  format.tracks, optimalComplexity = last approach's complexity else question.complexity), practiceSession (review→new queue),
   patternQuiz, celebrate, theme, uiPrefs, vizPointers (▲ markers from subscript scan).
 
 ## INVARIANTS — edges that must stay in sync

@@ -102,7 +102,7 @@ export default function MockInterview({ questions, progress, onRecordMock, onSol
             <button key={f.key} className="mock-format-card" onClick={() => start(f)}>
               <span className="mock-format-name">{f.label}</span>
               <span className={`tag diff-${f.difficulty || 'medium'}`}>
-                {f.difficulty || 'random'}
+                {f.tracks ? f.tracks.join(' · ') : f.difficulty || 'random'}
               </span>
               <span className="mock-format-time">{f.minutes} min</span>
               <span className="mock-format-blurb">{f.blurb}</span>

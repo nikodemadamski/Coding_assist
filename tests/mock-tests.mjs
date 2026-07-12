@@ -53,6 +53,25 @@ for (const fmt of MOCK_FORMATS.filter((f) => f.difficulty)) {
   check(diffs.size >= 2, 'surprise spans more than one difficulty over many seeds');
 }
 
+// the data round draws ONLY pandas/SQL, and mixes both over many seeds
+{
+  const data = formatByKey('data');
+  const tracks = new Set();
+  let ok = true;
+  let bad = '';
+  for (let seed = 1; seed <= 80; seed++) {
+    const q = byId[pickMockProblem(SEED_QUESTIONS, fresh(), data, seed)];
+    if (!q || !['pandas', 'sql'].includes(q.track)) {
+      ok = false;
+      bad = q?.id ?? 'none';
+      break;
+    }
+    tracks.add(q.track);
+  }
+  check(ok, 'data round only ever picks pandas or SQL problems', bad);
+  check(tracks.size === 2, 'data round mixes both data tracks over many seeds');
+}
+
 // ---- prefers problems you haven't solved ----
 {
   const std = formatByKey('standard');
