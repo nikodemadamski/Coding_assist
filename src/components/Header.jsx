@@ -9,6 +9,7 @@ export default function Header({
   onPatterns,
   onStats,
   onGuide,
+  onLearn,
   onSettings,
   theme,
   onToggleTheme,
@@ -90,6 +91,9 @@ export default function Header({
         </button>
         {menuOpen && (
           <div className="hdr-menu-pop" role="menu">
+            <button role="menuitem" onClick={go(onLearn)}>
+              Learn <span className="hdr-menu-note">python from zero</span>
+            </button>
             <button role="menuitem" onClick={go(onStats)}>
               Stats <span className="hdr-menu-note">readiness &amp; record</span>
             </button>

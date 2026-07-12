@@ -4,7 +4,7 @@
 import './proxy-shim.mjs';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
-import { PY_HARNESS, buildPayload, harnessResultToReport } from '../src/engine/pyHarness.js';
+import { PY_HARNESS, PY_SNIPPET_HARNESS, buildPayload, harnessResultToReport } from '../src/engine/pyHarness.js';
 import { runSqlQuestion } from '../src/engine/sqlCore.js';
 
 const require = createRequire(import.meta.url);
@@ -81,6 +81,14 @@ export async function runPy(question, code) {
     if (engine === 'cpython') return runInCPython(question, code);
   }
   return runInPyodide(question, code);
+}
+
+// Run a lesson snippet (a small python SCRIPT) with stdout captured, through
+// the EXACT harness the browser worker uses. Returns { status, stdout|message }.
+export async function runPySnippet(code) {
+  const py = await getPyodide();
+  py.globals.set('PAYLOAD_JSON', JSON.stringify({ code }));
+  return JSON.parse(await py.runPythonAsync(PY_SNIPPET_HARNESS));
 }
 
 // Execute standalone pandas snippets (warm-up answers) against a prelude that

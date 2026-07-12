@@ -3564,6 +3564,245 @@ details.hint[open] summary {
   margin: 6px 0 18px;
   line-height: 1.55;
 }
+/* ---- Learn Python from zero -------------------------------------------- */
+.learn-intro {
+  color: var(--text-dim);
+  max-width: 720px;
+  margin: 6px 0 16px;
+  line-height: 1.55;
+}
+.learn-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.learn-count {
+  font-weight: 600;
+  color: var(--text);
+}
+.learn-chapter {
+  margin-bottom: 22px;
+}
+.learn-chapter-head {
+  font-size: 0.95rem;
+  margin: 0 0 2px;
+}
+.learn-chapter-blurb,
+.learn-chapter-soon {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  margin: 0 0 10px;
+}
+.learn-lessons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 640px;
+}
+.learn-lesson {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.92rem;
+}
+.learn-lesson:hover {
+  border-color: var(--text-dim);
+}
+.learn-lesson.done .learn-lesson-mark {
+  color: var(--jade);
+}
+.learn-lesson.next {
+  border-color: var(--jade);
+}
+.learn-lesson.next .learn-lesson-mark {
+  color: var(--jade);
+}
+.learn-lesson.dimmed {
+  opacity: 0.55;
+}
+.learn-lesson-min {
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+.learn-back {
+  margin-top: 8px;
+}
+
+/* ---- the lesson player ---- */
+.ln-page {
+  max-width: 760px;
+}
+.ln-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.ln-top h1 {
+  font-size: 1.15rem;
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+.ln-minutes {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+.ln-dots {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.ln-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--line);
+}
+.ln-dot.done {
+  background: var(--jade);
+}
+.ln-dot.now {
+  background: var(--gold);
+}
+.ln-dot-extra {
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  margin-left: 3px;
+}
+.ln-read {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 18px;
+  line-height: 1.6;
+}
+.ln-code {
+  background: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: var(--font-code);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  white-space: pre;
+  overflow-x: auto;
+  margin: 10px 0;
+}
+.ln-stdout {
+  border-color: var(--jade);
+  margin: 0;
+}
+.ln-run-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.ln-start {
+  margin-top: 16px;
+}
+.ln-item {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+.ln-item-ask {
+  font-size: 1rem;
+  margin: 0 0 10px;
+}
+.ln-answer-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.ln-answer-row .wu-input {
+  flex: 1;
+  min-width: 0;
+}
+.ln-nudge {
+  color: var(--gold);
+  font-size: 0.88rem;
+  margin: 10px 0 0;
+}
+.ln-hint {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+.ln-editor {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.ln-outcome {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.ln-outcome.good .ln-outcome-line:first-child {
+  color: var(--jade);
+}
+.ln-outcome-line {
+  margin: 0 0 8px;
+  line-height: 1.55;
+}
+.ln-prove {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 6px 0 10px;
+}
+.ln-next {
+  margin-top: 4px;
+}
+.ln-reveal {
+  margin-top: 10px;
+}
+.ln-done {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 22px;
+  max-width: 560px;
+}
+.ln-done h1 {
+  margin: 0 0 8px;
+}
+.ln-done-line {
+  color: var(--text-dim);
+  margin: 0 0 16px;
+  line-height: 1.55;
+}
+.ln-done-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+@media (max-width: 700px) {
+  .ln-top h1 {
+    font-size: 1rem;
+  }
+  .ln-answer-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 /* Guidance sits below the question proper, behind a quiet divider. */
 .pv-extras {
   margin-top: 22px;

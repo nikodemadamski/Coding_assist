@@ -3,6 +3,7 @@
 // but not sloppy — every python answer compiles, every SQL answer executes.
 import './proxy-shim.mjs';
 import { WARMUP_SETS, WARMUP_LEVELS, checkAnswer, normalizeAnswer } from '../src/data/warmups.js';
+import { wrapForCompile } from './py-compile.mjs';
 
 let failures = 0;
 const check = (cond, label, detail = '') => {
@@ -56,25 +57,7 @@ for (const level of WARMUP_LEVELS) {
 }
 
 // ---- every answer is real, compilable Python ----
-// Snippets are single lines out of context, so wrap just enough to compile:
-// block headers get a body, `except` gets a `try`, decorators get a function,
-// return/yield/global go inside a def.
-function wrapForCompile(code) {
-  if (code.startsWith('except')) {
-    return `try:\n    pass\n${code}\n    pass`;
-  }
-  if (code.startsWith('@')) {
-    return `${code}\ndef _f():\n    pass`;
-  }
-  if (/^(return|yield|global)\b/.test(code)) {
-    return `def _f():\n    ${code}`;
-  }
-  if (code.endsWith(':')) {
-    const body = `${code}\n    pass`;
-    return code.startsWith('try') ? `${body}\nexcept Exception:\n    pass` : body;
-  }
-  return code;
-}
+// (wrapping shared with the lesson gate — see tests/py-compile.mjs)
 
 const { loadPyodide } = await import('pyodide');
 const pyodide = await loadPyodide();

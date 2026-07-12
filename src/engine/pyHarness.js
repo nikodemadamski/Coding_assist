@@ -418,6 +418,31 @@ except Exception:
 json.dumps(outcome)
 `;
 
+// Lesson snippets: run a small SCRIPT (not a function-under-test) in a fresh,
+// prelude-free namespace with stdout captured — lessons teach imports
+// explicitly, so nothing is pre-imported. Reads PAYLOAD_JSON = { code }.
+// Result: { status: 'ok', stdout } | { status: 'error', message, stdout }.
+export const PY_SNIPPET_HARNESS = `
+import json, io, traceback
+from contextlib import redirect_stdout
+
+payload = json.loads(PAYLOAD_JSON)
+_buf = io.StringIO()
+try:
+    _ns = {}
+    with redirect_stdout(_buf):
+        exec(compile(payload["code"], "<lesson>", "exec"), _ns)
+    outcome = {"status": "ok", "stdout": _buf.getvalue()}
+except Exception:
+    outcome = {
+        "status": "error",
+        "message": traceback.format_exc().splitlines()[-1],
+        "stdout": _buf.getvalue(),
+    }
+
+json.dumps(outcome)
+`;
+
 export function buildTracePayload(question, code, testIndex) {
   return {
     code,

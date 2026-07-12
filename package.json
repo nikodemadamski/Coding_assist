@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "test": "node tests/progress-tests.mjs && node tests/activity-tests.mjs && node tests/path-tests.mjs && node tests/warmup-tests.mjs && node tests/mock-tests.mjs && node tests/patterns-tests.mjs && node tests/quiz-tests.mjs && node tests/celebrate-tests.mjs && node tests/pointer-tests.mjs && node tests/prefs-tests.mjs && node tests/readiness-tests.mjs && node tests/bigo-tests.mjs && node tests/trace-tests.mjs && node tests/run-seed-tests.mjs",
+    "test": "node tests/progress-tests.mjs && node tests/activity-tests.mjs && node tests/path-tests.mjs && node tests/warmup-tests.mjs && node tests/lesson-tests.mjs && node tests/lesson-progress-tests.mjs && node tests/mock-tests.mjs && node tests/patterns-tests.mjs && node tests/quiz-tests.mjs && node tests/celebrate-tests.mjs && node tests/pointer-tests.mjs && node tests/prefs-tests.mjs && node tests/readiness-tests.mjs && node tests/bigo-tests.mjs && node tests/trace-tests.mjs && node tests/run-seed-tests.mjs",
     "test:smoke": "node tests/smoke.mjs"
   },
   "dependencies": {

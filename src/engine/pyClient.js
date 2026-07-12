@@ -103,6 +103,17 @@ export async function runPythonQuestion(question, code, onStatus = () => {}) {
   return harnessResultToReport(outcome.data);
 }
 
+// Lesson snippets: run a small script with stdout captured. Resolves to
+// { status: 'ok', stdout } or { status: 'error', message, stdout? } — same 5s
+// kill switch as question runs.
+export async function runPythonSnippet(code, onStatus = () => {}) {
+  const outcome = await dispatchJob('snippet', { code }, false, onStatus);
+  if (outcome.error) {
+    return { status: 'error', message: outcome.error.message };
+  }
+  return outcome.data;
+}
+
 // Visualizer: trace `code` on one test case. Resolves to the tracer outcome
 // ({ status:'ok', steps, lines, result, truncated } or { status:'error', message }).
 export async function runPythonTrace(question, code, testIndex, onStatus = () => {}) {

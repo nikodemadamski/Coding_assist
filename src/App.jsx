@@ -16,7 +16,11 @@ import ImportModal from './components/ImportModal.jsx';
 import SearchPalette from './components/SearchPalette.jsx';
 import Onboarding from './components/Onboarding.jsx';
 import Celebration from './components/Celebration.jsx';
+import LearnView from './components/LearnView.jsx';
+import LessonView from './components/LessonView.jsx';
 import { SEED_QUESTIONS } from './data/questions.js';
+import { lessonById, nextLesson } from './data/lessons.js';
+import { recordLessonComplete, recordLessonReview, buildReviewItems } from './state/lessonProgress.js';
 import {
   loadProgress,
   saveProgress,
@@ -171,6 +175,15 @@ export default function App() {
     setProgress((p) => applyRating(p, questionId, rating));
   }, []);
 
+  // Learn layer: completing a lesson schedules its first skill check; a
+  // review pass/fail climbs or restarts that lesson's ladder.
+  const handleLessonComplete = useCallback((lessonId, summary) => {
+    setProgress((p) => recordLessonComplete(p, lessonId, summary));
+  }, []);
+  const handleLessonReview = useCallback((lessonId, passed) => {
+    setProgress((p) => recordLessonReview(p, lessonId, passed));
+  }, []);
+
   const handleDraft = useCallback((questionId, code) => {
     setProgress((p) => ({ ...p, drafts: { ...p.drafts, [questionId]: code } }));
   }, []);
@@ -228,6 +241,7 @@ export default function App() {
         onPatterns={() => setView({ name: 'patterns' })}
         onStats={() => setView({ name: 'stats' })}
         onGuide={() => setView({ name: 'guide' })}
+        onLearn={() => setView({ name: 'learn' })}
         onSettings={() => setSettingsOpen(true)}
         theme={theme}
         onToggleTheme={toggleTheme}
@@ -248,6 +262,41 @@ export default function App() {
             onStats={() => setView({ name: 'stats' })}
           />
         )}
+        {view.name === 'learn' && (
+          <LearnView
+            progress={progress}
+            onOpenLesson={(id) => setView({ name: 'lesson', id })}
+            onStartReview={(id) => setView({ name: 'lesson', id, mode: 'review' })}
+            onBack={() => setView({ name: 'home' })}
+          />
+        )}
+        {view.name === 'lesson' &&
+          (() => {
+            const lesson = lessonById(view.id);
+            if (!lesson) return <p style={{ padding: 24 }}>This lesson no longer exists.</p>;
+            const upNext = nextLesson(progress);
+            return (
+              <LessonView
+                key={`${view.id}-${view.mode || 'learn'}`}
+                lesson={lesson}
+                mode={view.mode || 'learn'}
+                reviewItems={
+                  view.mode === 'review'
+                    ? buildReviewItems(lesson, progress.lessons?.[lesson.id])
+                    : null
+                }
+                onComplete={handleLessonComplete}
+                onReviewResult={handleLessonReview}
+                onExit={() => setView({ name: 'learn' })}
+                onNextLesson={
+                  upNext && upNext.id !== view.id
+                    ? () => setView({ name: 'lesson', id: upNext.id })
+                    : null
+                }
+                nextLessonTitle={upNext && upNext.id !== view.id ? upNext.title : null}
+              />
+            );
+          })()}
         {view.name === 'track' && (
           <TrackMap
             trackKey={view.trackKey}

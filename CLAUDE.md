@@ -36,7 +36,13 @@ Full gates (lint + test + build + smoke) before every push, no exceptions.
   `patternHints.js`,
   `warmups.js` + `warmups-pandas.js` + `warmups-sql.js` (typing drills, 3 tracks × 3
   levels × 50; SQL checking folds case, pandas/SQL answers EXECUTE in the warm-up gate),
-  `validateQuestion.js` (schema gate, also used by import).
+  `validateQuestion.js` (schema gate, also used by import),
+  `lessons.js` + `lessons-chN.js` + `validateLesson.js` (Learn-from-zero curriculum:
+  lessons `{id, chapter, prereqs, read{text≤120w, example}, items[]}` with item types
+  predict/type/fix/write/watch; tests/lesson-tests.mjs EXECUTES every read example,
+  predict snippet (stdout vs answer via checkAnswer), fix (broken must FAIL, solution
+  pass), write/watch through real engines; PY_SNIPPET_HARNESS in pyHarness runs scripts
+  with stdout capture — worker kind 'snippet', pyClient.runPythonSnippet).
 
 ## Engine (src/engine/)
 
@@ -59,6 +65,10 @@ Result comparison canonicalizes via `_canon`, honoring `unordered`.
   median firstSolveMs, ≥3 samples per difficulty.
 - `bigo.js` — bigOBucket maps a complexity string's time part to 6 buckets; product forms
   (O(m·n)), O(h), O(L) return null = reveal-don't-grade.
+- `lessonProgress.js` — progress.lessons[id] = {completedAt, runs, missedIdx, srs};
+  recordLessonComplete (skill check due +1d), recordLessonReview (pass climbs / fail
+  resets — never touches question srs), buildReviewItems (4 quick predict/type,
+  missed-first).
 - others: activity (daily goal + todayPulse), mockSession (formats incl. data round via
   format.tracks, optimalComplexity = last approach's complexity else question.complexity), practiceSession (review→new queue),
   patternQuiz, celebrate, theme, uiPrefs, vizPointers (▲ markers from subscript scan).

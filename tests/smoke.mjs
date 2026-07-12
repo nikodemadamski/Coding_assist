@@ -10,6 +10,7 @@
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
 import { WARMUP_SETS } from '../src/data/warmups.js';
+import { LESSONS } from '../src/data/lessons.js';
 
 const PORT = 4173;
 const BASE = `http://localhost:${PORT}`;
@@ -662,7 +663,7 @@ try {
 
   // ---- Sensei guide + attendance calendar ----
   await page.locator('.hdr-menu-btn').click();
-  check((await page.locator('.hdr-menu-pop button').count()) === 3, 'Library menu holds Stats / Patterns / Sensei');
+  check((await page.locator('.hdr-menu-pop button').count()) === 4, 'Library menu holds Learn / Stats / Patterns / Sensei');
   await page.keyboard.press('Escape');
   check((await page.locator('.hdr-menu-pop').count()) === 0, 'Esc closes the Library menu');
   await openLibrary(page, 'Sensei');
@@ -681,6 +682,68 @@ try {
     (await page.locator('.track-fit .ready-part.weakest').count()) === 1,
     'the thinnest track is highlighted'
   );
+
+  // ---- Learn Python from zero: the lesson player, end to end ----
+  await openLibrary(page, 'Learn');
+  check((await page.locator('.learn h1').innerText()).includes('Learn Python'), 'the Learn page opens');
+  check((await page.locator('.learn-lesson').count()) >= 6, 'chapter 1 lists its lessons');
+  await page.locator('.learn-lesson.next').click();
+  await page.locator('.ln-read').waitFor({ timeout: 10000 });
+  await page.locator('.ln-run-row .btn', { hasText: 'Run it' }).click();
+  await page.locator('.ln-stdout').waitFor({ timeout: 120000 });
+  check(
+    (await page.locator('.ln-stdout').innerText()).includes('welcome to the dojo'),
+    'the read example runs through the real engine'
+  );
+  await page.locator('button', { hasText: 'Start the drills' }).click();
+  await page.locator('.ln-item').waitFor({ timeout: 5000 });
+
+  const lesson1 = LESSONS[0];
+  // Item 1: answer correctly.
+  await page.fill('.ln-item .wu-input', lesson1.items[0].answer);
+  await page.locator('.ln-item .btn', { hasText: 'Check' }).click();
+  check((await page.locator('.ln-outcome').innerText()).includes('✓'), 'a correct answer is accepted with its why');
+  await page.locator('.ln-next').click();
+  // Item 2: miss twice — nudge, then reveal.
+  await page.fill('.ln-item .wu-input', 'definitely wrong');
+  await page.locator('.ln-item .btn', { hasText: 'Check' }).click();
+  check(await page.locator('.ln-nudge').isVisible(), 'the first miss asks for a second look');
+  await page.fill('.ln-item .wu-input', 'wrong again');
+  await page.locator('.ln-item .btn', { hasText: 'Check' }).click();
+  check(
+    (await page.locator('.ln-outcome').innerText()).includes(lesson1.items[1].answer),
+    'the second miss reveals the answer'
+  );
+  await page.locator('.ln-next').click();
+  // Items 3..N: answer correctly from the bank; the missed item returns once.
+  for (let i = 2; i < lesson1.items.length + 1; i++) {
+    const answered =
+      i < lesson1.items.length ? lesson1.items[i].answer : lesson1.items[1].answer;
+    await page.fill('.ln-item .wu-input', answered);
+    await page.locator('.ln-item .btn', { hasText: 'Check' }).click();
+    await page.locator('.ln-next').click();
+  }
+  await page.locator('.ln-done').waitFor({ timeout: 5000 });
+  check(
+    (await page.locator('.ln-done').innerText()).includes(
+      `${lesson1.items.length - 1}/${lesson1.items.length} first try`
+    ),
+    'the completion screen counts first-try answers'
+  );
+  check(
+    (await page.locator('.ln-done').innerText()).includes('Next lesson'),
+    'completion offers the next lesson'
+  );
+  await page.locator('.ln-done .btn', { hasText: 'Back to Learn' }).click();
+  check(
+    (await page.locator('.learn-lesson.done').count()) === 1,
+    'the finished lesson is checked off on the Learn page'
+  );
+  check(
+    (await page.locator('.learn-status').innerText()).includes('1/'),
+    'the lesson counter moved'
+  );
+  await page.locator('.learn-back').click();
 
   // ---- review forecast + backup nudge (seeded: 8 solves, reviews spread out) ----
   await page.evaluate(() => {
