@@ -28,6 +28,7 @@ import {
 import {
   recordSolve,
   recordFail,
+  applyRating,
   isSolved,
   currentStreak,
   backupStatus,
@@ -165,6 +166,11 @@ export default function App() {
     setProgress((p) => recordDayFail(recordFail(p, questionId), questionId));
   }, []);
 
+  // Confidence rating after a recorded solve: re-tunes the review interval.
+  const handleRate = useCallback((questionId, rating) => {
+    setProgress((p) => applyRating(p, questionId, rating));
+  }, []);
+
   const handleDraft = useCallback((questionId, code) => {
     setProgress((p) => ({ ...p, drafts: { ...p.drafts, [questionId]: code } }));
   }, []);
@@ -288,6 +294,7 @@ export default function App() {
             progress={progress}
             mode={view.name === 'drill' ? 'drill' : 'practice'}
             onSolve={handleSolve}
+            onRate={handleRate}
             onFail={handleFail}
             onDraft={handleDraft}
             onNote={handleNote}

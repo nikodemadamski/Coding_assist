@@ -78,12 +78,33 @@ export function recordSolve(
     next.srs[questionId] = { stage: 0, nextDue: addDays(today, SRS_INTERVALS[0]) };
   } else if (isDue(srs, today)) {
     // Reviewed on time: move the stage by the rating delta (clamped to the ladder).
+    // `prevStage` remembers where the ladder stood BEFORE this solve, so a
+    // confidence rating arriving moments later (applyRating) can re-derive the
+    // schedule exactly as if that delta had been passed here.
     const stage = Math.max(0, Math.min(srs.stage + stageDelta, SRS_INTERVALS.length - 1));
-    next.srs[questionId] = { stage, nextDue: addDays(today, SRS_INTERVALS[stage]) };
+    next.srs[questionId] = { stage, nextDue: addDays(today, SRS_INTERVALS[stage]), prevStage: srs.stage };
   }
   // Solving early (not due yet) leaves the schedule untouched.
 
   next.streak = touchStreak(next.streak, today);
+  return next;
+}
+
+// Re-tune the schedule chosen by the solve that JUST happened. The solve is
+// recorded immediately on a passing submit (so ending a session early never
+// loses it); the confidence rating arrives afterwards and only adjusts the
+// interval. No-op for first solves and early (not-due) solves — exactly the
+// cases where recordSolve ignores the delta too.
+export function applyRating(progress, questionId, rating, now = new Date()) {
+  const delta = RATING_DELTA[rating];
+  const srs = progress.srs?.[questionId];
+  if (delta === undefined || !srs || srs.prevStage === undefined || srs.prevStage === null) {
+    return progress;
+  }
+  const today = todayStr(now);
+  const next = structuredClone(progress);
+  const stage = Math.max(0, Math.min(srs.prevStage + delta, SRS_INTERVALS.length - 1));
+  next.srs[questionId] = { stage, nextDue: addDays(today, SRS_INTERVALS[stage]), prevStage: srs.prevStage };
   return next;
 }
 

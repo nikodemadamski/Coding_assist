@@ -19,6 +19,7 @@ export default function PracticeView({
   progress,
   onSolve,
   onFail,
+  onRate,
   onDraft,
   onNote,
   onBigO,
@@ -54,10 +55,11 @@ export default function PracticeView({
     );
   }
 
-  // Wrap the solve/fail handlers so a pass advances the queue and a fail/skip
-  // re-queues. Progress (SRS/streak/mistakes) is recorded by the App handlers.
-  const handleSolve = (qid, opts) => {
-    onSolve(qid, opts);
+  // A passing submit records the solve immediately (App handler) but does NOT
+  // advance — the reflect panel stays up. The confidence rating re-tunes the
+  // schedule and advances the queue; a fail/skip re-queues.
+  const handleRate = (qid, rating) => {
+    onRate(qid, rating);
     setSession((s) => onPass(s));
   };
   const handleNext = () => setSession((s) => onRequeue(s));
@@ -67,7 +69,8 @@ export default function PracticeView({
       key={id}
       question={question}
       progress={progress}
-      onSolve={handleSolve}
+      onSolve={onSolve}
+      onRate={handleRate}
       onFail={onFail}
       onDraft={onDraft}
       onNote={onNote}

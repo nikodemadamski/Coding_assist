@@ -8,7 +8,7 @@ import Notes from './Notes.jsx';
 import BigOCheck from './BigOCheck.jsx';
 import VisualizerModal from './VisualizerModal.jsx';
 import { runQuestion } from '../engine/runnerClient.js';
-import { RATING_DELTA, isSolved } from '../state/progress.js';
+import { isSolved } from '../state/progress.js';
 import { formatDuration } from '../state/mockSession.js';
 import {
   loadUiPrefs,
@@ -55,6 +55,7 @@ export default function ProblemView({
   practiceMode = false,
   practiceInfo = null,
   onNext,
+  onRate = null,
   // mock-interview props (optional): lock help, show a timer, report result
   mockMode = false,
   headerExtra = null,
@@ -252,8 +253,10 @@ export default function ProblemView({
         } else if (rep.allPassed) {
           solveMsRef.current = elapsedMs();
           if (practiceMode) {
-            // Wait for a confidence rating before scheduling — the rating tunes
-            // the next review interval.
+            // Record the solve NOW — leaving the session early must never lose
+            // it. The confidence rating that follows only re-tunes the interval
+            // (and advances the queue).
+            onSolve(question.id, { timeMs: solveMsRef.current });
             setOutcome('pass');
           } else {
             onSolve(question.id, { timeMs: solveMsRef.current });
@@ -279,11 +282,10 @@ export default function ProblemView({
 
   executeRef.current = execute;
 
-  // Rating a correct answer records the solve (with the confidence delta) AND
-  // advances the session — onSolve is the practice handler that drops the
-  // question from the queue, so we must NOT also call onNext (that re-queues).
+  // The solve was already recorded on submit; rating re-tunes the interval and
+  // advances the session queue (onRate is the practice handler for both).
   function rate(level) {
-    onSolve(question.id, { stageDelta: RATING_DELTA[level], timeMs: solveMsRef.current });
+    onRate?.(question.id, level);
   }
 
   function handleReset() {
@@ -593,8 +595,8 @@ export default function ProblemView({
           {practiceMode && outcome === 'pass' && (
             <div className="reflect">
               <div className="solved-banner">
-                ✓ Correct{solveMsRef.current != null ? ` in ${formatDuration(solveMsRef.current)}` : ''}!
-                Now lock in the understanding.
+                ✓ Correct{solveMsRef.current != null ? ` in ${formatDuration(solveMsRef.current)}` : ''} —
+                recorded. Now lock in the understanding, then rate it to continue.
               </div>
               {progress.notes?.[question.id] && (
                 <div className="past-note">

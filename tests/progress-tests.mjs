@@ -2,6 +2,8 @@
 import {
   recordSolve,
   recordFail,
+  applyRating,
+  isDue,
   currentStreak,
   dueQuestionIds,
   beltFor,
@@ -242,6 +244,32 @@ console.log('Training logic tests\n');
   check(good.srs.a.stage === 2, 'Good advances one stage');
   check(easy.srs.a.stage === 3, 'Easy advances two stages');
   check(hard.srs.a.stage === 0, 'Hard drops a stage');
+
+  // The bug-fix contract: a passing submit records the solve IMMEDIATELY (the
+  // review is no longer due even if the session ends right here), and the
+  // rating that follows re-tunes the interval as if it had been the delta.
+  const recorded = recordSolve(dueProg, 'a', new Date(), { timeMs: 1000 });
+  check(!isDue(recorded.srs.a, today), 'solve on submit clears due-ness before any rating');
+  check(recorded.srs.a.prevStage === 1, 'the pre-solve stage is remembered for the rating');
+  const ratedEasy = applyRating(recorded, 'a', 'easy');
+  const ratedHard = applyRating(recorded, 'a', 'hard');
+  const ratedGood = applyRating(recorded, 'a', 'good');
+  check(ratedEasy.srs.a.stage === easy.srs.a.stage, 'rating Easy after the fact matches solve-with-Easy');
+  check(ratedHard.srs.a.stage === hard.srs.a.stage, 'rating Hard after the fact matches solve-with-Hard');
+  check(ratedGood.srs.a.stage === good.srs.a.stage, 'rating Good after the fact matches solve-with-Good');
+
+  // First solves and early solves ignore ratings — same as recordSolve does.
+  const firstSolve = recordSolve(structuredClone(EMPTY_PROGRESS), 'z', new Date());
+  check(applyRating(firstSolve, 'z', 'easy').srs.z.stage === 0, 'rating a first solve is a no-op');
+  const early = {
+    ...dueProg,
+    srs: { a: { stage: 2, nextDue: addDays(today, 5) } },
+  };
+  const earlySolved = recordSolve(early, 'a', new Date());
+  check(
+    applyRating(earlySolved, 'a', 'hard').srs.a.stage === 2,
+    'rating an early (not-due) solve is a no-op'
+  );
 
   // Mastery levels track the ladder.
   check(masteryLevel(prog, 'c') === 'new', 'never-solved -> new');
