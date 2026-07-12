@@ -68,6 +68,16 @@ for (const track of ['pandas', 'sql']) {
   check(guideKeyOf(py) === 'arrays-hashing', 'an algorithm question still maps by category');
 }
 
+// ---- every data pattern has a per-pattern stuck-ladder hint ----
+{
+  const { DATA_HINTS } = await import('../src/data/patternHints.js');
+  for (const track of ['pandas', 'sql']) {
+    const pats = ROADMAP.find((c) => c.key === track).patterns;
+    const missing = pats.filter((p) => !DATA_HINTS[p]?.tell || !DATA_HINTS[p]?.reach);
+    check(missing.length === 0, `${track}: every pattern has a tell/reach hint`, missing.join(', '));
+  }
+}
+
 // ---- SQL templates look like SQL ----
 for (const p of dataCards.filter((c) => c.track === 'sql')) {
   check(/select/i.test(p.template), `"${p.key}" template contains a SELECT`);
