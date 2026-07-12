@@ -1144,17 +1144,21 @@ import { APPROACHES } from './approaches.js';
 import { APPROACHES_DATA } from './approaches-data.js';
 import { SQL_QUESTIONS_2 } from './sql2.js';
 import { SQL_QUESTIONS_3 } from './sql3.js';
+import { SQL_QUESTIONS_4 } from './sql4.js';
 import { PANDAS_QUESTIONS_2 } from './pandas2.js';
 import { PANDAS_QUESTIONS_3 } from './pandas3.js';
+import { PANDAS_QUESTIONS_4 } from './pandas4.js';
 
 const RAW_QUESTIONS = [
   ...PYTHON_QUESTIONS,
   ...PANDAS_QUESTIONS,
   ...PANDAS_QUESTIONS_2,
   ...PANDAS_QUESTIONS_3,
+  ...PANDAS_QUESTIONS_4,
   ...SQL_QUESTIONS,
   ...SQL_QUESTIONS_2,
   ...SQL_QUESTIONS_3,
+  ...SQL_QUESTIONS_4,
   ...NEETCODE_1,
   ...NEETCODE_2,
   ...NEETCODE_3,
