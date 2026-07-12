@@ -69,6 +69,43 @@ const ADVICE = {
 export const BIGO_MIN_SAMPLES = 15;
 export const BIGO_WEIGHT = 0.1;
 
+// Per-track fitness: how covered and how deeply owned each track is, so a
+// python-strong / SQL-weak learner can SEE the gap. Fitness blends coverage
+// (60%) with mastery (40%); mocks, pace and Big-O are cross-track skills and
+// stay out of the slice. Returns { tracks: [{track, total, solved, coverage,
+// mastery, score}], weakest } — weakest is null until something is solved.
+export const FITNESS_TRACKS = ['python', 'pandas', 'sql'];
+
+export function trackFitness(progress, questions) {
+  const tracks = FITNESS_TRACKS.map((track) => {
+    const qs = questions.filter((q) => q.track === track);
+    const total = Math.max(1, qs.length);
+    const solved = qs.filter((q) => isSolved(progress.solved[q.id])).length;
+    let mastered = 0;
+    let reviewing = 0;
+    for (const q of qs) {
+      const lvl = masteryLevel(progress, q.id);
+      if (lvl === 'mastered') mastered++;
+      else if (lvl === 'reviewing') reviewing++;
+    }
+    const coverage = solved / total;
+    const mastery = (mastered + 0.5 * reviewing) / total;
+    return {
+      track,
+      total: qs.length,
+      solved,
+      coverage,
+      mastery,
+      score: Math.round(100 * (0.6 * coverage + 0.4 * mastery)),
+    };
+  });
+  const anySolved = tracks.some((t) => t.solved > 0);
+  const weakest = anySolved
+    ? tracks.reduce((a, b) => (b.score < a.score ? b : a)).track
+    : null;
+  return { tracks, weakest };
+}
+
 export function readiness(progress, questions) {
   const total = Math.max(1, questions.length);
   const solvedCount = questions.filter((q) => isSolved(progress.solved[q.id])).length;

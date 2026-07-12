@@ -671,6 +671,17 @@ try {
   await openLibrary(page, 'Stats');
   check(await page.locator('.calendar-block').isVisible(), 'Stats page shows the attendance calendar');
 
+  // ---- per-track fitness: three bars, weakest called out ----
+  check((await page.locator('.track-fit .ready-part').count()) === 3, 'fitness by track shows all three tracks');
+  check(
+    (await page.locator('.track-fit').innerText()).includes('SQL'),
+    'the track fitness strip names SQL'
+  );
+  check(
+    (await page.locator('.track-fit .ready-part.weakest').count()) === 1,
+    'the thinnest track is highlighted'
+  );
+
   // ---- review forecast + backup nudge (seeded: 8 solves, reviews spread out) ----
   await page.evaluate(() => {
     const today = new Date();
@@ -708,7 +719,7 @@ try {
     (await page.locator('.ready-pace-row').innerText()).includes('vs'),
     'pace chip compares your median to the target time'
   );
-  check((await page.locator('.ready-advice').innerText()).includes('Biggest gap'), 'the card says what to fix first');
+  check((await page.locator('.ready-card .ready-advice').innerText()).includes('Biggest gap'), 'the card says what to fix first');
 
   check((await page.locator('.fc-day').count()) === 7, 'review forecast shows the next 7 days');
   const fcToday = await page.locator('.fc-day').first().innerText();

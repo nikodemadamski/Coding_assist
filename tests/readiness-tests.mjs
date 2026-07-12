@@ -2,6 +2,7 @@
 // and the solve-timing fields feeding it.
 import {
   readiness,
+  trackFitness,
   paceByDifficulty,
   medianMs,
   PACE_TARGETS_MS,
@@ -152,6 +153,38 @@ console.log('readiness-tests: recordSolve timing + preserved history');
   check('re-solves never overwrite the first-solve time', resolved.solved.a.firstSolveMs === min(7));
   const untimed = recordSolve(fresh(), 'b');
   check('untimed solves store no firstSolveMs', !('firstSolveMs' in untimed.solved.b));
+}
+
+// ---- per-track fitness ----
+{
+  console.log('trackFitness:');
+  const bank = [
+    { ...q('p1'), track: 'python' },
+    { ...q('p2'), track: 'python' },
+    { ...q('d1'), track: 'pandas' },
+    { ...q('d2'), track: 'pandas' },
+    { ...q('s1'), track: 'sql' },
+    { ...q('s2'), track: 'sql' },
+  ];
+
+  const empty = trackFitness(fresh(), bank);
+  check('three tracks always reported', empty.tracks.length === 3);
+  check('nothing solved -> all zero', empty.tracks.every((t) => t.score === 0));
+  check('nothing solved -> no weakest callout', empty.weakest === null);
+
+  // Solve both python questions, one pandas, zero SQL.
+  let p = fresh();
+  p = recordSolve(p, 'p1', new Date());
+  p = recordSolve(p, 'p2', new Date());
+  p = recordSolve(p, 'd1', new Date());
+  const fit = trackFitness(p, bank);
+  const by = Object.fromEntries(fit.tracks.map((t) => [t.track, t]));
+  check('python coverage full', by.python.coverage === 1 && by.python.solved === 2);
+  check('pandas coverage half', by.pandas.coverage === 0.5);
+  check('sql untouched', by.sql.score === 0 && by.sql.solved === 0);
+  check('weakest is the empty track', fit.weakest === 'sql');
+  check('scores order matches effort', by.python.score > by.pandas.score && by.pandas.score > by.sql.score);
+  check('totals count per track', by.python.total === 2 && by.sql.total === 2);
 }
 
 if (failures) {

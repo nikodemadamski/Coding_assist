@@ -1468,6 +1468,30 @@ details.hint[open] summary {
   border: 1px solid var(--line);
   border-radius: 12px;
 }
+.track-fit {
+  padding: 14px 20px;
+  margin-bottom: 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.track-fit h3 {
+  margin: 0 0 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-dim);
+}
+.track-fit .ready-part {
+  grid-template-columns: 150px minmax(60px, 1fr) 92px;
+}
+.track-fit .ready-part-pct {
+  white-space: nowrap;
+}
+.track-fit .ready-advice {
+  margin-bottom: 0;
+}
 .ready-left {
   text-align: center;
   min-width: 128px;

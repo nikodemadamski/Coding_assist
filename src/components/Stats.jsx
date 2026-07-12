@@ -8,7 +8,7 @@ import {
   reviewForecast,
 } from '../state/progress.js';
 import { summarizeMocks, formatDuration } from '../state/mockSession.js';
-import { readiness, PACE_MIN_SAMPLES } from '../state/readiness.js';
+import { readiness, trackFitness, PACE_MIN_SAMPLES } from '../state/readiness.js';
 import { ROADMAP, categoryKeyOf } from '../data/roadmap.js';
 import Calendar from './Calendar.jsx';
 
@@ -118,6 +118,36 @@ function ReadinessCard({ ready }) {
   );
 }
 
+const TRACK_LABEL = { python: 'python', pandas: 'pandas', sql: 'SQL' };
+
+// Per-track slice of the same readiness idea: coverage + mastery, one bar per
+// track, weakest highlighted — so a lopsided preparation is visible at a glance.
+function TrackFitnessCard({ fit }) {
+  return (
+    <section className="track-fit">
+      <h3>Fitness by track</h3>
+      <div className="ready-parts">
+        {fit.tracks.map((t) => (
+          <div className={`ready-part ${fit.weakest === t.track ? 'weakest' : ''}`} key={t.track}>
+            <span className="ready-part-label">{TRACK_LABEL[t.track]}</span>
+            <span className="ready-part-track">
+              <span className="ready-part-fill" style={{ width: `${t.score}%` }} />
+            </span>
+            <span className="ready-part-pct">
+              {t.score} · {t.solved}/{t.total}
+            </span>
+          </div>
+        ))}
+      </div>
+      {fit.weakest && (
+        <p className="ready-advice">
+          Thinnest track: {TRACK_LABEL[fit.weakest]} — its map is where the next sessions pay the most.
+        </p>
+      )}
+    </section>
+  );
+}
+
 function Forecast({ forecast }) {
   const max = Math.max(1, ...forecast.map((f) => f.count));
   const totalWeek = forecast.reduce((n, f) => n + f.count, 0);
@@ -153,6 +183,7 @@ export default function Stats({ questions, progress, backupInfo = null, onBackup
   const dueCount = dueQuestionIds(progress, validIds).length;
   const forecast = useMemo(() => reviewForecast(progress, validIds), [progress, validIds]);
   const ready = useMemo(() => readiness(progress, questions), [progress, questions]);
+  const trackFit = useMemo(() => trackFitness(progress, questions), [progress, questions]);
 
   const mastery = useMemo(() => {
     const counts = { new: 0, learning: 0, reviewing: 0, mastered: 0 };
@@ -215,6 +246,9 @@ export default function Stats({ questions, progress, backupInfo = null, onBackup
 
       {/* Am I ready? — the number the whole app exists to move */}
       <ReadinessCard ready={ready} />
+
+      {/* The same idea sliced by track: lopsided prep shows up here */}
+      <TrackFitnessCard fit={trackFit} />
 
       {/* Journey hero — the whole path at a glance */}
       <section className="journey-card">
