@@ -771,6 +771,22 @@ try {
     (await page.locator('.learn-status').innerText()).includes('1/'),
     'the lesson counter moved'
   );
+
+  // ---- Brilliant-style visual: the "See it" widget taps through beats ----
+  await page.locator('.learn-lesson-title', { hasText: 'Slicing' }).first().click();
+  await page.locator('.ln-read').waitFor({ timeout: 10000 });
+  check(await page.locator('.vw-player').isVisible(), 'a lesson with a visual opens on "See it"');
+  check((await page.locator('.vw-cell').count()) >= 4, 'the list widget renders its cells');
+  const beat0 = (await page.locator('.vw-caption').innerText()).trim();
+  await page.locator('.vw-controls .btn', { hasText: 'Next' }).click();
+  const beat1 = (await page.locator('.vw-caption').innerText()).trim();
+  check(beat1 !== beat0 && beat1.length > 0, 'tapping Next advances the visual to the next beat');
+  check((await page.locator('.vw-dot.on').count()) >= 2, 'progress dots track the beat');
+  // the "Read the code" tab still offers the runnable example
+  await page.locator('.ln-read-tab', { hasText: 'Read the code' }).click();
+  check(await page.locator('.ln-run-row .btn', { hasText: 'Run it' }).isVisible(), 'Read-the-code tab keeps the runnable example');
+  await page.locator('.icon-btn', { hasText: '←' }).first().click();
+
   await page.locator('.learn-back').click();
 
   // ---- a due skill check opens the daily practice session ----

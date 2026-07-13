@@ -13,6 +13,19 @@ export const LESSONS_CH3 = [
       text:
         'A **list** holds values in order: `nums = [3, 1, 4]`. Read by position with `nums[0]` (counting starts at 0!), and `nums[-1]` is the LAST element — negative counts from the end.\n\nGrow with `nums.append(x)`, measure with `len(nums)`, test membership with `in`.',
       example: { code: 'nums = [3, 1, 4]\nprint(nums[0], nums[-1])', expectedOutput: '3 4' },
+      visual: {
+        widget: 'list-cells',
+        list: [3, 1, 4],
+        caption: 'A list is boxes in a row. Each box has a position — its index.',
+        beats: [
+          { caption: 'Positions start at 0. nums[0] is the FIRST box.', pointer: 0 },
+          { caption: 'nums[1] is the next one along.', pointer: 1 },
+          { caption: 'nums[-1] counts from the END — the last box, whatever the length.', pointer: -1 },
+        ],
+        why: 'The pointer is the index. 0 is the first box, and negatives walk in from the end.',
+        verifyCode: 'nums = [3, 1, 4]\nprint(nums[0], nums[1], nums[-1])',
+        verifyOutput: '3 1 4',
+      },
     },
     items: [
       {
@@ -82,6 +95,20 @@ export const LESSONS_CH3 = [
       text:
         'A **slice** cuts a piece: `nums[1:3]` takes positions 1 and 2 — **start included, end excluded**. Leave an end open: `nums[:2]` is the first two, `nums[2:]` the rest.\n\nA third number is the step, and a step of `-1` walks backwards — `s[::-1]` is THE reverse idiom. Slices work on strings too.',
       example: { code: 'nums = [10, 20, 30, 40]\nprint(nums[1:3])', expectedOutput: '[20, 30]' },
+      visual: {
+        widget: 'list-cells',
+        list: [10, 20, 30, 40],
+        caption: 'A slice grabs a RANGE of boxes — watch which ones it includes.',
+        beats: [
+          { caption: 'nums[1:3] — start 1 included…', pointer: 1 },
+          { caption: '…end 3 EXCLUDED. So the shaded range is positions 1 and 2.', slice: [1, 3] },
+          { caption: 'nums[:2] — open start means "from the beginning": the first two.', slice: [0, 2] },
+          { caption: 'nums[2:] — open end means "to the end": the rest.', slice: [2, 4] },
+        ],
+        why: 'Start included, end excluded — the shaded band is exactly what the slice returns.',
+        verifyCode: 'nums = [10, 20, 30, 40]\nprint(nums[1:3], nums[:2], nums[2:])',
+        verifyOutput: '[20, 30] [10, 20] [30, 40]',
+      },
     },
     items: [
       {

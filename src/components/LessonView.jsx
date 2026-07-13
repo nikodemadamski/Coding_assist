@@ -3,6 +3,7 @@ import Markdown from './Markdown.jsx';
 import Editor from './Editor.jsx';
 import Results from './Results.jsx';
 import VisualizerModal from './VisualizerModal.jsx';
+import VisualPlayer from './visual/VisualPlayer.jsx';
 import { checkAnswer } from '../data/warmups.js';
 import { itemAsQuestion } from '../data/lessons.js';
 import { runQuestion } from '../engine/runnerClient.js';
@@ -227,6 +228,8 @@ export default function LessonView({
   const [firstTryCount, setFirstTryCount] = useState(0);
   const [requeued, setRequeued] = useState(false);
   const [readRun, setReadRun] = useState(null);
+  // Read phase defaults to "See it" when a visual exists — understanding first.
+  const [readMode, setReadMode] = useState(lesson.read.visual ? 'see' : 'read');
   const reportedRef = useRef(false);
 
   const idx = queue[pos];
@@ -283,17 +286,43 @@ export default function LessonView({
         </div>
         <div className="ln-read">
           <Markdown text={lesson.read.text} />
-          <pre className="ln-code">{lesson.read.example.code}</pre>
-          <div className="ln-run-row">
-            <button className="btn" onClick={runReadExample} disabled={readRun?.pending}>
-              {readRun?.pending ? 'Running…' : 'Run it'}
-            </button>
-            {readRun && !readRun.pending && (
-              <pre className="ln-code ln-stdout">
-                {readRun.status === 'ok' ? readRun.stdout.trimEnd() : readRun.message}
-              </pre>
-            )}
-          </div>
+          {lesson.read.visual && (
+            <div className="ln-read-tabs" role="tablist">
+              <button
+                role="tab"
+                className={`ln-read-tab ${readMode === 'see' ? 'active' : ''}`}
+                aria-selected={readMode === 'see'}
+                onClick={() => setReadMode('see')}
+              >
+                See it
+              </button>
+              <button
+                role="tab"
+                className={`ln-read-tab ${readMode === 'read' ? 'active' : ''}`}
+                aria-selected={readMode === 'read'}
+                onClick={() => setReadMode('read')}
+              >
+                Read the code
+              </button>
+            </div>
+          )}
+          {lesson.read.visual && readMode === 'see' ? (
+            <VisualPlayer visual={lesson.read.visual} />
+          ) : (
+            <>
+              <pre className="ln-code">{lesson.read.example.code}</pre>
+              <div className="ln-run-row">
+                <button className="btn" onClick={runReadExample} disabled={readRun?.pending}>
+                  {readRun?.pending ? 'Running…' : 'Run it'}
+                </button>
+                {readRun && !readRun.pending && (
+                  <pre className="ln-code ln-stdout">
+                    {readRun.status === 'ok' ? readRun.stdout.trimEnd() : readRun.message}
+                  </pre>
+                )}
+              </div>
+            </>
+          )}
         </div>
         <button className="btn btn-primary ln-start" onClick={() => setPhase('items')}>
           Start the drills →

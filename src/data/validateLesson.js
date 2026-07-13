@@ -3,6 +3,8 @@
 // the learning design: tiny reads, mostly doing, deterministic snippets (the
 // gate EXECUTES them, so their output claims must be mechanically checkable).
 
+import { validateVisual } from './visualWidgets.js';
+
 const ID_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const ITEM_TYPES = ['predict', 'type', 'fix', 'write', 'watch'];
 export const READ_WORD_CAP = 120;
@@ -68,6 +70,16 @@ export function validateLesson(lesson, { existingIds = [], chapterKeys = [], ear
   );
   if (read?.example?.code) {
     need(!NONDETERMINISTIC.test(read.example.code), 'read example must be deterministic (no input/random/time)');
+  }
+
+  // Optional "See it" visual: a tap-through animated widget. Beats validated by
+  // the shared widget registry; verifyCode determinism enforced here, its real
+  // execution checked by the lesson gate.
+  if (read?.visual !== undefined) {
+    for (const e of validateVisual(read.visual)) errors.push(`read.visual: ${e}`);
+    if (read.visual?.verifyCode) {
+      need(!NONDETERMINISTIC.test(read.visual.verifyCode), 'read.visual.verifyCode must be deterministic');
+    }
   }
 
   // Items: 4–12 of them, each a valid shape for its type; at least one

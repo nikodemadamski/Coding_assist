@@ -3691,6 +3691,115 @@ details.hint[open] summary {
   margin-top: 8px;
 }
 
+/* ---- visual widgets (Brilliant-style, anime.js-driven) ---- */
+.ln-read-tabs {
+  display: flex;
+  gap: 6px;
+  margin: 12px 0 10px;
+}
+.ln-read-tab {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text-dim);
+  font-size: 0.82rem;
+  padding: 4px 14px;
+  cursor: pointer;
+}
+.ln-read-tab.active {
+  color: var(--ink);
+  background: var(--jade);
+  border-color: var(--jade);
+  font-weight: 600;
+}
+.vw-player {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.vw {
+  padding: 20px 8px 8px;
+  overflow-x: auto;
+}
+.vw-cells {
+  position: relative;
+  display: flex;
+  gap: 8px;
+  padding-bottom: 26px;
+  width: max-content;
+  margin: 0 auto;
+}
+.vw-cell {
+  position: relative;
+  min-width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel);
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  font-family: var(--font-code);
+  font-size: 1rem;
+}
+.vw-cell.shaded {
+  background: color-mix(in srgb, var(--jade) 22%, var(--panel));
+  border-color: var(--jade);
+}
+.vw-cell.active {
+  border-color: var(--gold);
+}
+.vw-cell-idx {
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+.vw-pointer {
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  color: var(--gold);
+  font-size: 1rem;
+  will-change: transform;
+}
+.vw-caption {
+  min-height: 2.6em;
+  margin: 0;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+.vw-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.vw-dots {
+  display: flex;
+  gap: 5px;
+  margin-right: auto;
+}
+.vw-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--line);
+}
+.vw-dot.on {
+  background: var(--jade);
+}
+.vw-why {
+  margin: 0;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--jade) 8%, var(--panel));
+  border-radius: 8px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
 /* ---- the lesson player ---- */
 .ln-page {
   max-width: 760px;

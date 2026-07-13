@@ -87,6 +87,25 @@ console.log('Lesson tests\n');
   check(bad.length === 0, 'every read example prints its claimed output', bad.slice(0, 3).join(' | '));
 }
 
+// ---- every visual with verifyCode matches real Python behavior ----
+{
+  const visuals = [];
+  for (const lesson of LESSONS) {
+    if (lesson.read.visual?.verifyCode) visuals.push([lesson.id, 'read.visual', lesson.read.visual]);
+    for (const [i, item] of lesson.items.entries()) {
+      if (item.type === 'visual' && item.verifyCode) visuals.push([lesson.id, `item ${i + 1}`, item]);
+    }
+  }
+  const bad = [];
+  for (const [id, where, visual] of visuals) {
+    const res = await runPySnippet(visual.verifyCode);
+    if (res.status !== 'ok' || res.stdout.trim() !== visual.verifyOutput.trim()) {
+      bad.push(`${id} ${where}: got ${JSON.stringify(res.stdout ?? res.message)} wanted ${JSON.stringify(visual.verifyOutput)}`);
+    }
+  }
+  check(bad.length === 0, 'every visual verifyCode matches its claimed output', bad.slice(0, 3).join(' | '));
+}
+
 // ---- predict: true stdout satisfies the app's own checker ----
 {
   const bad = [];
