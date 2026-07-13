@@ -27,10 +27,15 @@ const BEAT_RULES = {
   'list-cells': (visual, beat) => {
     const len = visual.list?.length ?? 0;
     if (!Array.isArray(visual.list) || len === 0) return 'list-cells needs a non-empty `list`';
-    if (beat.pointer !== undefined) {
-      if (!isInt(beat.pointer) || beat.pointer < -len || beat.pointer > len - 1) {
-        return `pointer ${beat.pointer} out of range for a list of ${len}`;
+    for (const key of ['pointer', 'pointer2']) {
+      if (beat[key] !== undefined) {
+        if (!isInt(beat[key]) || beat[key] < -len || beat[key] > len - 1) {
+          return `${key} ${beat[key]} out of range for a list of ${len}`;
+        }
       }
+    }
+    for (const key of ['pointerLabel', 'pointer2Label']) {
+      if (beat[key] !== undefined && !isStr(beat[key])) return `${key} must be a non-empty string`;
     }
     if (beat.slice !== undefined) {
       const s = beat.slice;

@@ -13,6 +13,21 @@ export const LESSONS_CH5 = [
       text:
         'Real data nests: a list of lists (a grid), a dict of lists, a list of dicts. Reach in with chained access — `grid[1][0]` is row 1, column 0; `people[0]["name"]` is the first person\'s name.\n\nLoop the outer layer, then the inner. A list of dicts is exactly what a spreadsheet row looks like in code.',
       example: { code: 'grid = [[1, 2], [3, 4]]\nprint(grid[1][0])', expectedOutput: '3' },
+      visual: {
+        widget: 'var-boxes',
+        caption: 'Chained access reaches in one layer at a time. Watch it drill down.',
+        beats: [
+          { vars: { grid: '[[1, 2], [3, 4]]' }, caption: 'A grid is a list of lists.' },
+          { vars: { grid: '[[1, 2], [3, 4]]', 'grid[1]': '[3, 4]' }, caption: 'grid[1] picks row 1 — the second row.' },
+          {
+            vars: { grid: '[[1, 2], [3, 4]]', 'grid[1]': '[3, 4]', 'grid[1][0]': 3 },
+            caption: 'then [0] takes its first item: 3.',
+          },
+        ],
+        why: 'grid[1][0] is just [1] then [0] — reach the outer layer, then the inner.',
+        verifyCode: 'grid = [[1, 2], [3, 4]]\nprint(grid[1][0])',
+        verifyOutput: '3',
+      },
     },
     items: [
       {
@@ -77,6 +92,18 @@ export const LESSONS_CH5 = [
       text:
         'Two shortcuts from `collections`. `Counter(items)` counts everything in one line — no `.get()` loop. `defaultdict(list)` gives any new key an empty list automatically, so you can `.append` without checking first.\n\nIn this dojo both are always available — but real scripts need `from collections import Counter, defaultdict`.',
       example: { code: "from collections import Counter\nprint(Counter('aba')['a'])", expectedOutput: '2' },
+      visual: {
+        widget: 'dict-lookup',
+        pairs: { a: 3, n: 2, b: 1 },
+        caption: "Counter('banana') did the whole counting loop for you. Look values up.",
+        beats: [
+          { key: 'a', caption: "'a' appears 3 times — Counter counted them all in one line." },
+          { key: 'z', fallback: 0, caption: 'A key it never saw is 0, never a crash — like .get(k, 0) built in.' },
+        ],
+        why: 'Counter counts in one line and treats any missing key as 0.',
+        verifyCode: "from collections import Counter\nprint(Counter('banana')['a'])",
+        verifyOutput: '3',
+      },
     },
     items: [
       {
@@ -313,6 +340,38 @@ export const LESSONS_CH5 = [
       example: {
         code: 'left, right = 0, 4\nwhile left < right:\n    left = left + 1\n    right = right - 1\nprint(left, right)',
         expectedOutput: '2 2',
+      },
+      visual: {
+        widget: 'list-cells',
+        list: [10, 20, 30, 40, 50],
+        caption: 'Two pointers start at the ends and walk inward until they meet.',
+        beats: [
+          {
+            pointer: 0,
+            pointerLabel: 'left',
+            pointer2: 4,
+            pointer2Label: 'right',
+            caption: 'left starts at 0, right at the end (4). while left < right...',
+          },
+          {
+            pointer: 1,
+            pointerLabel: 'left',
+            pointer2: 3,
+            pointer2Label: 'right',
+            caption: 'each pass steps left up and right down — they close in.',
+          },
+          {
+            pointer: 2,
+            pointerLabel: 'left',
+            pointer2: 2,
+            pointer2Label: 'right',
+            caption: 'left == right (both 2) — the loop stops. They have met.',
+          },
+        ],
+        why: 'while left < right, moving both ends inward, is a whole family of problems.',
+        verifyCode:
+          'left, right = 0, 4\nwhile left < right:\n    left = left + 1\n    right = right - 1\nprint(left, right)',
+        verifyOutput: '2 2',
       },
     },
     items: [

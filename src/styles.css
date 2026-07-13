@@ -3765,6 +3765,17 @@ details.hint[open] summary {
   color: var(--gold);
   font-size: 1rem;
   will-change: transform;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+.vw-pointer2 {
+  color: var(--jade);
+}
+.vw-ptr-label {
+  font-size: 0.62rem;
+  font-family: var(--font-code);
 }
 /* var-boxes */
 .vw-vars {

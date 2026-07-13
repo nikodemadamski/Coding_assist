@@ -396,6 +396,18 @@ export const LESSONS_CH2 = [
         code: 'for n in [4, 12, 9]:\n    if n > 10:\n        print(n)\n        break',
         expectedOutput: '12',
       },
+      visual: {
+        widget: 'loop-tape',
+        items: [4, 12, 9],
+        caption: 'break leaves the loop the instant the goal is met — the rest is skipped.',
+        beats: [
+          { at: 0, caption: 'n = 4 — not over 10, move on to the next item.' },
+          { at: 1, caption: 'n = 12 — over 10! print it, then break. Index 2 is never visited.' },
+        ],
+        why: 'break = "found it, stop looking"; continue skips just the rest of one pass.',
+        verifyCode: 'for n in [4, 12, 9]:\n    if n > 10:\n        print(n)\n        break',
+        verifyOutput: '12',
+      },
     },
     items: [
       {

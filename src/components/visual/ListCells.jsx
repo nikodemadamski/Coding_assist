@@ -8,15 +8,19 @@ function formatVal(v) {
 
 // A list drawn as indexed cells. On each beat a ▲ pointer glides to the active
 // index (anime.js), the cell pulses, and a slice range shades in — so indexing,
-// negative indexes and slicing become something you watch, not memorize.
+// negative indexes and slicing become something you watch, not memorize. A
+// second pointer (beat.pointer2, with optional labels) draws the two-ends /
+// two-speed walk behind a whole family of array problems.
 export default function ListCells({ visual, beatIndex }) {
   const animate = useAnime();
   const cellRefs = useRef([]);
   const pointerRef = useRef(null);
+  const pointer2Ref = useRef(null);
   const len = visual.list.length;
   const beat = visual.beats[beatIndex] ?? {};
   const resolve = (p) => (p < 0 ? len + p : p);
   const activeIdx = beat.pointer !== undefined ? resolve(beat.pointer) : null;
+  const activeIdx2 = beat.pointer2 !== undefined ? resolve(beat.pointer2) : null;
   const slice = beat.slice ?? null;
 
   // The cells spring in one after another the first time the widget appears.
@@ -28,14 +32,17 @@ export default function ListCells({ visual, beatIndex }) {
   }, []);
 
   useEffect(() => {
-    if (activeIdx != null) {
-      const cell = cellRefs.current[activeIdx];
-      if (cell && pointerRef.current) {
-        const x = cell.offsetLeft + cell.offsetWidth / 2 - pointerRef.current.offsetWidth / 2;
-        animate(pointerRef.current, presets.slideTo(x));
+    const glide = (idx, ref) => {
+      if (idx == null) return;
+      const cell = cellRefs.current[idx];
+      if (cell && ref.current) {
+        const x = cell.offsetLeft + cell.offsetWidth / 2 - ref.current.offsetWidth / 2;
+        animate(ref.current, presets.slideTo(x));
         animate(cell, presets.pulse());
       }
-    }
+    };
+    glide(activeIdx, pointerRef);
+    glide(activeIdx2, pointer2Ref);
     if (slice) {
       const shaded = [];
       for (let i = slice[0]; i < slice[1]; i++) {
@@ -52,11 +59,12 @@ export default function ListCells({ visual, beatIndex }) {
       <div className="vw-cells">
         {visual.list.map((v, i) => {
           const inSlice = slice && i >= slice[0] && i < slice[1];
+          const active = activeIdx === i || activeIdx2 === i;
           return (
             <div
               key={i}
               ref={(el) => (cellRefs.current[i] = el)}
-              className={`vw-cell ${inSlice ? 'shaded' : ''} ${activeIdx === i ? 'active' : ''}`}
+              className={`vw-cell ${inSlice ? 'shaded' : ''} ${active ? 'active' : ''}`}
             >
               <span className="vw-cell-val">{formatVal(v)}</span>
               <span className="vw-cell-idx">{i}</span>
@@ -65,7 +73,12 @@ export default function ListCells({ visual, beatIndex }) {
         })}
         {activeIdx != null && (
           <span className="vw-pointer" ref={pointerRef} aria-hidden="true">
-            ▲
+            ▲{beat.pointerLabel ? <span className="vw-ptr-label">{beat.pointerLabel}</span> : null}
+          </span>
+        )}
+        {activeIdx2 != null && (
+          <span className="vw-pointer vw-pointer2" ref={pointer2Ref} aria-hidden="true">
+            ▲{beat.pointer2Label ? <span className="vw-ptr-label">{beat.pointer2Label}</span> : null}
           </span>
         )}
       </div>

@@ -179,6 +179,19 @@ export const LESSONS_CH3 = [
       text:
         'A **tuple** is a list that cannot change: `point = (3, 4)`. Use it for small fixed bundles — a pair of coordinates, a (name, score).\n\nThe superpower is **unpacking**: `x, y = point` pulls it apart into variables. That is also how Python swaps: `a, b = b, a` — no temp variable.',
       example: { code: 'point = (3, 4)\nx, y = point\nprint(x, y)', expectedOutput: '3 4' },
+      visual: {
+        widget: 'var-boxes',
+        caption: 'Unpacking pulls a tuple apart into named variables — watch it split.',
+        beats: [
+          { vars: { point: '(3, 4)' }, caption: 'A tuple bundles a few fixed values together.' },
+          { vars: { point: '(3, 4)', x: 3, y: 4 }, caption: 'x, y = point unpacks it into two variables at once.' },
+          { vars: { a: 1, b: 2 }, caption: 'a, b = 1, 2 assigns both in one line.' },
+          { vars: { a: 2, b: 1 }, caption: 'a, b = b, a swaps them — no temp variable needed.' },
+        ],
+        why: 'Unpacking and a, b = b, a swaps are tuples quietly at work.',
+        verifyCode: 'point = (3, 4)\nx, y = point\nprint(x, y)',
+        verifyOutput: '3 4',
+      },
     },
     items: [
       {
@@ -322,6 +335,27 @@ export const LESSONS_CH3 = [
       text:
         'A **set** holds each value at most once and answers `in` FAST — that pair of facts solves a whole family of problems (seen it before? any duplicates?).\n\nMake one with `{1, 2, 3}` or `set()` — careful: `{}` makes an empty DICT. Grow with `.add(x)`.',
       example: { code: 'print(len({1, 2, 2, 3}))', expectedOutput: '3' },
+      visual: {
+        widget: 'pipe-flow',
+        caption: 'A set keeps each value once — duplicates fall away as it is built.',
+        beats: [
+          {
+            label: 'set([1, 2, 2, 3])',
+            input: ['1', '2', '2', '3'],
+            output: ['1', '2', '3'],
+            caption: 'The repeated 2 is dropped — a set holds each value at most once.',
+          },
+          {
+            label: 'seen = {3, 5}; 5 in seen',
+            input: ['3', '5'],
+            output: ['True'],
+            caption: 'Membership (in) is the other superpower — and it is FAST.',
+          },
+        ],
+        why: 'Each value at most once, plus fast `in` — the seen-it / any-duplicates tool.',
+        verifyCode: 'print(len({1, 2, 2, 3}))',
+        verifyOutput: '3',
+      },
     },
     items: [
       {
