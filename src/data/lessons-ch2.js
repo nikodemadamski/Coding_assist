@@ -17,6 +17,33 @@ export const LESSONS_CH2 = [
         code: "power = 95\nif power > 90:\n    print('strong')\nelse:\n    print('training')",
         expectedOutput: 'strong',
       },
+      visual: {
+        widget: 'branch-flow',
+        caption: 'The marker drops to the ONE branch that runs; the rest are skipped.',
+        beats: [
+          {
+            value: 'power = 95',
+            branches: [
+              { test: 'if power > 90', taken: true, label: "print('strong')" },
+              { test: 'else', taken: false, label: "print('training')" },
+            ],
+            caption: '95 > 90 is true, so the if block runs and else is skipped.',
+          },
+          {
+            value: 'score = 75',
+            branches: [
+              { test: 'if score >= 90', taken: false, label: "print('A')" },
+              { test: 'elif score >= 70', taken: true, label: "print('B')" },
+              { test: 'else', taken: false, label: "print('C')" },
+            ],
+            caption: '75 fails ≥90 but passes ≥70 — the FIRST true branch wins, the rest are skipped.',
+          },
+        ],
+        why: 'In an if/elif/else chain only the first true branch runs.',
+        verifyCode:
+          "score = 75\nif score >= 90:\n    print('A')\nelif score >= 70:\n    print('B')\nelse:\n    print('C')",
+        verifyOutput: 'B',
+      },
     },
     items: [
       {

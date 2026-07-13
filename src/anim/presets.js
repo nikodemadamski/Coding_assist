@@ -15,6 +15,8 @@ export const presets = {
   // Glide an element to an absolute x offset (the list pointer sliding) — spring
   // physics so it eases in and gently settles rather than stopping dead.
   slideTo: (x) => ({ x, ease: settle }),
+  // The same, vertically (a flow marker dropping to the branch that runs).
+  glideY: (y) => ({ y, ease: settle }),
   // A quick attention pulse (a cell being read).
   pulse: () => ({ scale: [1, 1.18, 1], duration: DUR.base, ease: 'inOutQuad' }),
   // Fade a new value in over the old, rising slightly into place (reassignment).

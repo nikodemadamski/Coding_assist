@@ -13,6 +13,7 @@ export const VISUAL_WIDGETS = [
   'dict-lookup',
   'stack-tower',
   'text-reveal',
+  'branch-flow',
 ];
 
 const isInt = (n) => Number.isInteger(n);
@@ -77,6 +78,22 @@ const BEAT_RULES = {
       return 'text-reveal beat needs a non-empty `text` string';
     }
     if (beat.sub !== undefined && !isStr(beat.sub)) return 'sub must be a non-empty string';
+    return null;
+  },
+  'branch-flow': (visual, beat) => {
+    if (!Array.isArray(beat.branches) || beat.branches.length === 0) {
+      return 'branch-flow beat needs a non-empty `branches` array';
+    }
+    let taken = 0;
+    for (const b of beat.branches) {
+      if (!b || typeof b !== 'object') return 'each branch must be an object';
+      if (!isStr(b.test)) return 'each branch needs a `test` string';
+      if (!isStr(b.label)) return 'each branch needs a `label` string';
+      if (typeof b.taken !== 'boolean') return 'each branch needs a boolean `taken`';
+      if (b.taken) taken++;
+    }
+    if (taken > 1) return 'at most one branch can be taken (the first true one wins)';
+    if (beat.value !== undefined && !isStr(beat.value)) return 'value must be a string';
     return null;
   },
 };

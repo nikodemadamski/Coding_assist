@@ -3977,6 +3977,79 @@ details.hint[open] summary {
   word-break: break-word;
 }
 
+/* ---- branch-flow (if / elif / else, True/False, try/except) ---- */
+.vw-branch {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+.vw-br-value {
+  font-family: var(--font-code);
+  font-size: 0.95rem;
+}
+.vw-br-value code {
+  background: var(--ink);
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
+  padding: 5px 10px;
+}
+.vw-br-body {
+  display: flex;
+  gap: 10px;
+  width: max-content;
+  max-width: 100%;
+}
+.vw-br-rail {
+  position: relative;
+  width: 20px;
+  flex: none;
+}
+.vw-br-marker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: var(--gold);
+  font-size: 0.85rem;
+  line-height: 1;
+}
+.vw-br-rungs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.vw-br-rung {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  font-family: var(--font-code);
+  font-size: 0.85rem;
+  transition: opacity 0.2s, border-color 0.2s;
+}
+.vw-br-rung.taken {
+  border-color: var(--jade);
+  background: color-mix(in srgb, var(--jade) 14%, var(--panel));
+}
+.vw-br-rung.skipped {
+  opacity: 0.4;
+}
+.vw-br-test {
+  color: var(--text);
+}
+.vw-br-arrow {
+  color: var(--text-dim);
+}
+.vw-br-label {
+  color: var(--gold);
+}
+
 /* ---- arrange (Parsons) drag-to-order ---- */
 .ln-arrange-hint-line {
   color: var(--text-dim);

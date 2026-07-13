@@ -311,6 +311,39 @@ export const LESSONS_CH1 = [
       text:
         'Python has exactly two truth values: `True` and `False` — capital first letter.\n\nComparisons produce them: `==` equal, `!=` not equal, `< > <= >=`. The classic trap: a single `=` STORES, a double `==` COMPARES.\n\nCombine truths with `and`, `or`, `not` — plain English words, and the backbone of every `if` you will ever write.',
       example: { code: 'print(3 > 2)', expectedOutput: 'True' },
+      visual: {
+        widget: 'branch-flow',
+        caption: 'A comparison lands on one of two truths. Watch which lights up.',
+        beats: [
+          {
+            value: '5 == 5',
+            branches: [
+              { test: 'True', taken: true, label: 'the values are equal' },
+              { test: 'False', taken: false, label: 'they differ' },
+            ],
+            caption: '== asks "equal?" — 5 and 5 are, so it lands on True.',
+          },
+          {
+            value: '3 != 3',
+            branches: [
+              { test: 'True', taken: false, label: 'they differ' },
+              { test: 'False', taken: true, label: 'the values are equal' },
+            ],
+            caption: '!= means "not equal" — but 3 and 3 ARE equal, so False.',
+          },
+          {
+            value: 'x > 0 and x < 10   # x = 5',
+            branches: [
+              { test: 'True', taken: true, label: 'both sides hold' },
+              { test: 'False', taken: false, label: 'one side fails' },
+            ],
+            caption: 'and needs BOTH true — 5 is above 0 and below 10, so True.',
+          },
+        ],
+        why: 'Comparisons and and/or/not always land on exactly True or False.',
+        verifyCode: 'x = 5\nprint(x > 0 and x < 10)',
+        verifyOutput: 'True',
+      },
     },
     items: [
       {

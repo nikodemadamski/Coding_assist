@@ -158,6 +158,31 @@ export const LESSONS_CH4 = [
         code: "try:\n    print([1, 2][5])\nexcept IndexError:\n    print('index too big')",
         expectedOutput: 'index too big',
       },
+      visual: {
+        widget: 'branch-flow',
+        caption: 'try runs risky code; if it raises, the matching except path takes over.',
+        beats: [
+          {
+            value: '[1, 2][5]',
+            branches: [
+              { test: 'try succeeds', taken: false, label: 'use the value' },
+              { test: 'except IndexError', taken: true, label: "print('index too big')" },
+            ],
+            caption: 'Position 5 does not exist → IndexError → the except path runs instead of crashing.',
+          },
+          {
+            value: "int('abc')",
+            branches: [
+              { test: 'try succeeds', taken: false, label: 'use the number' },
+              { test: 'except ValueError', taken: true, label: "print('not a number')" },
+            ],
+            caption: "'abc' is the right TYPE but bad CONTENT → ValueError, caught by except.",
+          },
+        ],
+        why: 'try/except catches ONE named failure and keeps the program alive.',
+        verifyCode: "try:\n    print([1, 2][5])\nexcept IndexError:\n    print('index too big')",
+        verifyOutput: 'index too big',
+      },
     },
     items: [
       {
