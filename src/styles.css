@@ -3940,6 +3940,43 @@ details.hint[open] summary {
   line-height: 1.5;
 }
 
+/* ---- text-reveal (scrambleText) ---- */
+.vw-textreveal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  min-height: 92px;
+  justify-content: center;
+}
+.vw-tr-expr {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-code);
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+.vw-tr-expr code {
+  background: var(--ink);
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+.vw-tr-arrow {
+  color: var(--jade);
+}
+.vw-tr-text {
+  margin: 0;
+  font-family: var(--font-code);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 0.02em;
+  text-align: center;
+  word-break: break-word;
+}
+
 /* ---- arrange (Parsons) drag-to-order ---- */
 .ln-arrange-hint-line {
   color: var(--text-dim);

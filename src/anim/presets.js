@@ -2,7 +2,7 @@
 // with. All easings and durations live here so every animation across the app
 // feels like one system (the "self-made connection" to anime.js v4: widgets
 // speak presets, never raw anime.js params).
-import { spring, stagger } from 'animejs';
+import { spring, stagger, scrambleText } from 'animejs';
 
 export const DUR = { quick: 240, base: 420, slow: 640 };
 
@@ -28,4 +28,8 @@ export const presets = {
   // A staggered spring entrance for a whole group of cells at once — anime.js's
   // flagship move (delay: stagger). Fed an array/NodeList of targets on mount.
   enter: () => ({ scale: [0.6, 1], opacity: [0, 1], ease: settle, delay: stagger(45) }),
+  // Reveal an element's text with a randomized character scramble (anime.js v4
+  // scrambleText) — the element's textContent must already be the target string;
+  // this plays the scramble→settle. Teaches "this expression produces this text".
+  scramble: () => ({ innerHTML: scrambleText(), duration: DUR.slow, ease: 'outQuad' }),
 };

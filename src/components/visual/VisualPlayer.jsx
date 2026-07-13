@@ -4,6 +4,7 @@ import VarBoxes from './VarBoxes.jsx';
 import LoopTape from './LoopTape.jsx';
 import DictLookup from './DictLookup.jsx';
 import StackTower from './StackTower.jsx';
+import TextReveal from './TextReveal.jsx';
 
 // Tap-through player for a visual block: renders the widget at the current
 // beat, shows the caption, and advances one beat per tap. Widgets register
@@ -14,6 +15,7 @@ const WIDGETS = {
   'loop-tape': LoopTape,
   'dict-lookup': DictLookup,
   'stack-tower': StackTower,
+  'text-reveal': TextReveal,
 };
 
 export default function VisualPlayer({ visual, onDone = null }) {

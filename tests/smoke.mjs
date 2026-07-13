@@ -717,6 +717,11 @@ try {
   check((await page.locator('.learn-lesson').count()) >= 6, 'chapter 1 lists its lessons');
   await page.locator('.learn-lesson.next').click();
   await page.locator('.ln-read').waitFor({ timeout: 10000 });
+  // This lesson opens on a text-reveal visual (scrambleText); confirm it renders.
+  check(await page.locator('.vw-textreveal .vw-tr-text').isVisible(), 'a text-reveal visual renders its text');
+  // Lessons with a visual open on the "See it" tab; switch to the runnable code.
+  const readCodeTab = page.locator('.ln-read-tab', { hasText: 'Read the code' });
+  if (await readCodeTab.count()) await readCodeTab.click();
   await page.locator('.ln-run-row .btn', { hasText: 'Run it' }).click();
   await page.locator('.ln-stdout').waitFor({ timeout: 120000 });
   check(

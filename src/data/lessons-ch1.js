@@ -14,6 +14,18 @@ export const LESSONS_CH1 = [
       text:
         'Python programs are built from **values**: numbers like `3`, and text like `\'zoro\'` — quotes are how you mark text. `print(...)` shows a value on the screen.\n\nTwo things beginners meet immediately: text prints **without** its quotes, and printing several things separated by commas puts **spaces** between them. Each `print` ends its own line.',
       example: { code: "print('welcome to the dojo')", expectedOutput: 'welcome to the dojo' },
+      visual: {
+        widget: 'text-reveal',
+        caption: 'print builds the line you see. Watch each one appear.',
+        beats: [
+          { sub: "print('zoro')", text: 'zoro', caption: 'Quotes only MARK text — they are never part of what prints.' },
+          { sub: "print('luffy', 'zoro')", text: 'luffy zoro', caption: 'A comma prints each value with ONE space between.' },
+          { sub: 'print(2, 4, 6)', text: '2 4 6', caption: 'Any number of comma-separated values — a space between each pair.' },
+        ],
+        why: 'Text loses its quotes; commas add the spaces for you.',
+        verifyCode: 'print(2, 4, 6)',
+        verifyOutput: '2 4 6',
+      },
     },
     items: [
       {
@@ -151,6 +163,18 @@ export const LESSONS_CH1 = [
       text:
         'Math works as expected: `+ - *`, parentheses to group, and `**` for powers. Order follows school math.\n\nDivision is the surprise: `/` ALWAYS gives a decimal (`10 / 2` is `5.0`). For whole-number work you get two friends you will use constantly in interviews: `//` (divide and drop the remainder) and `%` (the remainder itself).',
       example: { code: 'print(7 // 2, 7 % 2)', expectedOutput: '3 1' },
+      visual: {
+        widget: 'text-reveal',
+        caption: 'Each expression settles on the number it computes to.',
+        beats: [
+          { sub: '2 + 3 * 4', text: '14', caption: 'Multiplication runs before addition: 2 + 12.' },
+          { sub: '10 / 2', text: '5.0', caption: '/ ALWAYS gives a decimal — 5.0, not 5.' },
+          { sub: '7 // 2, 7 % 2', text: '3 1', caption: '// drops the remainder (3); % IS the remainder (1).' },
+        ],
+        why: '/ makes a decimal; // and % split a division into whole part and leftover.',
+        verifyCode: 'print(7 // 2, 7 % 2)',
+        verifyOutput: '3 1',
+      },
     },
     items: [
       {
@@ -213,6 +237,18 @@ export const LESSONS_CH1 = [
       text:
         'Text values are called **strings**. Glue them with `+`, repeat with `*`, count characters with `len(s)`, and change case with `s.upper()` / `s.lower()`.\n\nThe everyday superpower is the **f-string**: put an `f` before the quotes and anything inside `{}` gets its value filled in — `f\'hello, {name}\'` builds text from variables.',
       example: { code: "name = 'zoro'\nprint(f'hello, {name}')", expectedOutput: 'hello, zoro' },
+      visual: {
+        widget: 'text-reveal',
+        caption: 'Text is BUILT. Watch each expression assemble its string.',
+        beats: [
+          { sub: "'go' + 'mu'", text: 'gomu', caption: '+ glues strings end to end — no space unless you add one.' },
+          { sub: "'na' * 2", text: 'nana', caption: '* repeats the string that many times.' },
+          { sub: "f'hello, {name}'   # name = 'zoro'", text: 'hello, zoro', caption: 'An f-string fills {name} with its value — text made from variables.' },
+        ],
+        why: 'Build text with +, *, and f-string slots that fill in variables.',
+        verifyCode: "name = 'zoro'\nprint(f'hello, {name}')",
+        verifyOutput: 'hello, zoro',
+      },
     },
     items: [
       {

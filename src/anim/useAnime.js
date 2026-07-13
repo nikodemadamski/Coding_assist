@@ -4,7 +4,7 @@
 // elements snap straight to their final resting state (every preset's last
 // keyframe is the correct end state, so this is safe and needs no special-casing).
 import { useCallback } from 'react';
-import { animate, stagger } from 'animejs';
+import { animate, stagger, utils } from 'animejs';
 import { DUR } from './presets.js';
 
 export function prefersReducedMotion() {
@@ -34,6 +34,14 @@ export function useAnime() {
     },
     [reduced]
   );
+}
+
+// Stop every in-flight animation on the given targets and leave them at their
+// current values — used before starting a fresh tween on an element that may
+// still be animating, so overlapping tweens (e.g. innerHTML scrambles) can't
+// fight. Wraps anime.js utils.remove so the wrapper stays the only touch point.
+export function stopAnim(targets) {
+  if (targets) utils.remove(targets);
 }
 
 // Re-exported so widgets can stagger a group of targets (v4's signature move)

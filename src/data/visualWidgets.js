@@ -6,7 +6,14 @@
 // (when verifyCode/verifyOutput are present) the gate additionally RUNS the code
 // so a visual can never misrepresent what Python actually does.
 
-export const VISUAL_WIDGETS = ['list-cells', 'var-boxes', 'loop-tape', 'dict-lookup', 'stack-tower'];
+export const VISUAL_WIDGETS = [
+  'list-cells',
+  'var-boxes',
+  'loop-tape',
+  'dict-lookup',
+  'stack-tower',
+  'text-reveal',
+];
 
 const isInt = (n) => Number.isInteger(n);
 const isStr = (s) => typeof s === 'string' && s.trim().length > 0;
@@ -65,6 +72,13 @@ const BEAT_RULES = {
     if (beat.op === 'push' && beat.value === undefined) return 'push needs a value';
     return null;
   },
+  'text-reveal': (visual, beat) => {
+    if (typeof beat.text !== 'string' || beat.text.length === 0) {
+      return 'text-reveal beat needs a non-empty `text` string';
+    }
+    if (beat.sub !== undefined && !isStr(beat.sub)) return 'sub must be a non-empty string';
+    return null;
+  },
 };
 
 // Validate a visual block (from read.visual or a `visual` item). Returns an
@@ -95,6 +109,14 @@ export function validateVisual(visual) {
   if (visual.verifyCode !== undefined || visual.verifyOutput !== undefined) {
     if (!isStr(visual.verifyCode)) errors.push('verifyCode must be a string when verifyOutput is set');
     if (typeof visual.verifyOutput !== 'string') errors.push('verifyOutput must be a string when verifyCode is set');
+    // text-reveal's final beat IS the text Python prints — tie them so the
+    // scramble can never settle on something other than the real output.
+    if (visual.widget === 'text-reveal' && typeof visual.verifyOutput === 'string') {
+      const lastText = visual.beats[visual.beats.length - 1]?.text;
+      if (lastText !== visual.verifyOutput.trim()) {
+        errors.push(`text-reveal last beat "${lastText}" must equal verifyOutput "${visual.verifyOutput.trim()}"`);
+      }
+    }
   }
   return errors;
 }
