@@ -22,6 +22,29 @@ import {
 
 const MASTERY_LABEL = { new: 'new', learning: 'learning', reviewing: 'reviewing', mastered: 'mastered' };
 
+// The Learn Python entry on the home page — progress, a continue link, and the
+// due skill-check count. Structural sibling of the data-track row.
+function LearnStrip({ info, onLearn }) {
+  return (
+    <div className="learn-strip">
+      <span className="learn-strip-line">
+        <strong>Learn Python from zero</strong>
+        <span className="learn-strip-count">
+          {info.done}/{info.total}
+        </span>
+      </span>
+      <button className="btn btn-jade" onClick={onLearn}>
+        {info.done === 0 ? 'Start from zero' : `Continue: ${info.nextTitle}`} →
+      </button>
+      {info.due > 0 && (
+        <button className="btn btn-warmup" onClick={onLearn}>
+          {info.due} skill check{info.due === 1 ? '' : 's'} due
+        </button>
+      )}
+    </div>
+  );
+}
+
 // The home page: a NeetCode-style visual roadmap. The whole map scales to fit
 // the viewport width (no scroll box), each node shows its progress, and
 // clicking a node opens a popup listing that topic's questions.
@@ -36,6 +59,8 @@ export default function RoadmapGraph({
   onOpenTrack,
   onBrowse,
   onStats,
+  onLearn,
+  lessonInfo = null, // { done, total, due, nextTitle }
 }) {
   const [openCat, setOpenCat] = useState(null);
   const catTrapRef = useRef(null);
@@ -136,7 +161,21 @@ export default function RoadmapGraph({
             its questions, or just press <strong>Begin the path</strong> and let the dojo pick
             for you.
           </p>
+          {onLearn && (
+            <p className="welcome-learn">
+              New to Python itself?{' '}
+              <button className="link-inline" onClick={onLearn}>
+                Start from zero →
+              </button>
+            </p>
+          )}
         </section>
+      )}
+
+      {/* Learn Python entry — above the daily strip for beginners. Self-hides
+          once the whole curriculum is done. */}
+      {onLearn && lessonInfo && lessonInfo.done < lessonInfo.total && brandNew && (
+        <LearnStrip info={lessonInfo} onLearn={onLearn} />
       )}
 
       {/* Daily loop, right on the front door */}
@@ -160,7 +199,7 @@ export default function RoadmapGraph({
         >
           {counts.due > 0 ? 'Start review' : brandNew ? 'Begin the path' : 'Continue the path'}
         </button>
-        {missCount > 0 && (
+        {missCount > 0 && !brandNew && (
           <button className="btn btn-drill" onClick={onDrill}>
             Drill misses ({missCount})
           </button>
@@ -168,10 +207,23 @@ export default function RoadmapGraph({
         <button className="btn btn-warmup" onClick={onWarmup}>
           Warm-up
         </button>
-        <button className="btn btn-mock" onClick={onMock} title="Timed, no hints — simulate the real interview">
-          Mock interview
-        </button>
+        {/* Mock interview is meaningless at zero solves — surfaces once you start. */}
+        {!brandNew && (
+          <button className="btn btn-mock" onClick={onMock} title="Timed, no hints — simulate the real interview">
+            Mock interview
+          </button>
+        )}
       </div>
+
+      {/* For returning users the Learn entry sits below the daily strip. */}
+      {onLearn && lessonInfo && lessonInfo.done < lessonInfo.total && !brandNew && (
+        <LearnStrip info={lessonInfo} onLearn={onLearn} />
+      )}
+      {onLearn && lessonInfo && lessonInfo.total > 0 && lessonInfo.done === lessonInfo.total && (
+        <button className="learn-done-chip" onClick={onLearn}>
+          Python basics ✓ — {lessonInfo.total}/{lessonInfo.total} lessons
+        </button>
+      )}
 
       {/* Today's pulse: what you've done, what's left, and the big number */}
       {!brandNew && (

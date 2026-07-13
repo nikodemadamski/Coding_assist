@@ -5,6 +5,7 @@
 // write/watch code passes its tests.
 import './proxy-shim.mjs';
 import { LESSONS, LESSON_CHAPTERS, itemAsQuestion } from '../src/data/lessons.js';
+import { QUESTION_LESSONS, CATEGORY_LESSONS } from '../src/data/lessonLinks.js';
 import { validateLesson } from '../src/data/validateLesson.js';
 import { checkAnswer, WARMUP_SETS } from '../src/data/warmups.js';
 import { SEED_QUESTIONS } from '../src/data/questions.js';
@@ -40,6 +41,21 @@ console.log('Lesson tests\n');
   for (const k of populated) {
     check(perChapter[k] >= 5, `chapter ${k} has a real lesson count (${perChapter[k]})`);
   }
+}
+
+// ---- lessonLinks reference only real questions and lessons ----
+{
+  const lessonIds = new Set(LESSONS.map((l) => l.id));
+  const qIds = new Set(SEED_QUESTIONS.map((q) => q.id));
+  const bad = [];
+  for (const [qid, ids] of Object.entries(QUESTION_LESSONS)) {
+    if (!qIds.has(qid)) bad.push(`QUESTION_LESSONS: question "${qid}" does not exist`);
+    for (const id of ids) if (!lessonIds.has(id)) bad.push(`QUESTION_LESSONS["${qid}"]: lesson "${id}" does not exist`);
+  }
+  for (const [cat, ids] of Object.entries(CATEGORY_LESSONS)) {
+    for (const id of ids) if (!lessonIds.has(id)) bad.push(`CATEGORY_LESSONS["${cat}"]: lesson "${id}" does not exist`);
+  }
+  check(bad.length === 0, 'every lessonLinks reference resolves', bad.slice(0, 3).join(' | '));
 }
 
 // ---- chapter-end transfer links point at real targets ----

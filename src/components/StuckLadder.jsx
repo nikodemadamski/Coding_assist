@@ -3,6 +3,8 @@ import Markdown from './Markdown.jsx';
 import Approaches from './Approaches.jsx';
 import { patternHint } from '../data/patternHints.js';
 import { guideKeyOf } from '../data/patternGuide.js';
+import { lessonsForQuestion } from '../data/lessonLinks.js';
+import { lessonById } from '../data/lessons.js';
 
 // The "I'm stuck" ladder. Instead of one hint and then the whole solution
 // spoiler, you climb one rung at a time — each reveals a little more, so you
@@ -10,8 +12,12 @@ import { guideKeyOf } from '../data/patternGuide.js';
 //   1. which pattern is this?   2. a nudge   3. the plan   4. the code
 // A YouTube search link waits at the very bottom, for when you truly want to
 // hear someone else explain it.
-export default function StuckLadder({ question, onVisualize, onSeePattern }) {
+export default function StuckLadder({ question, progress, onVisualize, onSeePattern, onOpenLesson }) {
   const hint = patternHint(question);
+  const missingLesson =
+    onOpenLesson && progress
+      ? lessonById(lessonsForQuestion(question, progress)[0] ?? '')
+      : null;
 
   const rungs = [
     {
@@ -32,6 +38,11 @@ export default function StuckLadder({ question, onVisualize, onSeePattern }) {
               onClick={() => onSeePattern(guideKeyOf(question))}
             >
               See the full pattern template →
+            </button>
+          )}
+          {missingLesson && (
+            <button className="rung-link" onClick={() => onOpenLesson(missingLesson.id)}>
+              Missing a Python basic? · {missingLesson.title} in {missingLesson.minutes} min →
             </button>
           )}
         </div>

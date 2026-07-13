@@ -9,6 +9,8 @@ import BigOCheck from './BigOCheck.jsx';
 import VisualizerModal from './VisualizerModal.jsx';
 import { runQuestion } from '../engine/runnerClient.js';
 import { isSolved } from '../state/progress.js';
+import { lessonsForQuestion } from '../data/lessonLinks.js';
+import { lessonById } from '../data/lessons.js';
 import { formatDuration } from '../state/mockSession.js';
 import {
   loadUiPrefs,
@@ -62,6 +64,8 @@ export default function ProblemView({
   onSubmitReport = null,
   // jump to the Patterns reference for this problem's pattern (optional)
   onSeePattern = null,
+  // learn-before-use: open a prerequisite lesson (optional)
+  onOpenLesson = null,
   // personal notes (optional): save handler; the note itself is read from progress
   onNote = null,
   // after-solve Big-O check-in result recorder (optional)
@@ -87,6 +91,7 @@ export default function ProblemView({
   const [justSolved, setJustSolved] = useState(false);
   const [outcome, setOutcome] = useState(null); // practice: 'pass' | 'fail' | null
   const [viz, setViz] = useState(null); // { code, label } → visualizer open
+  const [lessonDismissed, setLessonDismissed] = useState(false); // "I know it — continue"
   const [uiPrefs, setUiPrefs] = useState(loadUiPrefs); // divider split % + editor font size
   const draftTimer = useRef(null);
   const bodyRef = useRef(null);
@@ -387,6 +392,34 @@ export default function ProblemView({
         onTouchEnd={onSwipeEnd}
       >
         <section className={`pv-pane pane-problem ${tab === 'problem' ? 'visible' : ''}`}>
+          {/* Learn-before-use: if this problem leans on a Python basic you
+              haven't met, offer the 2-minute lesson first — with an escape
+              hatch. Never blocks. */}
+          {!mockMode &&
+            onOpenLesson &&
+            !lessonDismissed &&
+            (() => {
+              const ids = lessonsForQuestion(question, progress);
+              if (ids.length === 0) return null;
+              const lesson = lessonById(ids[0]);
+              if (!lesson) return null;
+              return (
+                <div className="pv-learn-first">
+                  <span className="pv-learn-first-text">
+                    New to this? It uses <strong>{lesson.title}</strong> — learn it first, then
+                    this clicks.
+                  </span>
+                  <div className="pv-learn-first-actions">
+                    <button className="btn btn-jade" onClick={() => onOpenLesson(lesson.id)}>
+                      Learn it ({lesson.minutes} min) →
+                    </button>
+                    <button className="btn-plain" onClick={() => setLessonDismissed(true)}>
+                      I know it — continue
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
           {/* The question itself comes first — description, examples,
               constraints — exactly what you'd see in the interview. All
               guidance (why, stuck ladder, go-deeper, notes) waits below. */}
@@ -429,7 +462,13 @@ export default function ProblemView({
                   <Markdown text={question.why} />
                 </div>
               )}
-              <StuckLadder question={question} onVisualize={openVisualizer} onSeePattern={onSeePattern} />
+              <StuckLadder
+                question={question}
+                progress={progress}
+                onVisualize={openVisualizer}
+                onSeePattern={onSeePattern}
+                onOpenLesson={onOpenLesson}
+              />
             </div>
           )}
           {!mockMode && question.insight && (

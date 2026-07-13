@@ -9,7 +9,7 @@ const STEPS = [
   {
     icon: '🗺',
     title: 'This map is your whole journey',
-    body: 'Every topic you need, top to bottom. Arrows mean "learn this pattern before that one." You don\'t have to plan anything — the path decides the order for you.',
+    body: 'Every topic you need, top to bottom. Arrows mean "learn this pattern before that one." New to Python itself? Start with Learn (from the Library menu) — the language first, then this map is your playground.',
   },
   {
     icon: '🎯',

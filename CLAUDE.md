@@ -91,9 +91,14 @@ Result comparison canonicalizes via `_canon`, honoring `unordered`.
 
 App.jsx owns views: home (RoadmapGraph = the map), browse (Picker), track (TrackMap),
 problem/practice/drill (ProblemView / PracticeView), warmup, mock, patterns, quiz, stats,
-guide; modals: Settings, ImportModal, SearchPalette (⌘K), Onboarding, Celebration.
-All dialogs use `useFocusTrap`. Header: Search/Browse/Library▾(Stats·Patterns·Sensei)/
-theme/Settings; quiet UI — no decorative emojis, color carries state.
+guide, learn (LearnView chapter list) / lesson (LessonView player); modals: Settings,
+ImportModal, SearchPalette (⌘K), Onboarding, Celebration. All dialogs use `useFocusTrap`.
+Header: Search/Browse/Library▾(Learn·Stats·Patterns·Sensei)/theme/Settings; quiet UI — no
+decorative emojis, color carries state. Learn-before-use: lessonLinks.js maps a question →
+prerequisite lessons; a dismissible pv-learn-first banner + a Stuck-ladder rung link offer
+the lesson first (python track, uncompleted lessons only). Home shows a learn-strip
+(Continue + due skill-check count) that self-collapses at 30/30; Mock/Drill hidden at 0
+solves.
 
 ProblemView anatomy: pv-toolbar (back/title/Focus/Run/Submit) → pv-tabs (BOTTOM on
 <900px, swipe between panes; swipes ignore .cm-editor/.mkeys) → pv-body grid

@@ -109,6 +109,19 @@ try {
     await page.locator('.map-strip button', { hasText: 'Begin the path' }).isVisible(),
     'daily practice strip lives on the map home'
   );
+  // Learn Python entry for a brand-new user; Mock is hidden at zero solves.
+  check(
+    (await page.locator('.learn-strip').innerText()).includes('Learn Python from zero'),
+    'the home offers a Learn Python entry'
+  );
+  check(
+    (await page.locator('.map-strip button', { hasText: 'Mock interview' }).count()) === 0,
+    'Mock interview is hidden until the first solve'
+  );
+  check(
+    (await page.locator('.welcome-card').innerText()).includes('Start from zero'),
+    'the welcome card invites total beginners to start from zero'
+  );
   const fitsViewport = await page.evaluate(
     () => document.querySelector('.graph-canvas').getBoundingClientRect().width <= window.innerWidth
   );
@@ -154,6 +167,21 @@ try {
   check(
     (await page.locator('.pv-title').innerText()).includes('Two Sum'),
     'clicking a question in the popup opens it'
+  );
+
+  // ---- learn-before-use: the pre-question lesson banner ----
+  check(
+    await page.locator('.pv-learn-first').isVisible(),
+    'a question with an unlearned basic shows the learn-it-first banner'
+  );
+  check(
+    (await page.locator('.pv-learn-first').innerText()).includes('Learn it'),
+    'the banner offers the lesson'
+  );
+  await page.locator('.pv-learn-first .btn-plain', { hasText: 'I know it' }).click();
+  check(
+    (await page.locator('.pv-learn-first').count()) === 0,
+    '"I know it — continue" dismisses the banner'
   );
 
   // ---- premium learning layer on the problem ----
@@ -635,7 +663,7 @@ try {
   );
   // the stuck ladder links back to the pattern template (still on the problem)
   await page.locator('.stuck-next', { hasText: 'Which pattern' }).click();
-  await page.locator('.rung-link').click();
+  await page.locator('.rung-link', { hasText: 'pattern template' }).click();
   check(
     (await page.locator('.pattern-card.open').count()) >= 1,
     'the stuck ladder jumps straight to this problem\'s pattern template'

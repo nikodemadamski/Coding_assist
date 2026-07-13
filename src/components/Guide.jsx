@@ -6,6 +6,12 @@ You are not "a mere monkey." You are someone who hasn't yet built the reps. Inte
 these firms don't test raw IQ — they test **pattern recognition under mild pressure, out
 loud, without bugs.** That is a *trainable* skill, and this dojo is built to train exactly it.
 
+**Day 0 — new to Python itself?** Do **Learn** (in the Library menu) first. Chapter 1 takes
+you from "what is a variable" to writing small functions; by chapter 3 you know lists,
+slicing, dicts and the .get() method — the exact tools the path questions assume. Finished
+lessons come back as 90-second skill checks inside your daily reviews. Learn the language,
+*then* the NeetCode path is your playground.
+
 ## How to learn (the method that actually sticks)
 
 1. **Show up daily — small is fine.** 45 focused minutes every day beats a 6-hour cram on

@@ -19,8 +19,13 @@ import Celebration from './components/Celebration.jsx';
 import LearnView from './components/LearnView.jsx';
 import LessonView from './components/LessonView.jsx';
 import { SEED_QUESTIONS } from './data/questions.js';
-import { lessonById, nextLesson } from './data/lessons.js';
-import { recordLessonComplete, recordLessonReview, buildReviewItems } from './state/lessonProgress.js';
+import { lessonById, nextLesson, lessonCounts, LESSONS } from './data/lessons.js';
+import {
+  recordLessonComplete,
+  recordLessonReview,
+  buildReviewItems,
+  dueLessonIds,
+} from './state/lessonProgress.js';
 import {
   loadProgress,
   saveProgress,
@@ -135,6 +140,12 @@ export default function App() {
     () => nextOnPath(allQuestions, (id) => isSolved(progress.solved[id])),
     [allQuestions, progress]
   );
+  const lessonInfo = useMemo(() => {
+    const { done, total } = lessonCounts(progress);
+    const up = nextLesson(progress);
+    const due = dueLessonIds(progress, new Set(LESSONS.map((l) => l.id))).length;
+    return { done, total, due, nextTitle: up?.title ?? '' };
+  }, [progress]);
   useEffect(() => {
     const cur = { solvedCount, streak: streakVal };
     if (milestoneRef.current === null) {
@@ -260,6 +271,8 @@ export default function App() {
             onOpenTrack={(key) => setView({ name: 'track', trackKey: key })}
             onBrowse={(key) => setView({ name: 'browse', focusCategory: key })}
             onStats={() => setView({ name: 'stats' })}
+            onLearn={() => setView({ name: 'learn' })}
+            lessonInfo={lessonInfo}
           />
         )}
         {view.name === 'learn' && (
@@ -287,7 +300,7 @@ export default function App() {
                 }
                 onComplete={handleLessonComplete}
                 onReviewResult={handleLessonReview}
-                onExit={() => setView({ name: 'learn' })}
+                onExit={() => setView(view.from ?? { name: 'learn' })}
                 onNextLesson={
                   upNext && upNext.id !== view.id
                     ? () => setView({ name: 'lesson', id: upNext.id })
@@ -368,6 +381,9 @@ export default function App() {
             onOpenNext={(id) => setView({ name: 'problem', id, from: view.from || 'home' })}
             onBack={() => setView(backTo)}
             onSeePattern={(key) => setView({ name: 'patterns', focusKey: key })}
+            onOpenLesson={(id) =>
+              setView({ name: 'lesson', id, from: { name: 'problem', id: currentQuestion.id, from: view.from } })
+            }
           />
         )}
         {view.name === 'problem' && !currentQuestion && (
