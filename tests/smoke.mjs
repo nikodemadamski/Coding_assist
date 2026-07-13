@@ -1131,20 +1131,33 @@ try {
   await page.locator('.wu-level-card', { hasText: 'Beginner' }).click();
   await page.locator('.wu-prompt').waitFor({ timeout: 10000 });
   {
-    const prompt = (await page.locator('.wu-prompt').innerText()).trim();
-    const wuItem = WARMUP_SETS['sql-beginner'].find((it) => it.prompt === prompt);
-    check(!!wuItem, 'sql warm-up question comes from the sql bank');
-    // type it in UPPERCASE: SQL answers must be case-insensitive outside quotes.
-    // SQL warm-up answers EXECUTE against sql.js (async), so wait for the grade
-    // to land rather than racing the default implicit timeout.
-    await page.locator('.wu-input').click();
-    await page.fill('.wu-input', wuItem.answer.toUpperCase());
-    await page.keyboard.press('Enter');
-    await page.locator('.wu-run-streak', { hasText: '1' }).waitFor({ timeout: 60000 });
-    check(
-      (await page.locator('.wu-run-streak').innerText()).includes('1'),
-      'an UPPERCASE answer is accepted — SQL checking folds case'
-    );
+    // SQL warm-up answers EXECUTE against sql.js (async). The very first grade in
+    // a long run can outlast the per-question countdown while the wasm engine
+    // warms up, ending the run at a summary. Each question is an equivalent
+    // case-fold test, so on a miss we re-enter the level and answer a fresh one.
+    let streakOk = false;
+    let bankHit = false;
+    for (let attempt = 0; attempt < 3 && !streakOk; attempt++) {
+      await page.locator('.wu-prompt').waitFor({ timeout: 10000 });
+      const prompt = (await page.locator('.wu-prompt').innerText()).trim();
+      const wuItem = WARMUP_SETS['sql-beginner'].find((it) => it.prompt === prompt);
+      bankHit = bankHit || !!wuItem;
+      await page.locator('.wu-input').click();
+      await page.fill('.wu-input', wuItem.answer.toUpperCase()); // uppercase: SQL folds case outside quotes
+      await page.keyboard.press('Enter');
+      try {
+        await page.locator('.wu-run-streak', { hasText: '1' }).waitFor({ timeout: 20000 });
+        streakOk = true;
+      } catch {
+        const changeBtn = page.locator('button', { hasText: 'Change level' });
+        if (await changeBtn.count()) {
+          await changeBtn.click();
+          await page.locator('.wu-level-card', { hasText: 'Beginner' }).click();
+        }
+      }
+    }
+    check(bankHit, 'sql warm-up question comes from the sql bank');
+    check(streakOk, 'an UPPERCASE answer is accepted — SQL checking folds case');
   }
   await page.fill('.wu-input', 'select definitely wrong');
   await page.keyboard.press('Enter');

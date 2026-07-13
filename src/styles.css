@@ -3773,6 +3773,9 @@ details.hint[open] summary {
 .vw-pointer2 {
   color: var(--jade);
 }
+.vw-pointer-mid {
+  color: var(--rose, #e06c9f);
+}
 .vw-ptr-label {
   font-size: 0.62rem;
   font-family: var(--font-code);
@@ -4180,6 +4183,53 @@ details.hint[open] summary {
   color: var(--jade);
   font-size: 1.1rem;
   line-height: 1;
+}
+
+/* ---- interval-bars (intervals: sort by start, merge overlaps) ---- */
+.vw-intervals {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 280px;
+}
+.vw-ib-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.vw-ib-track {
+  position: relative;
+  height: 26px;
+}
+.vw-ib-bar {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  min-width: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--gold) 24%, var(--panel));
+  border: 1.5px solid var(--gold);
+  font-family: var(--font-code);
+  font-size: 0.72rem;
+  color: var(--text);
+}
+.vw-ib-bar.merged {
+  background: color-mix(in srgb, var(--jade) 24%, var(--panel));
+  border-color: var(--jade);
+}
+.vw-ib-axis {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1.5px solid var(--line);
+  padding-top: 3px;
+}
+.vw-ib-tick {
+  font-family: var(--font-code);
+  font-size: 0.62rem;
+  color: var(--text-dim);
 }
 
 /* ---- arrange (Parsons) drag-to-order ---- */

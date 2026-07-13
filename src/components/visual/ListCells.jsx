@@ -16,11 +16,13 @@ export default function ListCells({ visual, beatIndex }) {
   const cellRefs = useRef([]);
   const pointerRef = useRef(null);
   const pointer2Ref = useRef(null);
+  const midRef = useRef(null);
   const len = visual.list.length;
   const beat = visual.beats[beatIndex] ?? {};
   const resolve = (p) => (p < 0 ? len + p : p);
   const activeIdx = beat.pointer !== undefined ? resolve(beat.pointer) : null;
   const activeIdx2 = beat.pointer2 !== undefined ? resolve(beat.pointer2) : null;
+  const activeMid = beat.mid !== undefined ? resolve(beat.mid) : null;
   const slice = beat.slice ?? null;
 
   // The cells spring in one after another the first time the widget appears.
@@ -43,6 +45,7 @@ export default function ListCells({ visual, beatIndex }) {
     };
     glide(activeIdx, pointerRef);
     glide(activeIdx2, pointer2Ref);
+    glide(activeMid, midRef);
     if (slice) {
       const shaded = [];
       for (let i = slice[0]; i < slice[1]; i++) {
@@ -59,7 +62,7 @@ export default function ListCells({ visual, beatIndex }) {
       <div className="vw-cells">
         {visual.list.map((v, i) => {
           const inSlice = slice && i >= slice[0] && i < slice[1];
-          const active = activeIdx === i || activeIdx2 === i;
+          const active = activeIdx === i || activeIdx2 === i || activeMid === i;
           return (
             <div
               key={i}
@@ -79,6 +82,11 @@ export default function ListCells({ visual, beatIndex }) {
         {activeIdx2 != null && (
           <span className="vw-pointer vw-pointer2" ref={pointer2Ref} aria-hidden="true">
             ▲{beat.pointer2Label ? <span className="vw-ptr-label">{beat.pointer2Label}</span> : null}
+          </span>
+        )}
+        {activeMid != null && (
+          <span className="vw-pointer vw-pointer-mid" ref={midRef} aria-hidden="true">
+            ▲{beat.midLabel ? <span className="vw-ptr-label">{beat.midLabel}</span> : null}
           </span>
         )}
       </div>

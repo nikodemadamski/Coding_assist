@@ -16,6 +16,7 @@ export const VISUAL_WIDGETS = [
   'branch-flow',
   'call-return',
   'pipe-flow',
+  'interval-bars',
 ];
 
 const isInt = (n) => Number.isInteger(n);
@@ -27,14 +28,14 @@ const BEAT_RULES = {
   'list-cells': (visual, beat) => {
     const len = visual.list?.length ?? 0;
     if (!Array.isArray(visual.list) || len === 0) return 'list-cells needs a non-empty `list`';
-    for (const key of ['pointer', 'pointer2']) {
+    for (const key of ['pointer', 'pointer2', 'mid']) {
       if (beat[key] !== undefined) {
         if (!isInt(beat[key]) || beat[key] < -len || beat[key] > len - 1) {
           return `${key} ${beat[key]} out of range for a list of ${len}`;
         }
       }
     }
-    for (const key of ['pointerLabel', 'pointer2Label']) {
+    for (const key of ['pointerLabel', 'pointer2Label', 'midLabel']) {
       if (beat[key] !== undefined && !isStr(beat[key])) return `${key} must be a non-empty string`;
     }
     if (beat.slice !== undefined) {
@@ -125,6 +126,21 @@ const BEAT_RULES = {
       if (typeof v !== 'string' && typeof v !== 'number') return 'input/output items must be strings or numbers';
     }
     if (beat.label !== undefined && !isStr(beat.label)) return 'label must be a string';
+    return null;
+  },
+  'interval-bars': (visual, beat) => {
+    const scale = visual.scale;
+    if (!(typeof scale === 'number' && scale > 0)) return 'interval-bars needs a positive `scale`';
+    if (!Array.isArray(beat.bars) || beat.bars.length === 0) return 'each beat needs a non-empty `bars` array';
+    for (const b of beat.bars) {
+      if (!Array.isArray(b) || b.length !== 2 || !isInt(b[0]) || !isInt(b[1])) {
+        return 'each bar must be [start, end] integers';
+      }
+      if (b[0] < 0 || b[1] > scale || b[0] > b[1]) return `bar [${b[0]}, ${b[1]}] out of range 0..${scale}`;
+    }
+    if (beat.tone !== undefined && !['input', 'merged'].includes(beat.tone)) {
+      return "tone must be 'input' or 'merged'";
+    }
     return null;
   },
 };

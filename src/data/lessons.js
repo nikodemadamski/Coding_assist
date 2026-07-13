@@ -13,6 +13,7 @@ import { LESSONS_CH3 } from './lessons-ch3.js';
 import { LESSONS_CH4 } from './lessons-ch4.js';
 import { LESSONS_CH5 } from './lessons-ch5.js';
 import { LESSONS_CH6 } from './lessons-ch6.js';
+import { LESSONS_CH7 } from './lessons-ch7.js';
 
 export const LESSON_CHAPTERS = [
   {
@@ -45,6 +46,11 @@ export const LESSON_CHAPTERS = [
     label: 'Python power tools',
     blurb: 'Recursion, classes, lambdas — turn any idea into code.',
   },
+  {
+    key: 'search-windows',
+    label: 'Search & windows',
+    blurb: 'Slide, halve, and pick — the workhorse search patterns.',
+  },
 ];
 
 // Path order — prereqs always point backwards into this list.
@@ -55,6 +61,7 @@ export const LESSONS = [
   ...LESSONS_CH4,
   ...LESSONS_CH5,
   ...LESSONS_CH6,
+  ...LESSONS_CH7,
 ];
 
 const BY_ID = Object.fromEntries(LESSONS.map((l) => [l.id, l]));
