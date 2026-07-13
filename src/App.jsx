@@ -294,6 +294,8 @@ export default function App() {
                     : null
                 }
                 nextLessonTitle={upNext && upNext.id !== view.id ? upNext.title : null}
+                onWarmup={() => setView({ name: 'warmup' })}
+                onOpenQuestion={(id) => setView({ name: 'problem', id, from: 'home' })}
               />
             );
           })()}

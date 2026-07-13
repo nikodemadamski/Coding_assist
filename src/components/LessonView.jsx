@@ -212,6 +212,8 @@ export default function LessonView({
   onDone = null, // review mode: completion "Continue" (falls back to onExit)
   onNextLesson = null,
   nextLessonTitle = null,
+  onWarmup = null, // chapter-end transfer: speed-test at the warm-up
+  onOpenQuestion = null, // chapter-end transfer: try a real path question
 }) {
   const baseQueue =
     mode === 'review' && reviewItems
@@ -339,6 +341,24 @@ export default function LessonView({
               </button>
             )}
           </div>
+          {mode === 'learn' && lesson.transfer && (
+            <div className="ln-transfer">
+              <span className="ln-transfer-label">Put it to work</span>
+              {onWarmup && lesson.transfer.warmup && (
+                <button className="ln-transfer-link" onClick={onWarmup}>
+                  Speed-test it at the Warm-up →
+                </button>
+              )}
+              {onOpenQuestion && lesson.transfer.question && (
+                <button
+                  className="ln-transfer-link"
+                  onClick={() => onOpenQuestion(lesson.transfer.question)}
+                >
+                  Try a real problem with it →
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     );

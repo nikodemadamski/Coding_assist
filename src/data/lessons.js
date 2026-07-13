@@ -10,6 +10,8 @@
 import { LESSONS_CH1 } from './lessons-ch1.js';
 import { LESSONS_CH2 } from './lessons-ch2.js';
 import { LESSONS_CH3 } from './lessons-ch3.js';
+import { LESSONS_CH4 } from './lessons-ch4.js';
+import { LESSONS_CH5 } from './lessons-ch5.js';
 
 export const LESSON_CHAPTERS = [
   {
@@ -40,7 +42,13 @@ export const LESSON_CHAPTERS = [
 ];
 
 // Path order — prereqs always point backwards into this list.
-export const LESSONS = [...LESSONS_CH1, ...LESSONS_CH2, ...LESSONS_CH3];
+export const LESSONS = [
+  ...LESSONS_CH1,
+  ...LESSONS_CH2,
+  ...LESSONS_CH3,
+  ...LESSONS_CH4,
+  ...LESSONS_CH5,
+];
 
 const BY_ID = Object.fromEntries(LESSONS.map((l) => [l.id, l]));
 

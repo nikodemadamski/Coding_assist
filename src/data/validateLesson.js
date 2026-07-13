@@ -36,6 +36,19 @@ export function validateLesson(lesson, { existingIds = [], chapterKeys = [], ear
     need(earlierIds.includes(p), `prereq "${p}" must be an earlier lesson id`);
   }
 
+  // Optional chapter-end transfer link: which warm-up level and path question
+  // this lesson unlocks. IDs are checked for existence by the lesson gate.
+  if (lesson.transfer !== undefined) {
+    need(
+      lesson.transfer && typeof lesson.transfer.warmup === 'string',
+      'transfer.warmup must be a warm-up level key'
+    );
+    need(
+      lesson.transfer.question === undefined || typeof lesson.transfer.question === 'string',
+      'transfer.question must be a question id if present'
+    );
+  }
+
   // The read: a small text and one runnable example whose output is verified.
   const read = lesson.read;
   need(read && typeof read.text === 'string' && read.text.trim(), 'read.text is required');

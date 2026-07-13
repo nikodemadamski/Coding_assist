@@ -3793,6 +3793,32 @@ details.hint[open] summary {
   gap: 10px;
   flex-wrap: wrap;
 }
+.ln-transfer {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ln-transfer-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-dim);
+}
+.ln-transfer-link {
+  background: none;
+  border: none;
+  color: var(--jade);
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 2px 0;
+}
+.ln-transfer-link:hover {
+  text-decoration: underline;
+}
 @media (max-width: 700px) {
   .ln-top h1 {
     font-size: 1rem;

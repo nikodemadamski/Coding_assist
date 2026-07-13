@@ -6,7 +6,8 @@
 import './proxy-shim.mjs';
 import { LESSONS, LESSON_CHAPTERS, itemAsQuestion } from '../src/data/lessons.js';
 import { validateLesson } from '../src/data/validateLesson.js';
-import { checkAnswer } from '../src/data/warmups.js';
+import { checkAnswer, WARMUP_SETS } from '../src/data/warmups.js';
+import { SEED_QUESTIONS } from '../src/data/questions.js';
 import { wrapForCompile } from './py-compile.mjs';
 import { runPy, runPySnippet } from './engines.mjs';
 
@@ -39,6 +40,22 @@ console.log('Lesson tests\n');
   for (const k of populated) {
     check(perChapter[k] >= 5, `chapter ${k} has a real lesson count (${perChapter[k]})`);
   }
+}
+
+// ---- chapter-end transfer links point at real targets ----
+{
+  const qIds = new Set(SEED_QUESTIONS.map((q) => q.id));
+  const bad = [];
+  for (const lesson of LESSONS) {
+    if (!lesson.transfer) continue;
+    if (!WARMUP_SETS[lesson.transfer.warmup]) {
+      bad.push(`${lesson.id}: warm-up level "${lesson.transfer.warmup}" does not exist`);
+    }
+    if (lesson.transfer.question && !qIds.has(lesson.transfer.question)) {
+      bad.push(`${lesson.id}: question "${lesson.transfer.question}" does not exist`);
+    }
+  }
+  check(bad.length === 0, 'every transfer link points at a real target', bad.slice(0, 3).join(' | '));
 }
 
 // ---- every read example prints exactly what it claims ----
