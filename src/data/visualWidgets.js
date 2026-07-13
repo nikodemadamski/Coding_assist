@@ -14,6 +14,7 @@ export const VISUAL_WIDGETS = [
   'stack-tower',
   'text-reveal',
   'branch-flow',
+  'call-return',
 ];
 
 const isInt = (n) => Number.isInteger(n);
@@ -94,6 +95,19 @@ const BEAT_RULES = {
     }
     if (taken > 1) return 'at most one branch can be taken (the first true one wins)';
     if (beat.value !== undefined && !isStr(beat.value)) return 'value must be a string';
+    return null;
+  },
+  'call-return': (visual, beat) => {
+    if (!isStr(beat.func)) return 'call-return beat needs a `func` name string';
+    if (!Array.isArray(beat.args)) return 'call-return beat needs an `args` array';
+    for (const a of beat.args) {
+      if (typeof a !== 'string' && typeof a !== 'number') return 'each arg must be a string or number';
+    }
+    if (typeof beat.returns !== 'string' && typeof beat.returns !== 'number') {
+      return 'call-return beat needs a `returns` value (string or number)';
+    }
+    if (beat.body !== undefined && !isStr(beat.body)) return 'body must be a string';
+    if (beat.into !== undefined && !isStr(beat.into)) return 'into must be a string';
     return null;
   },
 };

@@ -12,6 +12,40 @@ export const LESSONS_CH4 = [
       text:
         'You have been reading `def` for two chapters — now own it. `def` names a recipe; the names in parentheses are its inputs; `return` sends a value BACK to whoever called.\n\nThe classic confusion: `print` only SHOWS a value, `return` hands it over. A function that never returns gives back `None`.',
       example: { code: 'def double(n):\n    return n * 2\n\nprint(double(5))', expectedOutput: '10' },
+      visual: {
+        widget: 'call-return',
+        caption: 'return HANDS a value back; print only SHOWS one. Watch the difference.',
+        beats: [
+          {
+            call: 'double(5)',
+            func: 'double',
+            args: ['5'],
+            body: 'return n * 2',
+            returns: '10',
+            into: 'x',
+            caption: '5 goes in as n; return hands back n*2 = 10, which lands in x.',
+          },
+          {
+            call: 'greet()',
+            func: 'greet',
+            args: [],
+            body: "return 'hi'",
+            returns: "'hi'",
+            caption: 'No inputs — greet just hands back the string hi.',
+          },
+          {
+            call: "shout('go')",
+            func: 'shout',
+            args: ["'go'"],
+            body: 'print(word)   # no return',
+            returns: 'None',
+            caption: 'shout PRINTS but never returns — so it hands back None.',
+          },
+        ],
+        why: 'A function with no return hands back None. Printing is not returning.',
+        verifyCode: 'def double(n):\n    return n * 2\n\nprint(double(5))',
+        verifyOutput: '10',
+      },
     },
     items: [
       {
@@ -90,6 +124,40 @@ export const LESSONS_CH4 = [
       example: {
         code: "def power_up(name, boost=10):\n    return name + ' +' + str(boost)\n\nprint(power_up('zoro'))",
         expectedOutput: 'zoro +10',
+      },
+      visual: {
+        widget: 'call-return',
+        caption: 'A default fills in any argument you leave out. Watch it step in.',
+        beats: [
+          {
+            call: 'f(3)',
+            func: 'f',
+            args: ['3'],
+            body: 'a=3, b=2 (default) → a * b',
+            returns: '6',
+            caption: 'b was not given, so its default 2 steps in: 3 * 2 = 6.',
+          },
+          {
+            call: 'f(3, 5)',
+            func: 'f',
+            args: ['3', '5'],
+            body: 'a=3, b=5 → a * b',
+            returns: '15',
+            caption: 'A supplied value beats the default: 3 * 5 = 15.',
+          },
+          {
+            call: "power_up('zoro')",
+            func: 'power_up',
+            args: ["'zoro'"],
+            body: 'boost falls back to 10',
+            returns: "'zoro +10'",
+            caption: 'Only name is given; boost uses its default 10.',
+          },
+        ],
+        why: 'Defaults make arguments optional; a passed value always wins.',
+        verifyCode:
+          "def power_up(name, boost=10):\n    return name + ' +' + str(boost)\n\nprint(power_up('zoro'))",
+        verifyOutput: 'zoro +10',
       },
     },
     items: [

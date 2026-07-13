@@ -4,7 +4,7 @@
 // elements snap straight to their final resting state (every preset's last
 // keyframe is the correct end state, so this is safe and needs no special-casing).
 import { useCallback } from 'react';
-import { animate, stagger, utils } from 'animejs';
+import { animate, stagger, utils, createTimeline } from 'animejs';
 import { DUR } from './presets.js';
 
 export function prefersReducedMotion() {
@@ -32,6 +32,17 @@ export function useAnime() {
       if (p.duration == null && !isSpring) p.duration = DUR.base;
       return animate(targets, p);
     },
+    [reduced]
+  );
+}
+
+// Returns a factory that builds an anime.js v4 timeline for sequencing several
+// steps (args fly in → body computes → value returns). Under reduced motion the
+// timeline runs every step at duration 0, so the sequence snaps to its end state.
+export function useTimeline() {
+  const reduced = prefersReducedMotion();
+  return useCallback(
+    () => createTimeline({ defaults: reduced ? { duration: 0, ease: 'linear' } : { duration: DUR.base } }),
     [reduced]
   );
 }

@@ -4050,6 +4050,80 @@ details.hint[open] summary {
   color: var(--gold);
 }
 
+/* ---- call-return (functions: args in, value back) ---- */
+.vw-call {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+}
+.vw-cr-caller {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  font-family: var(--font-code);
+  font-size: 0.9rem;
+}
+.vw-cr-call {
+  background: var(--ink);
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
+  padding: 5px 10px;
+}
+.vw-cr-result {
+  color: var(--text-dim);
+}
+.vw-cr-result strong {
+  color: var(--gold);
+}
+.vw-cr-fn {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  padding: 12px 18px;
+  border: 1.5px solid var(--jade);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--jade) 7%, var(--panel));
+  min-width: 180px;
+}
+.vw-cr-fn-name {
+  font-family: var(--font-code);
+  font-size: 0.85rem;
+  color: var(--jade);
+}
+.vw-cr-args {
+  display: flex;
+  gap: 8px;
+}
+.vw-cr-arg {
+  min-width: 34px;
+  text-align: center;
+  padding: 4px 8px;
+  background: var(--panel);
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
+  font-family: var(--font-code);
+  font-size: 0.9rem;
+}
+.vw-cr-body {
+  font-family: var(--font-code);
+  font-size: 0.82rem;
+  color: var(--text-dim);
+}
+.vw-cr-return {
+  font-family: var(--font-code);
+  font-size: 0.9rem;
+}
+.vw-cr-return-kw {
+  color: var(--jade);
+}
+.vw-cr-return strong {
+  color: var(--gold);
+}
+
 /* ---- arrange (Parsons) drag-to-order ---- */
 .ln-arrange-hint-line {
   color: var(--text-dim);

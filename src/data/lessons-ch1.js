@@ -412,6 +412,40 @@ export const LESSONS_CH1 = [
       text:
         'A **function** is a named recipe you call with parentheses: you already use `print(...)` and `len(...)`. Python ships more: `max`, `min`, `abs`, `round`, and converters like `int(\'7\')` which turns text into a number.\n\nThe key idea: functions **give a value back**. You can print it, store it in a variable, or feed it straight into another function.',
       example: { code: 'biggest = max(3, 9, 4)\nprint(biggest)', expectedOutput: '9' },
+      visual: {
+        widget: 'call-return',
+        caption: 'Values go IN; a function hands one value BACK. Watch it travel.',
+        beats: [
+          {
+            call: 'max(3, 9, 4)',
+            func: 'max',
+            args: ['3', '9', '4'],
+            body: 'keep the largest',
+            returns: '9',
+            into: 'biggest',
+            caption: 'max takes the three numbers and hands back the largest — it lands in biggest.',
+          },
+          {
+            call: "int('7')",
+            func: 'int',
+            args: ["'7'"],
+            body: 'parse the text',
+            returns: '7',
+            caption: "int('7') turns the text into the number 7 you can do math with.",
+          },
+          {
+            call: 'len([4, 5, 6])',
+            func: 'len',
+            args: ['[4, 5, 6]'],
+            body: 'count the items',
+            returns: '3',
+            caption: 'len counts the items and returns 3 — a value you can store or print.',
+          },
+        ],
+        why: 'A function gives a value back — store it, print it, or feed it onward.',
+        verifyCode: 'biggest = max(3, 9, 4)\nprint(biggest)',
+        verifyOutput: '9',
+      },
     },
     items: [
       {
