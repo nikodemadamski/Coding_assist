@@ -315,6 +315,27 @@ export const LESSONS_CH4 = [
       text:
         'A **comprehension** is a build-a-list loop in one line: `[n * 2 for n in nums]` — the append is implied. Add a filter at the end: `[n for n in nums if n % 2 == 0]`.\n\nRead it as English: "n doubled, for each n in nums". When the line stops reading like English, use a normal loop.',
       example: { code: 'print([n * 2 for n in [1, 2, 3]])', expectedOutput: '[2, 4, 6]' },
+      visual: {
+        widget: 'pipe-flow',
+        caption: 'A comprehension pipes each item through an expression into a new list.',
+        beats: [
+          {
+            label: '[n * 2 for n in nums]',
+            input: ['1', '2', '3'],
+            output: ['2', '4', '6'],
+            caption: 'Each item comes out transformed — same length, brand-new list.',
+          },
+          {
+            label: '[n for n in nums if n % 2 == 0]',
+            input: ['1', '2', '3', '4'],
+            output: ['2', '4'],
+            caption: 'The if FILTERS — only the items that pass make it through.',
+          },
+        ],
+        why: 'Transform shape: [expression for item in sequence] — plus an optional if filter.',
+        verifyCode: 'print([n * 2 for n in [1, 2, 3]])',
+        verifyOutput: '[2, 4, 6]',
+      },
     },
     items: [
       {
@@ -378,6 +399,27 @@ export const LESSONS_CH4 = [
       text:
         '`sorted(x)` returns a NEW sorted list; `x.sort()` sorts the list in place (and returns None — a classic trap). `reverse=True` flips the order.\n\nThe power move is `key=`: tell Python what to compare — `key=len`, `key=str.lower`, or a lambda like `key=lambda p: p[1]` for "sort by the second element".',
       example: { code: 'print(sorted([3, 1, 2]))', expectedOutput: '[1, 2, 3]' },
+      visual: {
+        widget: 'pipe-flow',
+        caption: 'sorted pipes the items out in order. key= changes what "order" means.',
+        beats: [
+          {
+            label: 'sorted([3, 1, 2])',
+            input: ['3', '1', '2'],
+            output: ['1', '2', '3'],
+            caption: 'sorted returns a NEW list, smallest to largest.',
+          },
+          {
+            label: 'sorted(words, key=len)',
+            input: ["'bb'", "'a'", "'ccc'"],
+            output: ["'a'", "'bb'", "'ccc'"],
+            caption: 'key=len sorts by LENGTH, not alphabetically — shortest first.',
+          },
+        ],
+        why: 'key= tells Python what to compare; sorted leaves the original untouched.',
+        verifyCode: 'print(sorted([3, 1, 2]))',
+        verifyOutput: '[1, 2, 3]',
+      },
     },
     items: [
       {

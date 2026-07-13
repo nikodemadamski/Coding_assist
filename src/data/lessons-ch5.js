@@ -206,6 +206,27 @@ export const LESSONS_CH5 = [
       text:
         'Text problems flow one way: `split()` breaks a string into a list of words, you process the list, then `\' \'.join(list)` glues it back into a string.\n\n`.strip()` trims edges, `.replace(a, b)` swaps text. The split-process-join pipeline solves a huge share of string questions.',
       example: { code: "print('a b c'.split())", expectedOutput: "['a', 'b', 'c']" },
+      visual: {
+        widget: 'pipe-flow',
+        caption: 'Text flows: split breaks it apart, join glues it back together.',
+        beats: [
+          {
+            label: "'a b c'.split()",
+            input: ["'a b c'"],
+            output: ["'a'", "'b'", "'c'"],
+            caption: 'split breaks the string into a list of words.',
+          },
+          {
+            label: "'-'.join(['a', 'b', 'c'])",
+            input: ["'a'", "'b'", "'c'"],
+            output: ["'a-b-c'"],
+            caption: 'join glues the list back into one string, with a separator between.',
+          },
+        ],
+        why: 'split → process the list → join is the backbone of string problems.',
+        verifyCode: "print('a b c'.split())",
+        verifyOutput: "['a', 'b', 'c']",
+      },
     },
     items: [
       {

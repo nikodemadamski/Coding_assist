@@ -15,6 +15,7 @@ export const VISUAL_WIDGETS = [
   'text-reveal',
   'branch-flow',
   'call-return',
+  'pipe-flow',
 ];
 
 const isInt = (n) => Number.isInteger(n);
@@ -108,6 +109,17 @@ const BEAT_RULES = {
     }
     if (beat.body !== undefined && !isStr(beat.body)) return 'body must be a string';
     if (beat.into !== undefined && !isStr(beat.into)) return 'into must be a string';
+    return null;
+  },
+  'pipe-flow': (visual, beat) => {
+    if (!Array.isArray(beat.input) || beat.input.length === 0) {
+      return 'pipe-flow beat needs a non-empty `input` array';
+    }
+    if (!Array.isArray(beat.output)) return 'pipe-flow beat needs an `output` array';
+    for (const v of [...beat.input, ...beat.output]) {
+      if (typeof v !== 'string' && typeof v !== 'number') return 'input/output items must be strings or numbers';
+    }
+    if (beat.label !== undefined && !isStr(beat.label)) return 'label must be a string';
     return null;
   },
 };

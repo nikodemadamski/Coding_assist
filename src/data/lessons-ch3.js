@@ -381,6 +381,27 @@ export const LESSONS_CH3 = [
       text:
         'Three loops you will type forever. `enumerate(nums)` gives position AND value. `zip(a, b)` walks two sequences in step. `d.items()` gives each key AND value of a dict.\n\nAll three use tuple unpacking right in the for line — that is why chapter 3 taught tuples first.',
       example: { code: "for i, ch in enumerate('ab'):\n    print(i, ch)", expectedOutput: '0 a\n1 b' },
+      visual: {
+        widget: 'pipe-flow',
+        caption: 'These tools pipe items out already PAIRED, ready to unpack in the for line.',
+        beats: [
+          {
+            label: "enumerate(['a', 'b'])",
+            input: ["'a'", "'b'"],
+            output: ['0 → a', '1 → b'],
+            caption: 'enumerate pairs each value with its position.',
+          },
+          {
+            label: "d.items()   # {'x': 1, 'y': 2}",
+            input: ["'x'", "'y'"],
+            output: ['x → 1', 'y → 2'],
+            caption: '.items() hands back each key together with its value.',
+          },
+        ],
+        why: 'enumerate, zip and .items() all give pairs — that is why tuples came first.',
+        verifyCode: "for i, ch in enumerate('ab'):\n    print(i, ch)",
+        verifyOutput: '0 a\n1 b',
+      },
     },
     items: [
       {

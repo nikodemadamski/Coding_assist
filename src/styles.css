@@ -4124,6 +4124,53 @@ details.hint[open] summary {
   color: var(--gold);
 }
 
+/* ---- pipe-flow (comprehensions, sorting, enumerate/zip, split/join) ---- */
+.vw-pipe {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+.vw-pipe-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.vw-pipe-cell {
+  padding: 7px 11px;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  font-family: var(--font-code);
+  font-size: 0.9rem;
+}
+.vw-pipe-cell.out {
+  border-color: var(--jade);
+  background: color-mix(in srgb, var(--jade) 14%, var(--panel));
+  color: var(--gold);
+}
+.vw-pipe-mid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.vw-pipe-label {
+  font-family: var(--font-code);
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  background: var(--ink);
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
+  padding: 3px 8px;
+}
+.vw-pipe-arrow {
+  color: var(--jade);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
 /* ---- arrange (Parsons) drag-to-order ---- */
 .ln-arrange-hint-line {
   color: var(--text-dim);

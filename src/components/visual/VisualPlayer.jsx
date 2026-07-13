@@ -7,6 +7,7 @@ import StackTower from './StackTower.jsx';
 import TextReveal from './TextReveal.jsx';
 import BranchFlow from './BranchFlow.jsx';
 import CallReturn from './CallReturn.jsx';
+import PipeFlow from './PipeFlow.jsx';
 
 // Tap-through player for a visual block: renders the widget at the current
 // beat, shows the caption, and advances one beat per tap. Widgets register
@@ -20,6 +21,7 @@ const WIDGETS = {
   'text-reveal': TextReveal,
   'branch-flow': BranchFlow,
   'call-return': CallReturn,
+  'pipe-flow': PipeFlow,
 };
 
 export default function VisualPlayer({ visual, onDone = null }) {
