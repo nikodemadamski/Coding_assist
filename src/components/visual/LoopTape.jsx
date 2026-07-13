@@ -18,6 +18,13 @@ export default function LoopTape({ visual, beatIndex }) {
   const at = beat.at; // index into items, or -1/undefined = before/after
   const prevAcc = beatIndex > 0 ? visual.beats[beatIndex - 1].acc : undefined;
 
+  // The tape cells spring in one after another when the widget first appears.
+  useEffect(() => {
+    const cells = cellRefs.current.filter(Boolean);
+    if (cells.length) animate(cells, presets.enter());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (at != null && at >= 0 && cellRefs.current[at] && markerRef.current) {
       const cell = cellRefs.current[at];

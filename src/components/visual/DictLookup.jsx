@@ -11,11 +11,19 @@ function formatVal(v) {
 // exists, made visible.
 export default function DictLookup({ visual, beatIndex }) {
   const animate = useAnime();
+  const rootRef = useRef(null);
   const rowRefs = useRef({});
   const fallbackRef = useRef(null);
   const beat = visual.beats[beatIndex] ?? {};
   const keys = Object.keys(visual.pairs);
   const present = beat.key in visual.pairs;
+
+  // The key→value rows spring in one after another when the widget appears.
+  useEffect(() => {
+    const rows = rootRef.current?.querySelectorAll('.vw-dict-row');
+    if (rows?.length) animate(rows, presets.enter());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (present && rowRefs.current[beat.key]) {
@@ -27,7 +35,7 @@ export default function DictLookup({ visual, beatIndex }) {
   }, [beatIndex]);
 
   return (
-    <div className="vw vw-dict">
+    <div className="vw vw-dict" ref={rootRef}>
       <div className="vw-dict-rows">
         {keys.map((k) => (
           <div

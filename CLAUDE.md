@@ -38,11 +38,18 @@ Full gates (lint + test + build + smoke) before every push, no exceptions.
   levels × 50; SQL checking folds case, pandas/SQL answers EXECUTE in the warm-up gate),
   `validateQuestion.js` (schema gate, also used by import),
   `lessons.js` + `lessons-chN.js` + `validateLesson.js` (Learn-from-zero curriculum:
-  lessons `{id, chapter, prereqs, read{text≤120w, example}, items[]}` with item types
-  predict/type/fix/write/watch; tests/lesson-tests.mjs EXECUTES every read example,
-  predict snippet (stdout vs answer via checkAnswer), fix (broken must FAIL, solution
-  pass), write/watch through real engines; PY_SNIPPET_HARNESS in pyHarness runs scripts
-  with stdout capture — worker kind 'snippet', pyClient.runPythonSnippet).
+  lessons `{id, chapter, prereqs, read{text≤120w, example, visual?}, items[]}` with item
+  types predict/type/fix/write/watch/visual/arrange; tests/lesson-tests.mjs EXECUTES every
+  read example, predict snippet (stdout vs answer via checkAnswer), fix (broken must FAIL,
+  solution pass), write/watch through real engines, every visual `verifyCode` (stdout must
+  equal claimed output), and every `arrange` puzzle (ordered lines PASS, reversed FAIL —
+  order is load-bearing); PY_SNIPPET_HARNESS in pyHarness runs scripts with stdout capture —
+  worker kind 'snippet', pyClient.runPythonSnippet).
+- `visualWidgets.js` — the Brilliant-style concept-visualization registry + per-widget beat
+  validator (used by BOTH the gate and the renderer): widgets `list-cells | var-boxes |
+  loop-tape | dict-lookup | stack-tower`, each fed tap-through `beats` (pure data).
+  `read.visual` / a `visual` item render one beat per tap; an `arrange` item is a Parsons
+  drag-to-order (indentation baked in, order-only).
 
 ## Engine (src/engine/)
 
@@ -52,6 +59,19 @@ never prepended** (keeps user line numbers). PY_HARNESS runs tests; PY_TRACE_HAR
 the settrace visualizer with an AST narrator (`_narrate`, `_cond_text`, MAX_STEPS 400).
 Both run identically in the Pyodide module worker (5s kill switch) and in Node tests.
 Result comparison canonicalizes via `_canon`, honoring `unordered`.
+
+## Animation (src/anim/) — the ONLY place that touches anime.js
+
+**anime.js v4** (bundled npm dep, compiled by Vite → zero runtime external call, offline/PWA
+safe). `useAnime.js` is the sole import site: the `useAnime()` hook returns
+`animate(targets, params)` (v4 `animate`), honors `prefers-reduced-motion` (snaps to the
+final state — `ease:'linear'`, duration 0), and re-exports `stagger` so widgets never import
+anime.js directly. `presets.js` is the shared vocabulary widgets compose with — a single
+shared `spring()` gives natural settling physics; presets `slideTo/pulse/fadeSwap/popIn/
+shade/popOut/enter` (enter = staggered spring group entrance). v4 note: `ease` not `easing`,
+ease names drop the prefix (`outCubic`, `inOutQuad`, `outBack`), transforms use `x`/`y`.
+Widgets in `src/components/visual/` (ListCells/VarBoxes/LoopTape/DictLookup/StackTower +
+VisualPlayer tap-through host) speak presets only.
 
 ## State (src/state/) — pure modules, all unit-tested
 

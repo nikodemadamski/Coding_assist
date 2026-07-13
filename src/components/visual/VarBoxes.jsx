@@ -11,11 +11,19 @@ function formatVal(v) {
 // reassignment and swaps become visible instead of abstract.
 export default function VarBoxes({ visual, beatIndex }) {
   const animate = useAnime();
+  const rootRef = useRef(null);
   const valRefs = useRef({});
   const beat = visual.beats[beatIndex] ?? {};
   const prev = beatIndex > 0 ? visual.beats[beatIndex - 1].vars ?? {} : {};
   const vars = beat.vars ?? {};
   const names = Object.keys(vars);
+
+  // The boxes spring in one after another when the widget first appears.
+  useEffect(() => {
+    const boxes = rootRef.current?.querySelectorAll('.vw-var');
+    if (boxes?.length) animate(boxes, presets.enter());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     for (const name of names) {
@@ -27,7 +35,7 @@ export default function VarBoxes({ visual, beatIndex }) {
   }, [beatIndex]);
 
   return (
-    <div className="vw vw-varboxes">
+    <div className="vw vw-varboxes" ref={rootRef}>
       <div className="vw-vars">
         {names.map((name) => (
           <div key={name} className="vw-var">
