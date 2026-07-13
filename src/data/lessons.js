@@ -8,6 +8,8 @@
 // THEN run it), type (muscle memory), fix (repair real code), write (tiny
 // function vs real tests), watch (step through it in the visualizer).
 import { LESSONS_CH1 } from './lessons-ch1.js';
+import { LESSONS_CH2 } from './lessons-ch2.js';
+import { LESSONS_CH3 } from './lessons-ch3.js';
 
 export const LESSON_CHAPTERS = [
   {
@@ -38,7 +40,7 @@ export const LESSON_CHAPTERS = [
 ];
 
 // Path order — prereqs always point backwards into this list.
-export const LESSONS = [...LESSONS_CH1];
+export const LESSONS = [...LESSONS_CH1, ...LESSONS_CH2, ...LESSONS_CH3];
 
 const BY_ID = Object.fromEntries(LESSONS.map((l) => [l.id, l]));
 

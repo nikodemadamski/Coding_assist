@@ -745,6 +745,51 @@ try {
   );
   await page.locator('.learn-back').click();
 
+  // ---- a due skill check opens the daily practice session ----
+  await page.evaluate(() => {
+    const t = new Date();
+    const today = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+    const p = JSON.parse(localStorage.getItem('zoro.progress.v1'));
+    p.lessons['ch1-values'].srs.nextDue = today; // due now
+    localStorage.setItem('zoro.progress.v1', JSON.stringify(p));
+  });
+  await page.reload();
+  await page.locator('.map-strip button').first().waitFor({ timeout: 10000 });
+  await page.locator('.map-strip button').first().click(); // start the daily session
+  await page.locator('.ln-item').waitFor({ timeout: 10000 });
+  check(
+    (await page.locator('.ln-page h1').innerText()).includes('Values & print'),
+    'the due skill check opens the daily session'
+  );
+  // Answer the 4 quick items by matching what's on screen against the bank.
+  for (let k = 0; k < 4; k++) {
+    const ask = await page.locator('.ln-item-ask').innerText();
+    const hasCode = (await page.locator('.ln-item .ln-code').count()) > 0;
+    const codeShown = hasCode ? await page.locator('.ln-item .ln-code').first().innerText() : null;
+    const item = lesson1.items.find(
+      (it) =>
+        (it.type === 'type' && ask.includes(it.prompt)) ||
+        (it.type === 'predict' && codeShown !== null && codeShown.trim() === it.code)
+    );
+    await page.fill('.ln-item .wu-input', item.answer);
+    await page.locator('.ln-item .btn', { hasText: 'Check' }).click();
+    await page.locator('.ln-next').click();
+  }
+  await page.locator('.ln-done').waitFor({ timeout: 5000 });
+  check(
+    (await page.locator('.ln-done h1').innerText()).includes('Skill check passed'),
+    'four correct answers pass the skill check'
+  );
+  await page.locator('.ln-done .btn', { hasText: 'Continue' }).click();
+  check(
+    await page.locator('.pv-toolbar').isVisible(),
+    'the session continues into the question queue after the check'
+  );
+  await page.locator('.icon-btn[aria-label="End practice session"]').click();
+  await page.locator('.q-list').first().waitFor({ timeout: 5000 }); // sessions exit to Browse
+  await page.locator('.header-logo').click();
+  await page.locator('.graph-node').first().waitFor({ timeout: 5000 });
+
   // ---- review forecast + backup nudge (seeded: 8 solves, reviews spread out) ----
   await page.evaluate(() => {
     const today = new Date();

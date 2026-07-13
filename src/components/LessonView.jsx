@@ -209,6 +209,7 @@ export default function LessonView({
   onComplete,
   onReviewResult,
   onExit,
+  onDone = null, // review mode: completion "Continue" (falls back to onExit)
   onNextLesson = null,
   nextLessonTitle = null,
 }) {
@@ -328,9 +329,15 @@ export default function LessonView({
                 Next lesson: {nextLessonTitle} →
               </button>
             )}
-            <button className="btn" onClick={onExit}>
-              Back to Learn
-            </button>
+            {mode === 'review' ? (
+              <button className="btn btn-primary" onClick={() => (onDone ?? onExit)()}>
+                Continue →
+              </button>
+            ) : (
+              <button className="btn" onClick={onExit}>
+                Back to Learn
+              </button>
+            )}
           </div>
         </div>
       </div>

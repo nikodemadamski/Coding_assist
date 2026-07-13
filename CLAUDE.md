@@ -70,7 +70,7 @@ Result comparison canonicalizes via `_canon`, honoring `unordered`.
   resets — never touches question srs), buildReviewItems (4 quick predict/type,
   missed-first).
 - others: activity (daily goal + todayPulse), mockSession (formats incl. data round via
-  format.tracks, optimalComplexity = last approach's complexity else question.complexity), practiceSession (review→new queue),
+  format.tracks, optimalComplexity = last approach's complexity else question.complexity), practiceSession (skills→review→new queue; skill checks = due lesson reviews, never requeue),
   patternQuiz, celebrate, theme, uiPrefs, vizPointers (▲ markers from subscript scan).
 
 ## INVARIANTS — edges that must stay in sync

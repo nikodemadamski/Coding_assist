@@ -86,5 +86,35 @@ const first = LESSONS[0];
   check(counts.done === 1 && counts.total === LESSONS.length, 'lesson counts add up');
 }
 
+// ---- the daily session serves skills → reviews → new ----
+{
+  const { createSession, createDrillSession, currentPhase, currentId, onPass, onRequeue, sessionCounts } =
+    await import('../src/state/practiceSession.js');
+  const questions = [{ id: 'q-due' }, { id: 'q-new' }];
+  let p = recordLessonComplete(fresh(), first.id, {});
+  p.lessons[first.id].srs.nextDue = today; // skill check due now
+  p.solved['q-due'] = { firstSolvedAt: 'x', attempts: 1, solves: 1 };
+  p.srs['q-due'] = { stage: 0, nextDue: today }; // question review due
+  const session = createSession(p, questions, { seed: 5 });
+
+  check(currentPhase(session) === 'skills', 'a due skill check opens the session');
+  check(currentId(session) === first.id, 'the due lesson is served first');
+  check(sessionCounts(session).skillsLeft === 1, 'skill count reported');
+
+  const afterSkill = onPass(session);
+  check(currentPhase(afterSkill) === 'review', 'the question review follows the skill check');
+  check(currentId(afterSkill) === 'q-due', 'the due question is next');
+  const afterReview = onPass(afterSkill);
+  check(currentPhase(afterReview) === 'new', 'new questions come last');
+  check(currentId(afterReview) === 'q-new', 'the unsolved question closes the session');
+
+  check(
+    onRequeue(session).skills.length === 0,
+    'a finished skill check advances even on requeue (never loops)'
+  );
+  const drill = createDrillSession(p, questions);
+  check((drill.skills ?? []).length === 0, 'drills never include skill checks');
+}
+
 console.log(failures === 0 ? '\nAll lesson-progress tests green.' : `\n${failures} FAILURE(S).`);
 process.exit(failures === 0 ? 0 : 1);

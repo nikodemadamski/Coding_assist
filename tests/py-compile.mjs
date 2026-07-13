@@ -12,6 +12,13 @@ export function wrapForCompile(code) {
   if (/^(return|yield|global)\b/.test(code)) {
     return `def _f():\n    ${code}`;
   }
+  if (/^(break|continue)\s*$/.test(code)) {
+    return `for _ in []:\n    ${code}`;
+  }
+  if (/^(else\s*:|elif\b)/.test(code)) {
+    const clause = code.endsWith(':') ? `${code}\n    pass` : code;
+    return `if True:\n    pass\n${clause}`;
+  }
   if (code.endsWith(':')) {
     const body = `${code}\n    pass`;
     return code.startsWith('try') ? `${body}\nexcept Exception:\n    pass` : body;
