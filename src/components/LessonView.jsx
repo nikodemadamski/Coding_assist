@@ -18,7 +18,19 @@ import { runPythonSnippet } from '../engine/pyClient.js';
 // mode 'review' — a 4-item skill check (items passed in), reports via
 //                 onReviewResult(id, passed)
 
-const FIX_REVEAL_AFTER = 3; // failed runs before "Show the fix" appears
+const FIX_REVEAL_AFTER = 3; // failed runs before "Show the fix" / "Show the order" appears
+
+// A shuffled [0..n-1] guaranteed NOT already in order (so an arrange puzzle
+// always starts scrambled).
+function shuffledIndices(n) {
+  const a = Array.from({ length: n }, (_, i) => i);
+  for (let i = n - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  const sorted = a.every((v, i) => v === i);
+  return sorted && n > 1 ? [a[n - 1], ...a.slice(0, n - 1)] : a;
+}
 
 // One exercise. Owns its own attempt state; reports up once resolved.
 function ItemPlayer({ lesson, item, idx, onResolved }) {
@@ -33,6 +45,12 @@ function ItemPlayer({ lesson, item, idx, onResolved }) {
   const [showFix, setShowFix] = useState(false);
   const [viz, setViz] = useState(false);
   const inputRef = useRef(null);
+  // arrange (Parsons): a shuffled order of line indices, drag/buttons to sort.
+  const [order, setOrder] = useState(() =>
+    item.type === 'arrange' ? shuffledIndices(item.lines.length) : []
+  );
+  const [dragIdx, setDragIdx] = useState(null);
+  const rowRefs = useRef([]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -80,6 +98,122 @@ function ItemPlayer({ lesson, item, idx, onResolved }) {
       <div className="ln-item">
         {item.caption && <p className="ln-item-ask">{item.caption}</p>}
         <VisualPlayer visual={item} onDone={() => onResolved({ firstTry: true, missed: false })} />
+      </div>
+    );
+  }
+
+  // arrange (Parsons): drag the shuffled lines into working order.
+  if (item.type === 'arrange') {
+    const moveRow = (from, to) => {
+      if (to < 0 || to >= order.length || from === to) return;
+      setOrder((o) => {
+        const next = [...o];
+        const [x] = next.splice(from, 1);
+        next.splice(to, 0, x);
+        return next;
+      });
+    };
+    const onPointerMove = (e) => {
+      if (dragIdx === null) return;
+      const y = e.clientY;
+      let target = dragIdx;
+      rowRefs.current.forEach((el, i) => {
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        if (y >= r.top && y <= r.bottom) target = i;
+      });
+      if (target !== dragIdx) {
+        moveRow(dragIdx, target);
+        setDragIdx(target);
+      }
+    };
+    async function checkArrange() {
+      setRunning(true);
+      setReport(null);
+      const assembled = order.map((li) => item.lines[li]).join('\n');
+      const rep = await runQuestion(itemAsQuestion(lesson, item, idx), assembled, () => {});
+      setReport(rep);
+      setRunning(false);
+      if (rep.allPassed) setState('correct');
+      else setFailedRuns((f) => f + 1);
+    }
+    const revealOrder = () => {
+      setOrder(item.lines.map((_, i) => i));
+      setState('revealed');
+    };
+
+    return (
+      <div className="ln-item">
+        <p className="ln-item-ask">{item.brief}</p>
+        <p className="ln-arrange-hint-line">Drag the lines into the right order (indentation is done for you).</p>
+        <ol
+          className="ln-arrange"
+          onPointerMove={onPointerMove}
+          onPointerUp={() => setDragIdx(null)}
+          onPointerLeave={() => setDragIdx(null)}
+        >
+          {order.map((li, pos) => (
+            <li
+              key={li}
+              ref={(el) => (rowRefs.current[pos] = el)}
+              className={`ln-arrange-row ${dragIdx === pos ? 'dragging' : ''}`}
+            >
+              <span
+                className="ln-arrange-grip"
+                aria-hidden="true"
+                onPointerDown={(e) => {
+                  if (resolved) return;
+                  setDragIdx(pos);
+                  e.currentTarget.setPointerCapture?.(e.pointerId);
+                }}
+              >
+                ⠿
+              </span>
+              <code className="ln-arrange-code">{item.lines[li]}</code>
+              {!resolved && (
+                <span className="ln-arrange-moves">
+                  <button aria-label="Move up" onClick={() => moveRow(pos, pos - 1)} disabled={pos === 0}>
+                    ↑
+                  </button>
+                  <button
+                    aria-label="Move down"
+                    onClick={() => moveRow(pos, pos + 1)}
+                    disabled={pos === order.length - 1}
+                  >
+                    ↓
+                  </button>
+                </span>
+              )}
+            </li>
+          ))}
+        </ol>
+        {!resolved && (
+          <div className="ln-run-row">
+            <button className="btn btn-primary" onClick={checkArrange} disabled={running}>
+              {running ? 'Running…' : 'Check'}
+            </button>
+            {failedRuns >= FIX_REVEAL_AFTER && (
+              <button className="btn" onClick={revealOrder}>
+                Show the order
+              </button>
+            )}
+            {failedRuns >= 1 && item.hint && <span className="ln-hint">Hint: {item.hint}</span>}
+          </div>
+        )}
+        {report && !resolved && <Results report={report} question={itemAsQuestion(lesson, item, idx)} />}
+        {resolved && (
+          <div className={`ln-outcome ${state === 'correct' ? 'good' : 'shown'}`}>
+            <p className="ln-outcome-line">
+              {state === 'correct' ? '✓ Assembled and passing — that is the shape.' : 'Here it is, in order.'}
+            </p>
+            <button
+              className="btn btn-primary ln-next"
+              onClick={() => onResolved({ firstTry: state === 'correct' && failedRuns === 0, missed: state !== 'correct' })}
+            >
+              Next →
+            </button>
+          </div>
+        )}
       </div>
     );
   }

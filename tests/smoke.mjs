@@ -787,6 +787,57 @@ try {
   check(await page.locator('.ln-run-row .btn', { hasText: 'Run it' }).isVisible(), 'Read-the-code tab keeps the runnable example');
   await page.locator('.icon-btn', { hasText: '←' }).first().click();
 
+  // ---- arrange (Parsons): drag shuffled lines into order, checked by the real engine ----
+  const arrLesson = LESSONS.find((l) => l.items.some((it) => it.type === 'arrange'));
+  const arrItem = arrLesson.items.find((it) => it.type === 'arrange');
+  await page.locator('.learn-lesson-title', { hasText: arrLesson.title }).first().click();
+  await page.locator('.ln-read').waitFor({ timeout: 10000 });
+  await page.locator('.btn', { hasText: 'Start the drills' }).click();
+  await page.locator('.ln-item').waitFor({ timeout: 10000 });
+  // Resolve each item in order (correct first try, so nothing requeues) until the puzzle.
+  for (const it of arrLesson.items) {
+    if (it.type === 'arrange') break;
+    if (it.type === 'predict' || it.type === 'type') {
+      await page.fill('.ln-item .wu-input', it.answer);
+      await page.locator('.ln-item .btn', { hasText: 'Check' }).click();
+    } else if (it.type === 'write' || it.type === 'fix') {
+      await page.locator('.ln-item .cm-content').click();
+      await page.keyboard.press('Control+A');
+      await page.keyboard.press('Backspace');
+      await page.keyboard.insertText(it.solution);
+      await page.locator('.ln-item .btn', { hasText: 'Run' }).click();
+      await page.locator('.ln-outcome.good').waitFor({ timeout: 120000 });
+    }
+    await page.locator('.ln-next').click();
+  }
+  await page.locator('.ln-arrange').waitFor({ timeout: 10000 });
+  check(
+    (await page.locator('.ln-arrange-row').count()) === arrItem.lines.length,
+    'arrange puzzle renders one row per solution line'
+  );
+  const startOrder = (await page.locator('.ln-arrange-code').allInnerTexts()).map((t) => t.trim());
+  check(
+    startOrder.join('\n') !== arrItem.lines.map((l) => l.trim()).join('\n'),
+    'arrange rows start shuffled, not already solved'
+  );
+  // Selection-sort the rows into the correct order with the ↑ buttons.
+  const target = arrItem.lines.map((l) => l.trim());
+  for (let pos = 0; pos < target.length; pos++) {
+    const codes = (await page.locator('.ln-arrange-code').allInnerTexts()).map((t) => t.trim());
+    let j = codes.findIndex((c, k) => k >= pos && c === target[pos]);
+    while (j > pos) {
+      await page.locator('.ln-arrange-row').nth(j).locator('button[aria-label="Move up"]').click();
+      j--;
+    }
+  }
+  await page.locator('.ln-run-row .btn', { hasText: 'Check' }).click();
+  await page.locator('.ln-outcome.good').waitFor({ timeout: 120000 });
+  check(
+    (await page.locator('.ln-outcome').innerText()).includes('Assembled'),
+    'arrange: lines dragged into order assemble and pass through the real engine'
+  );
+  await page.locator('.icon-btn', { hasText: '✕' }).first().click();
+
   await page.locator('.learn-back').click();
 
   // ---- a due skill check opens the daily practice session ----
@@ -1078,9 +1129,13 @@ try {
     const prompt = (await page.locator('.wu-prompt').innerText()).trim();
     const wuItem = WARMUP_SETS['sql-beginner'].find((it) => it.prompt === prompt);
     check(!!wuItem, 'sql warm-up question comes from the sql bank');
-    // type it in UPPERCASE: SQL answers must be case-insensitive outside quotes
+    // type it in UPPERCASE: SQL answers must be case-insensitive outside quotes.
+    // SQL warm-up answers EXECUTE against sql.js (async), so wait for the grade
+    // to land rather than racing the default implicit timeout.
+    await page.locator('.wu-input').click();
     await page.fill('.wu-input', wuItem.answer.toUpperCase());
     await page.keyboard.press('Enter');
+    await page.locator('.wu-run-streak', { hasText: '1' }).waitFor({ timeout: 60000 });
     check(
       (await page.locator('.wu-run-streak').innerText()).includes('1'),
       'an UPPERCASE answer is accepted — SQL checking folds case'

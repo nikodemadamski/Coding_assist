@@ -1,22 +1,31 @@
 // Named animation presets — the shared vocabulary the visual widgets compose
 // with. All easings and durations live here so every animation across the app
-// feels like one system (the "self-made connection" to anime.js: widgets speak
-// presets, never raw anime.js params).
+// feels like one system (the "self-made connection" to anime.js v4: widgets
+// speak presets, never raw anime.js params).
+import { spring, stagger } from 'animejs';
 
-export const EASE = 'easeOutCubic';
 export const DUR = { quick: 240, base: 420, slow: 640 };
 
+// anime.js v4's signature feel: a spring settles with real physics instead of a
+// fixed easing curve, so the pointer and boxes arrive with a little life and a
+// hint of overshoot. One shared spring keeps every widget consistent.
+const settle = spring({ stiffness: 130, damping: 14 });
+
 export const presets = {
-  // Glide an element to an absolute x offset (the list pointer sliding).
-  slideTo: (x) => ({ translateX: x, duration: DUR.base, easing: EASE }),
+  // Glide an element to an absolute x offset (the list pointer sliding) — spring
+  // physics so it eases in and gently settles rather than stopping dead.
+  slideTo: (x) => ({ x, ease: settle }),
   // A quick attention pulse (a cell being read).
-  pulse: () => ({ scale: [1, 1.16, 1], duration: DUR.base, easing: 'easeInOutQuad' }),
-  // Fade a new value in over the old (reassignment).
-  fadeSwap: () => ({ opacity: [0, 1], duration: DUR.quick, easing: EASE }),
-  // Pop a box into existence (push onto a stack, a new value appearing).
-  popIn: () => ({ scale: [0.4, 1], opacity: [0, 1], duration: DUR.base, easing: 'easeOutBack' }),
+  pulse: () => ({ scale: [1, 1.18, 1], duration: DUR.base, ease: 'inOutQuad' }),
+  // Fade a new value in over the old, rising slightly into place (reassignment).
+  fadeSwap: () => ({ opacity: [0, 1], y: [8, 0], duration: DUR.quick, ease: 'outCubic' }),
+  // Pop a box into existence with a springy bounce (push, a new value appearing).
+  popIn: () => ({ scale: [0.4, 1], opacity: [0, 1], ease: settle }),
   // Shade a region in (a slice range lighting up).
-  shade: () => ({ opacity: [0, 1], duration: DUR.quick, easing: EASE }),
+  shade: () => ({ opacity: [0, 1], duration: DUR.quick, ease: 'outCubic' }),
   // Slide a box up and out (pop off a stack).
-  popOut: () => ({ translateY: [-4, -26], opacity: [1, 0], duration: DUR.base, easing: EASE }),
+  popOut: () => ({ y: [0, -26], opacity: [1, 0], duration: DUR.base, ease: 'inCubic' }),
+  // A staggered spring entrance for a whole group of cells at once — anime.js's
+  // flagship move (delay: stagger). Fed an array/NodeList of targets on mount.
+  enter: () => ({ scale: [0.6, 1], opacity: [0, 1], ease: settle, delay: stagger(45) }),
 };

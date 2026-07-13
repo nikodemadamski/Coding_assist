@@ -3940,6 +3940,69 @@ details.hint[open] summary {
   line-height: 1.5;
 }
 
+/* ---- arrange (Parsons) drag-to-order ---- */
+.ln-arrange-hint-line {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  margin: 0 0 8px;
+}
+.ln-arrange {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  touch-action: none;
+}
+.ln-arrange-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--ink);
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+}
+.ln-arrange-row.dragging {
+  border-color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 10%, var(--ink));
+}
+.ln-arrange-grip {
+  cursor: grab;
+  color: var(--text-dim);
+  font-size: 1.1rem;
+  touch-action: none;
+  user-select: none;
+}
+.ln-arrange-code {
+  flex: 1;
+  font-family: var(--font-code);
+  font-size: 0.9rem;
+  white-space: pre;
+  overflow-x: auto;
+}
+.ln-arrange-moves {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ln-arrange-moves button {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--text-dim);
+  width: 24px;
+  height: 18px;
+  line-height: 1;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+.ln-arrange-moves button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
 /* ---- the lesson player ---- */
 .ln-page {
   max-width: 760px;

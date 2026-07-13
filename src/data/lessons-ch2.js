@@ -337,6 +337,23 @@ export const LESSONS_CH2 = [
         answer: '3',
         why: 'Count over a string — same shape, characters instead of numbers.',
       },
+      {
+        type: 'arrange',
+        brief: 'Assemble total_gold(piles): add up every pile with the ACCUMULATE shape.',
+        function_name: 'total_gold',
+        lines: [
+          'def total_gold(piles):',
+          '    total = 0',
+          '    for p in piles:',
+          '        total = total + p',
+          '    return total',
+        ],
+        tests: [
+          { args: [[10, 20, 5]], expected: 35 },
+          { args: [[]], expected: 0 },
+        ],
+        hint: 'Start total at 0 BEFORE the loop, add inside it, return AFTER it.',
+      },
     ],
   },
   {

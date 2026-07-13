@@ -19,6 +19,14 @@ export default function ListCells({ visual, beatIndex }) {
   const activeIdx = beat.pointer !== undefined ? resolve(beat.pointer) : null;
   const slice = beat.slice ?? null;
 
+  // The cells spring in one after another the first time the widget appears.
+  useEffect(() => {
+    const cells = cellRefs.current.filter(Boolean);
+    if (cells.length) animate(cells, presets.enter());
+    // Mount only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (activeIdx != null) {
       const cell = cellRefs.current[activeIdx];

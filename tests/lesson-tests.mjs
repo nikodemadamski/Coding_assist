@@ -152,6 +152,24 @@ console.log('Lesson tests\n');
   check(bad.length === 0, 'every type answer compiles as Python', bad.slice(0, 3).join(' | '));
 }
 
+// ---- arrange: assembled lines pass; the reverse order fails ----
+{
+  const bad = [];
+  for (const lesson of LESSONS) {
+    for (const [i, item] of lesson.items.entries()) {
+      if (item.type !== 'arrange') continue;
+      const q = itemAsQuestion(lesson, item, i);
+      const ordered = await runPy(q, item.lines.join('\n'));
+      if (!ordered.allPassed) bad.push(`${lesson.id} item ${i + 1}: the correct order FAILS its tests`);
+      const scrambled = await runPy(q, [...item.lines].reverse().join('\n'));
+      if (scrambled.allPassed) {
+        bad.push(`${lesson.id} item ${i + 1}: the REVERSED order still passes — order isn't load-bearing`);
+      }
+    }
+  }
+  check(bad.length === 0, 'every arrange item assembles correctly and order matters', bad.slice(0, 3).join(' | '));
+}
+
 // ---- fix / write / watch: run through the real question engine ----
 {
   const bad = [];

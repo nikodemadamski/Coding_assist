@@ -6,7 +6,7 @@
 import { validateVisual } from './visualWidgets.js';
 
 const ID_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
-const ITEM_TYPES = ['predict', 'type', 'fix', 'write', 'watch', 'visual'];
+const ITEM_TYPES = ['predict', 'type', 'fix', 'write', 'watch', 'visual', 'arrange'];
 export const READ_WORD_CAP = 120;
 
 // Snippet code the gate runs must be reproducible: no user input, no
@@ -91,8 +91,8 @@ export function validateLesson(lesson, { existingIds = [], chapterKeys = [], ear
   }
   need(items.some((i) => i.type === 'predict'), 'needs at least one predict item');
   need(
-    items.some((i) => ['type', 'fix', 'write'].includes(i.type)),
-    'needs at least one hands-on item (type/fix/write)'
+    items.some((i) => ['type', 'fix', 'write', 'arrange'].includes(i.type)),
+    'needs at least one hands-on item (type/fix/write/arrange)'
   );
 
   items.forEach((item, i) => {
@@ -156,6 +156,33 @@ export function validateLesson(lesson, { existingIds = [], chapterKeys = [], ear
       if (item.verifyCode) {
         need(!NONDETERMINISTIC.test(item.verifyCode), `${at}: visual verifyCode must be deterministic`);
       }
+    }
+    if (item.type === 'arrange') {
+      need(typeof item.brief === 'string' && item.brief.trim(), `${at}: arrange needs a brief`);
+      need(
+        typeof item.function_name === 'string' && /^[a-z_][a-z0-9_]*$/i.test(item.function_name || ''),
+        `${at}: arrange needs a valid function_name`
+      );
+      need(
+        Array.isArray(item.lines) && item.lines.length >= 2 && item.lines.every((l) => typeof l === 'string'),
+        `${at}: arrange needs a lines array (≥2 code lines, already indented)`
+      );
+      // The scramble must be able to differ from the answer, or "order" is
+      // meaningless — reject all-identical line sets.
+      if (Array.isArray(item.lines)) {
+        need(new Set(item.lines).size >= 2, `${at}: arrange lines must not be all identical`);
+      }
+      need(Array.isArray(item.tests) && item.tests.length >= 1, `${at}: arrange needs at least one test`);
+      (item.tests ?? []).forEach((t, j) => {
+        need(t && Array.isArray(t.args), `${at} test ${j + 1}: needs an args array`);
+        need(t && 'expected' in t, `${at} test ${j + 1}: needs an expected value`);
+      });
+      try {
+        JSON.stringify(item.tests);
+      } catch {
+        errors.push(`${at}: tests are not JSON-serializable`);
+      }
+      need(typeof item.hint === 'string' && item.hint.trim(), `${at}: arrange needs a hint`);
     }
   });
 

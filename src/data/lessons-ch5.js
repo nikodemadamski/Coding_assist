@@ -262,6 +262,22 @@ export const LESSONS_CH5 = [
         solution: 'def count_words(s):\n    return len(s.split())\n',
         hint: 'split gives the list; len counts it.',
       },
+      {
+        type: 'arrange',
+        brief: 'Assemble shout_words(s): uppercase every word and join them back with spaces. "go go" -> "GO GO".',
+        function_name: 'shout_words',
+        lines: [
+          'def shout_words(s):',
+          '    words = s.split()',
+          '    loud = [w.upper() for w in words]',
+          "    return ' '.join(loud)",
+        ],
+        tests: [
+          { args: ['go go'], expected: 'GO GO' },
+          { args: ['one'], expected: 'ONE' },
+        ],
+        hint: 'split first, transform each word, then join — the string pipeline in order.',
+      },
     ],
   },
   {
