@@ -477,6 +477,20 @@ export const LESSONS_CH2 = [
         code: "for i in range(1, 6):\n    if i % 2 == 0:\n        print('even')\n    else:\n        print(i)",
         expectedOutput: '1\neven\n3\neven\n5',
       },
+      visual: {
+        widget: 'loop-tape',
+        items: [1, 2, 3, 4, 5],
+        accLabel: 'prints',
+        caption: 'Repeat with for, choose with if inside — the two skills, working together.',
+        beats: [
+          { at: 0, acc: '1', caption: 'i = 1 is odd → the else runs, printing 1.' },
+          { at: 1, acc: 'even', caption: 'i = 2 is even → print "even" instead.' },
+          { at: 4, acc: '5', caption: 'i = 5 is odd → print 5. The loop has walked all five.' },
+        ],
+        why: 'A for loop that makes a choice each pass is most little programs.',
+        verifyCode: "for i in range(1, 6):\n    if i % 2 == 0:\n        print('even')\n    else:\n        print(i)",
+        verifyOutput: '1\neven\n3\neven\n5',
+      },
     },
     items: [
       {

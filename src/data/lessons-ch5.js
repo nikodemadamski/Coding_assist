@@ -429,6 +429,23 @@ export const LESSONS_CH5 = [
         code: "# plan: count each, compare tallies\nfrom collections import Counter\nprint(Counter('listen') == Counter('silent'))",
         expectedOutput: 'True',
       },
+      visual: {
+        widget: 'branch-flow',
+        caption: 'Plan in words — "count each, compare tallies" — then let the answer fall out.',
+        beats: [
+          {
+            value: "Counter('listen') == Counter('silent')",
+            branches: [
+              { test: 'True', taken: true, label: 'same letters, same counts → anagram' },
+              { test: 'False', taken: false, label: 'tallies differ → not an anagram' },
+            ],
+            caption: 'Both words carry the same letter tallies, so the comparison lands on True.',
+          },
+        ],
+        why: 'Plan → tiny tests → code turns "compare the tallies" into three lines.',
+        verifyCode: "from collections import Counter\nprint(Counter('listen') == Counter('silent'))",
+        verifyOutput: 'True',
+      },
     },
     transfer: { warmup: 'hard', question: 'py-two-sum' },
     items: [

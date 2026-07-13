@@ -46,10 +46,15 @@ Full gates (lint + test + build + smoke) before every push, no exceptions.
   order is load-bearing); PY_SNIPPET_HARNESS in pyHarness runs scripts with stdout capture —
   worker kind 'snippet', pyClient.runPythonSnippet).
 - `visualWidgets.js` — the Brilliant-style concept-visualization registry + per-widget beat
-  validator (used by BOTH the gate and the renderer): widgets `list-cells | var-boxes |
-  loop-tape | dict-lookup | stack-tower`, each fed tap-through `beats` (pure data).
-  `read.visual` / a `visual` item render one beat per tap; an `arrange` item is a Parsons
-  drag-to-order (indentation baked in, order-only).
+  validator (used by BOTH the gate and the renderer). 9 widgets: `list-cells` (indexing/
+  slicing + a 2nd `pointer2` for two-pointer walks) | `var-boxes` | `loop-tape` | `dict-lookup`
+  | `stack-tower` | `text-reveal` (scrambleText: expression→string; the gate ties the last
+  beat's text to verifyOutput) | `branch-flow` (if/elif/else · True/False · try/except: the
+  taken rung lights, skipped dim) | `call-return` (args fly in → body → value returns, on a
+  timeline) | `pipe-flow` (input row → expression → staggered output row: comprehensions,
+  sorting, enumerate/zip, split/join). Each fed tap-through `beats` (pure data). EVERY lesson
+  carries a `read.visual` (lesson gate enforces full coverage); a `visual` item renders one
+  beat per tap; an `arrange` item is a Parsons drag-to-order (indentation baked in, order-only).
 
 ## Engine (src/engine/)
 
@@ -65,13 +70,17 @@ Result comparison canonicalizes via `_canon`, honoring `unordered`.
 **anime.js v4** (bundled npm dep, compiled by Vite → zero runtime external call, offline/PWA
 safe). `useAnime.js` is the sole import site: the `useAnime()` hook returns
 `animate(targets, params)` (v4 `animate`), honors `prefers-reduced-motion` (snaps to the
-final state — `ease:'linear'`, duration 0), and re-exports `stagger` so widgets never import
-anime.js directly. `presets.js` is the shared vocabulary widgets compose with — a single
-shared `spring()` gives natural settling physics; presets `slideTo/pulse/fadeSwap/popIn/
-shade/popOut/enter` (enter = staggered spring group entrance). v4 note: `ease` not `easing`,
+final state — `ease:'linear'`, duration 0); it also exports `stagger`, `stopAnim` (utils.remove
+— kill in-flight tweens so overlapping animations don't fight) and `useTimeline` (createTimeline,
+reduced-motion aware — call-return sequences args-in→body→return on it). `presets.js` is the
+shared vocabulary widgets compose with — a single shared `spring()` gives natural settling
+physics; presets `slideTo/glideY/pulse/fadeSwap/popIn/shade/popOut/enter/scramble` (enter =
+staggered spring group entrance; scramble = scrambleText reveal). v4 note: `ease` not `easing`,
 ease names drop the prefix (`outCubic`, `inOutQuad`, `outBack`), transforms use `x`/`y`.
-Widgets in `src/components/visual/` (ListCells/VarBoxes/LoopTape/DictLookup/StackTower +
-VisualPlayer tap-through host) speak presets only.
+Widgets in `src/components/visual/` (ListCells/VarBoxes/LoopTape/DictLookup/StackTower/
+TextReveal/BranchFlow/CallReturn/PipeFlow + VisualPlayer tap-through host) speak presets only.
+Widgets whose text/DOM anime mutates are keyed per beat (`key={beatIndex}`) so React
+reconciliation never fights the animation.
 
 ## State (src/state/) — pure modules, all unit-tested
 

@@ -3,7 +3,10 @@ import { useAnime } from '../../anim/useAnime.js';
 import { presets } from '../../anim/presets.js';
 
 function formatVal(v) {
-  return typeof v === 'string' ? `'${v}'` : String(v);
+  // Strings show with quotes (they ARE text), but a value already written as a
+  // structure — a list, tuple or dict literal — is shown as-is, not re-quoted.
+  if (typeof v === 'string' && !/^[[({]/.test(v)) return `'${v}'`;
+  return String(v);
 }
 
 // Variables as labeled boxes. Each beat is a snapshot of the variables; a box

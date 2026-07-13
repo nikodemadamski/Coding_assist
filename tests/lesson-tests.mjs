@@ -35,6 +35,9 @@ console.log('Lesson tests\n');
     seen.push(lesson.id);
   }
   check(schemaErrors.length === 0, 'every lesson passes validateLesson', schemaErrors.slice(0, 3).join(' | '));
+  // Every lesson must carry a concept animation beside its read-the-code panel.
+  const noVisual = LESSONS.filter((l) => !l.read.visual).map((l) => l.id);
+  check(noVisual.length === 0, `every lesson has a read.visual (${LESSONS.length}/${LESSONS.length})`, noVisual.join(', '));
   const perChapter = Object.fromEntries(chapterKeys.map((k) => [k, 0]));
   for (const l of LESSONS) perChapter[l.chapter]++;
   const populated = chapterKeys.filter((k) => perChapter[k] > 0);

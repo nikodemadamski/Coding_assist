@@ -90,10 +90,15 @@ do that before you close the app. Import a fresh pack from Claude whenever you w
 ### Staying on pace for a Google / Anthropic loop
 
 - **📗 Learn Python from zero** (Library → Learn): a 30-lesson, 5-chapter interactive
-  course for when the *language* is the wall, not the algorithm. Read a little (≤120 words),
-  then do a lot — predict-the-output, type-the-line, fix-the-bug, write-the-function, and
-  step-through-it exercises, every one run through the real Python engine so the feedback is
-  never a lie. Covers values → variables → loops → **lists, slicing, dicts & `.get()`, sets**
+  course for when the *language* is the wall, not the algorithm. **See it, then write it** —
+  every lesson opens on a Brilliant-style animated concept (a "See it" panel beside the code,
+  powered by a bundled, offline-safe anime.js v4): a list with a gliding pointer, a decision
+  lighting up the branch that runs, arguments flying into a function and a value returning, a
+  comprehension piping items into a new list, text assembling itself with a scramble. Then do
+  a lot — predict-the-output, type-the-line, fix-the-bug, write-the-function, drag-the-lines-
+  into-order (Parsons), and step-through-it exercises, every one (and every animation) run
+  through the real Python engine so the feedback is never a lie. Covers values → variables →
+  loops → **lists, slicing, dicts & `.get()`, sets**
   → functions & comprehensions → Counter, stacks, two-pointer walks, and the "write your
   thoughts first" habit — exactly the tools the path questions assume. Finished lessons come
   back as 90-second **skill checks** inside your daily reviews (same spaced-repetition

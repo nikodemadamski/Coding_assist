@@ -491,6 +491,27 @@ export const LESSONS_CH4 = [
         code: "names = ['zoro', 'nami']\nprint(sorted(n.upper() for n in names))",
         expectedOutput: "['NAMI', 'ZORO']",
       },
+      visual: {
+        widget: 'pipe-flow',
+        caption: 'The everyday trio in one line: transform each item, then sort the result.',
+        beats: [
+          {
+            label: 'n.upper() for n in names',
+            input: ["'zoro'", "'nami'"],
+            output: ["'ZORO'", "'NAMI'"],
+            caption: 'First the comprehension upper-cases each name.',
+          },
+          {
+            label: 'sorted(...)',
+            input: ["'ZORO'", "'NAMI'"],
+            output: ["'NAMI'", "'ZORO'"],
+            caption: 'Then sorted puts them in order — NAMI before ZORO.',
+          },
+        ],
+        why: 'Comprehension transforms, sorted orders — chained, they solve a huge share of tasks.',
+        verifyCode: "names = ['zoro', 'nami']\nprint(sorted(n.upper() for n in names))",
+        verifyOutput: "['NAMI', 'ZORO']",
+      },
     },
     transfer: { warmup: 'intermediate', question: 'py-valid-anagram' },
     items: [
