@@ -3766,6 +3766,146 @@ details.hint[open] summary {
   font-size: 1rem;
   will-change: transform;
 }
+/* var-boxes */
+.vw-vars {
+  display: flex;
+  gap: 18px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.vw-var {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.vw-var-name {
+  font-family: var(--font-code);
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+.vw-var-box {
+  min-width: 54px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel);
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+}
+.vw-var-val {
+  font-family: var(--font-code);
+  font-size: 1rem;
+}
+/* loop-tape accumulator */
+.vw-acc {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 14px;
+}
+.vw-acc-label {
+  font-family: var(--font-code);
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+.vw-acc-box {
+  min-width: 44px;
+  padding: 6px 12px;
+  text-align: center;
+  background: color-mix(in srgb, var(--gold) 16%, var(--panel));
+  border: 1.5px solid var(--gold);
+  border-radius: 8px;
+  font-family: var(--font-code);
+}
+/* dict-lookup */
+.vw-dict-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 260px;
+  margin: 0 auto;
+}
+.vw-dict-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--panel);
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  font-family: var(--font-code);
+}
+.vw-dict-row.active {
+  border-color: var(--jade);
+  background: color-mix(in srgb, var(--jade) 14%, var(--panel));
+}
+.vw-dict-key {
+  text-align: right;
+}
+.vw-dict-arrow {
+  color: var(--text-dim);
+}
+.vw-dict-query {
+  margin-top: 14px;
+  text-align: center;
+  font-family: var(--font-code);
+  font-size: 0.92rem;
+}
+.vw-dict-result {
+  margin-left: 8px;
+}
+.vw-dict-fallback {
+  color: var(--gold);
+}
+/* stack-tower */
+.vw-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.vw-stack-tower {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 4px;
+  min-height: 60px;
+  justify-content: flex-start;
+}
+.vw-stack-box {
+  position: relative;
+  min-width: 64px;
+  padding: 10px 16px;
+  text-align: center;
+  background: var(--panel);
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  font-family: var(--font-code);
+}
+.vw-stack-box.top {
+  border-color: var(--gold);
+}
+.vw-stack-toptag {
+  position: absolute;
+  right: -42px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.7rem;
+  color: var(--gold);
+}
+.vw-stack-empty {
+  color: var(--text-dim);
+  font-style: italic;
+}
+.vw-stack-op {
+  font-family: var(--font-code);
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
 .vw-caption {
   min-height: 2.6em;
   margin: 0;

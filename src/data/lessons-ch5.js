@@ -134,6 +134,19 @@ export const LESSONS_CH5 = [
       text:
         'A **stack** is a list used at one end: `.append()` to push, `.pop()` to take the LAST one back (last in, first out) — matching brackets, undo, "most recent". \n\nA **queue** serves the FIRST in first. `deque` from collections does that fast: `.append()` to add, `.popleft()` to serve — the workhorse of breadth-first search.',
       example: { code: 'stack = [1, 2, 3]\nprint(stack.pop())', expectedOutput: '3' },
+      visual: {
+        widget: 'stack-tower',
+        caption: 'A stack grows and shrinks at the TOP. Watch last-in, first-out.',
+        beats: [
+          { op: 'push', value: 1, caption: 'append(1) — the box lands on top.' },
+          { op: 'push', value: 2, caption: 'append(2) — stacked above 1.' },
+          { op: 'push', value: 3, caption: 'append(3) — 3 is now the top.' },
+          { op: 'pop', caption: 'pop() takes the LAST one pushed — 3. Last in, first out.' },
+        ],
+        why: 'pop() always returns the top — the most recently pushed box.',
+        verifyCode: 'stack = []\nstack.append(1)\nstack.append(2)\nstack.append(3)\nprint(stack.pop())',
+        verifyOutput: '3',
+      },
     },
     items: [
       {

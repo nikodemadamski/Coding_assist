@@ -73,6 +73,17 @@ function ItemPlayer({ lesson, item, idx, onResolved }) {
 
   const typed = item.type === 'predict' || item.type === 'type';
 
+  // A standalone visual item: tap through the beats, then "Got it →". Never
+  // fails — it's understanding, not a test.
+  if (item.type === 'visual') {
+    return (
+      <div className="ln-item">
+        {item.caption && <p className="ln-item-ask">{item.caption}</p>}
+        <VisualPlayer visual={item} onDone={() => onResolved({ firstTry: true, missed: false })} />
+      </div>
+    );
+  }
+
   return (
     <div className="ln-item">
       {item.type === 'predict' && (

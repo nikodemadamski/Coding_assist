@@ -88,6 +88,19 @@ export const LESSONS_CH2 = [
       text:
         '`while` repeats its block as long as the condition stays true. Something INSIDE the loop must move the condition toward false — otherwise it never ends (this dojo kills runaway code after 5 seconds; real programs just hang).\n\nThe rhythm: set up before the loop, test at the top, change inside.',
       example: { code: 'n = 3\nwhile n > 0:\n    print(n)\n    n = n - 1', expectedOutput: '3\n2\n1' },
+      visual: {
+        widget: 'var-boxes',
+        caption: 'A while loop runs until its condition turns false. Watch n drive it.',
+        beats: [
+          { vars: { n: 3 }, caption: 'n is 3. while n > 0 is True — enter the loop.' },
+          { vars: { n: 2 }, caption: 'n = n - 1 → 2. Still > 0, so loop again.' },
+          { vars: { n: 1 }, caption: 'n → 1. Still > 0.' },
+          { vars: { n: 0 }, caption: 'n → 0. Now n > 0 is False — the loop STOPS.' },
+        ],
+        why: 'Something inside must move n toward the exit, or the loop never ends.',
+        verifyCode: 'n = 3\nwhile n > 0:\n    n = n - 1\nprint(n)',
+        verifyOutput: '0',
+      },
     },
     items: [
       {
@@ -160,6 +173,20 @@ export const LESSONS_CH2 = [
       text:
         '`for` visits each item of a sequence, putting it in the loop variable one at a time. `range(n)` counts `0` up to (but **not including**) `n`; `range(a, b)` starts at `a`, stops before `b`.\n\nStrings are sequences too — a for loop walks them character by character.',
       example: { code: 'for i in range(3):\n    print(i)', expectedOutput: '0\n1\n2' },
+      visual: {
+        widget: 'loop-tape',
+        items: [10, 20, 5],
+        accLabel: 'total',
+        caption: 'A for loop visits each item in turn. Watch total add them up.',
+        beats: [
+          { at: 0, acc: 10, caption: 'First pass: n is 10. total becomes 10.' },
+          { at: 1, acc: 30, caption: 'n is 20. total climbs to 30.' },
+          { at: 2, acc: 35, caption: 'n is 5. total ends at 35.' },
+        ],
+        why: 'The loop variable takes each value once; the accumulator carries the running total.',
+        verifyCode: 'total = 0\nfor n in [10, 20, 5]:\n    total = total + n\nprint(total)',
+        verifyOutput: '35',
+      },
     },
     items: [
       {
@@ -234,6 +261,21 @@ export const LESSONS_CH2 = [
       example: {
         code: 'count = 0\nfor n in [1, 2, 3, 4]:\n    if n % 2 == 0:\n        count = count + 1\nprint(count)',
         expectedOutput: '2',
+      },
+      visual: {
+        widget: 'loop-tape',
+        items: [1, 2, 3, 4],
+        accLabel: 'count',
+        caption: 'The COUNT shape: add 1 only when a test passes. Watch it tick.',
+        beats: [
+          { at: 0, acc: 0, caption: '1 is odd — the test fails, count stays 0.' },
+          { at: 1, acc: 1, caption: '2 is even — count ticks up to 1.' },
+          { at: 2, acc: 1, caption: '3 is odd — count stays 1.' },
+          { at: 3, acc: 2, caption: '4 is even — count ends at 2.' },
+        ],
+        why: 'Count only moves on the passes where the condition holds.',
+        verifyCode: 'count = 0\nfor n in [1, 2, 3, 4]:\n    if n % 2 == 0:\n        count = count + 1\nprint(count)',
+        verifyOutput: '2',
       },
     },
     items: [

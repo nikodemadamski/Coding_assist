@@ -6,7 +6,7 @@
 import { validateVisual } from './visualWidgets.js';
 
 const ID_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
-const ITEM_TYPES = ['predict', 'type', 'fix', 'write', 'watch'];
+const ITEM_TYPES = ['predict', 'type', 'fix', 'write', 'watch', 'visual'];
 export const READ_WORD_CAP = 120;
 
 // Snippet code the gate runs must be reproducible: no user input, no
@@ -150,6 +150,12 @@ export function validateLesson(lesson, { existingIds = [], chapterKeys = [], ear
         `${at}: watch needs a valid function_name`
       );
       need(Array.isArray(item.tests) && item.tests.length >= 1, `${at}: watch needs a test to trace`);
+    }
+    if (item.type === 'visual') {
+      for (const e of validateVisual(item)) errors.push(`${at}: ${e}`);
+      if (item.verifyCode) {
+        need(!NONDETERMINISTIC.test(item.verifyCode), `${at}: visual verifyCode must be deterministic`);
+      }
     }
   });
 

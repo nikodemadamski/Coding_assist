@@ -1,11 +1,19 @@
 import { useState } from 'react';
 import ListCells from './ListCells.jsx';
+import VarBoxes from './VarBoxes.jsx';
+import LoopTape from './LoopTape.jsx';
+import DictLookup from './DictLookup.jsx';
+import StackTower from './StackTower.jsx';
 
 // Tap-through player for a visual block: renders the widget at the current
 // beat, shows the caption, and advances one beat per tap. Widgets register
 // here; the schema gate guarantees `visual.widget` is one we know.
 const WIDGETS = {
   'list-cells': ListCells,
+  'var-boxes': VarBoxes,
+  'loop-tape': LoopTape,
+  'dict-lookup': DictLookup,
+  'stack-tower': StackTower,
 };
 
 export default function VisualPlayer({ visual, onDone = null }) {

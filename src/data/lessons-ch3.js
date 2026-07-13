@@ -241,6 +241,18 @@ export const LESSONS_CH3 = [
       text:
         "A **dict** maps keys to values: `bounties = {'zoro': 1111}`. Read with `bounties['zoro']` — but a missing key CRASHES. `bounties.get(key, 0)` reads safely, giving you the default instead.\n\nWrite with `d[key] = value`. `key in d` tests keys. `.get` powers the single most useful beginner pattern: counting things.",
       example: { code: "bounties = {'zoro': 1111}\nprint(bounties.get('nami', 0))", expectedOutput: '0' },
+      visual: {
+        widget: 'dict-lookup',
+        pairs: { zoro: 1111, luffy: 3000 },
+        caption: 'A dict maps keys to values. Watch what .get() does with a missing key.',
+        beats: [
+          { key: 'zoro', caption: "d.get('zoro') finds the key → 1111." },
+          { key: 'nami', fallback: 0, caption: "d.get('nami', 0) — 'nami' is missing, so you get the default 0. No crash." },
+        ],
+        why: "d['nami'] would CRASH; .get(key, default) hands you the default instead.",
+        verifyCode: "d = {'zoro': 1111, 'luffy': 3000}\nprint(d.get('zoro'), d.get('nami', 0))",
+        verifyOutput: '1111 0',
+      },
     },
     items: [
       {

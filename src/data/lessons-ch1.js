@@ -77,6 +77,18 @@ export const LESSONS_CH1 = [
       text:
         'A **variable** is a name for a value: `power = 90` stores 90 under the name `power`. From then on you can use the name anywhere you would use the value.\n\nThe name always goes LEFT of `=`, the value RIGHT. Assigning again **replaces** what the name points to — variables remember only their latest value.',
       example: { code: 'power = 90\nprint(power)', expectedOutput: '90' },
+      visual: {
+        widget: 'var-boxes',
+        caption: 'A variable is a named box holding one value. Watch what a copy does.',
+        beats: [
+          { vars: { a: 3 }, caption: 'a = 3 — the box named a holds 3.' },
+          { vars: { a: 3, b: 3 }, caption: 'b = a copies the VALUE 3 into a new box, b.' },
+          { vars: { a: 10, b: 3 }, caption: 'a = 10 changes a ONLY — b keeps its own copy, 3.' },
+        ],
+        why: 'b = a copies the value, not the box. Changing a later never touches b.',
+        verifyCode: 'a = 3\nb = a\na = 10\nprint(a, b)',
+        verifyOutput: '10 3',
+      },
     },
     items: [
       {
