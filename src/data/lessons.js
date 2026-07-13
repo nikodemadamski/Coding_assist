@@ -12,6 +12,7 @@ import { LESSONS_CH2 } from './lessons-ch2.js';
 import { LESSONS_CH3 } from './lessons-ch3.js';
 import { LESSONS_CH4 } from './lessons-ch4.js';
 import { LESSONS_CH5 } from './lessons-ch5.js';
+import { LESSONS_CH6 } from './lessons-ch6.js';
 
 export const LESSON_CHAPTERS = [
   {
@@ -39,6 +40,11 @@ export const LESSON_CHAPTERS = [
     label: 'The interview toolkit',
     blurb: 'Counter, deque, idioms, and the thoughts-first habit.',
   },
+  {
+    key: 'power-tools',
+    label: 'Python power tools',
+    blurb: 'Recursion, classes, lambdas — turn any idea into code.',
+  },
 ];
 
 // Path order — prereqs always point backwards into this list.
@@ -48,6 +54,7 @@ export const LESSONS = [
   ...LESSONS_CH3,
   ...LESSONS_CH4,
   ...LESSONS_CH5,
+  ...LESSONS_CH6,
 ];
 
 const BY_ID = Object.fromEntries(LESSONS.map((l) => [l.id, l]));
