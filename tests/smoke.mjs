@@ -792,6 +792,13 @@ try {
   check(await page.locator('.ln-run-row .btn', { hasText: 'Run it' }).isVisible(), 'Read-the-code tab keeps the runnable example');
   await page.locator('.icon-btn', { hasText: '←' }).first().click();
 
+  // ---- a later-chapter widget renders (tree-view SVG for the trees lesson) ----
+  await page.locator('.learn-lesson-title', { hasText: 'Binary trees' }).first().click();
+  await page.locator('.ln-read').waitFor({ timeout: 10000 });
+  await page.locator('.vw-tree-svg').waitFor({ timeout: 10000 });
+  check((await page.locator('.vw-tree-node').count()) >= 3, 'the trees lesson draws a tree-view widget');
+  await page.locator('.icon-btn', { hasText: '←' }).first().click();
+
   // ---- arrange (Parsons): drag shuffled lines into order, checked by the real engine ----
   const arrLesson = LESSONS.find((l) => l.items.some((it) => it.type === 'arrange'));
   const arrItem = arrLesson.items.find((it) => it.type === 'arrange');

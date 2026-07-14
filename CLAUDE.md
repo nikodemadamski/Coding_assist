@@ -38,7 +38,12 @@ Full gates (lint + test + build + smoke) before every push, no exceptions.
   levels × 50; SQL checking folds case, pandas/SQL answers EXECUTE in the warm-up gate),
   `validateQuestion.js` (schema gate, also used by import),
   `lessons.js` + `lessons-chN.js` + `validateLesson.js` (Learn-from-zero curriculum:
-  lessons `{id, chapter, prereqs, read{text≤120w, example, visual?}, items[]}` with item
+  **52 lessons across 9 chapters** — ch1-5 language + arrays/two-pointer/stack, then ch6
+  power-tools (recursion, classes, functional, generators, idioms), ch7 search-windows
+  (sliding-window, binary-search, heap, intervals, greedy), ch8 structures (linked lists,
+  trees, traversals, backtracking, tries), ch9 graphs-dp (graphs, DP 1-D/2-D, bits, math) —
+  covering every one of NeetCode's 16 pattern families from zero.
+  Lessons `{id, chapter, prereqs, read{text≤120w, example, visual?}, items[]}` with item
   types predict/type/fix/write/watch/visual/arrange; tests/lesson-tests.mjs EXECUTES every
   read example, predict snippet (stdout vs answer via checkAnswer), fix (broken must FAIL,
   solution pass), write/watch through real engines, every visual `verifyCode` (stdout must
@@ -46,15 +51,18 @@ Full gates (lint + test + build + smoke) before every push, no exceptions.
   order is load-bearing); PY_SNIPPET_HARNESS in pyHarness runs scripts with stdout capture —
   worker kind 'snippet', pyClient.runPythonSnippet).
 - `visualWidgets.js` — the Brilliant-style concept-visualization registry + per-widget beat
-  validator (used by BOTH the gate and the renderer). 9 widgets: `list-cells` (indexing/
-  slicing + a 2nd `pointer2` for two-pointer walks) | `var-boxes` | `loop-tape` | `dict-lookup`
-  | `stack-tower` | `text-reveal` (scrambleText: expression→string; the gate ties the last
-  beat's text to verifyOutput) | `branch-flow` (if/elif/else · True/False · try/except: the
-  taken rung lights, skipped dim) | `call-return` (args fly in → body → value returns, on a
-  timeline) | `pipe-flow` (input row → expression → staggered output row: comprehensions,
-  sorting, enumerate/zip, split/join). Each fed tap-through `beats` (pure data). EVERY lesson
-  carries a `read.visual` (lesson gate enforces full coverage); a `visual` item renders one
-  beat per tap; an `arrange` item is a Parsons drag-to-order (indentation baked in, order-only).
+  validator (used by BOTH the gate and the renderer). 14 widgets: `list-cells` (indexing/
+  slicing + `pointer2`/`mid` markers for two-pointer & binary search) | `var-boxes` |
+  `loop-tape` | `dict-lookup` | `stack-tower` (also the recursion call stack) | `text-reveal`
+  (scrambleText: expression→string; the gate ties the last beat's text to verifyOutput) |
+  `branch-flow` (if/elif/else · True/False · try/except) | `call-return` (args→body→return, on a
+  timeline) | `pipe-flow` (input row→expression→staggered output row) | `interval-bars`
+  (intervals on a number line, merge) | `node-chain` (linked list, .next walk, reversal) |
+  `tree-view` (SVG nested [value,left,right], path-keyed; trees/traversals/backtracking/tries) |
+  `graph-view` (SVG nodes+edges; BFS/DFS frontier) | `dp-table` (1-D/2-D grid; active cell +
+  its deps light up). Each fed tap-through `beats` (pure data). EVERY lesson carries a
+  `read.visual` (lesson gate enforces full coverage); a `visual` item renders one beat per tap;
+  an `arrange` item is a Parsons drag-to-order (indentation baked in, order-only).
 
 ## Engine (src/engine/)
 
@@ -78,7 +86,9 @@ physics; presets `slideTo/glideY/pulse/fadeSwap/popIn/shade/popOut/enter/scrambl
 staggered spring group entrance; scramble = scrambleText reveal). v4 note: `ease` not `easing`,
 ease names drop the prefix (`outCubic`, `inOutQuad`, `outBack`), transforms use `x`/`y`.
 Widgets in `src/components/visual/` (ListCells/VarBoxes/LoopTape/DictLookup/StackTower/
-TextReveal/BranchFlow/CallReturn/PipeFlow + VisualPlayer tap-through host) speak presets only.
+TextReveal/BranchFlow/CallReturn/PipeFlow/IntervalBars/NodeChain/TreeView/GraphView/DpTable +
+VisualPlayer tap-through host) speak presets only. SVG widgets (tree/graph) pulse the
+circle, not the positioned group, so scale never fights the translate.
 Widgets whose text/DOM anime mutates are keyed per beat (`key={beatIndex}`) so React
 reconciliation never fights the animation.
 

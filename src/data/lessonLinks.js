@@ -27,17 +27,28 @@ export const QUESTION_LESSONS = {
   'py-eval-rpn': ['ch5-stack-queue'],
   'py-min-stack': ['ch5-stack-queue'],
   'py-top-k-frequent': ['ch5-counter'],
-  'py-binary-search': ['ch2-while'],
+  'py-binary-search': ['ch7-binary-search'],
 };
 
 // Fallback by roadmap category, used when a question has no specific entry.
-// Only categories with a genuine beginner lesson appear here.
+// Every NeetCode pattern family now has a from-zero lesson to point at.
 export const CATEGORY_LESSONS = {
   'arrays-hashing': ['ch3-dicts'],
   'two-pointers': ['ch5-two-pointers'],
   stack: ['ch5-stack-queue'],
-  'sliding-window': ['ch2-for'],
-  'binary-search': ['ch2-while'],
+  'sliding-window': ['ch7-sliding-window'],
+  'binary-search': ['ch7-binary-search'],
+  heap: ['ch7-heap'],
+  intervals: ['ch7-intervals'],
+  greedy: ['ch7-greedy'],
+  'linked-list': ['ch8-linked-list'],
+  trees: ['ch8-trees'],
+  backtracking: ['ch8-backtracking'],
+  tries: ['ch8-tries'],
+  graphs: ['ch9-graphs'],
+  dp: ['ch9-dp-1d'],
+  bits: ['ch9-bits'],
+  'math-geometry': ['ch9-math'],
 };
 
 // Lessons (id + title/minutes via the caller) a question leans on that the
