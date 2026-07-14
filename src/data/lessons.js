@@ -14,6 +14,7 @@ import { LESSONS_CH4 } from './lessons-ch4.js';
 import { LESSONS_CH5 } from './lessons-ch5.js';
 import { LESSONS_CH6 } from './lessons-ch6.js';
 import { LESSONS_CH7 } from './lessons-ch7.js';
+import { LESSONS_CH8 } from './lessons-ch8.js';
 
 export const LESSON_CHAPTERS = [
   {
@@ -51,6 +52,11 @@ export const LESSON_CHAPTERS = [
     label: 'Search & windows',
     blurb: 'Slide, halve, and pick — the workhorse search patterns.',
   },
+  {
+    key: 'structures',
+    label: 'Linked lists & trees',
+    blurb: 'Nodes, pointers, and recursion on real structures.',
+  },
 ];
 
 // Path order — prereqs always point backwards into this list.
@@ -62,6 +68,7 @@ export const LESSONS = [
   ...LESSONS_CH5,
   ...LESSONS_CH6,
   ...LESSONS_CH7,
+  ...LESSONS_CH8,
 ];
 
 const BY_ID = Object.fromEntries(LESSONS.map((l) => [l.id, l]));

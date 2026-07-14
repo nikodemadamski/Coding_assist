@@ -4232,6 +4232,95 @@ details.hint[open] summary {
   color: var(--text-dim);
 }
 
+/* ---- node-chain (linked lists) ---- */
+.vw-chain {
+  overflow-x: auto;
+}
+.vw-chain-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: max-content;
+  margin: 0 auto;
+  padding-bottom: 26px;
+}
+.vw-chain-node-wrap {
+  display: flex;
+  align-items: center;
+}
+.vw-chain-node {
+  min-width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  font-family: var(--font-code);
+  font-size: 0.95rem;
+}
+.vw-chain-node.active {
+  border-color: var(--gold);
+}
+.vw-chain-arrow {
+  color: var(--text-dim);
+  padding: 0 8px;
+}
+.vw-chain-none {
+  color: var(--text-dim);
+  font-family: var(--font-code);
+  font-size: 0.8rem;
+}
+.vw-chain-ptr {
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  color: var(--gold);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  will-change: transform;
+}
+
+/* ---- tree-view (trees, traversals, backtracking, tries) ---- */
+.vw-tree {
+  display: flex;
+  justify-content: center;
+}
+.vw-tree-svg {
+  width: 100%;
+  max-width: 360px;
+  height: 200px;
+}
+.vw-tree-edge {
+  stroke: var(--line);
+  stroke-width: 0.8;
+}
+.vw-tree-node circle {
+  fill: var(--panel);
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.vw-tree-node text {
+  fill: var(--text);
+  font-family: var(--font-code);
+  font-size: 5px;
+}
+.vw-tree-node.visited circle {
+  stroke: var(--jade);
+}
+.vw-tree-node.active circle {
+  fill: color-mix(in srgb, var(--gold) 30%, var(--panel));
+  stroke: var(--gold);
+  stroke-width: 1.6;
+}
+.vw-tree-node.active text {
+  fill: var(--gold);
+}
+
 /* ---- arrange (Parsons) drag-to-order ---- */
 .ln-arrange-hint-line {
   color: var(--text-dim);

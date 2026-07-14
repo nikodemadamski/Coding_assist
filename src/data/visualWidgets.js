@@ -17,7 +17,20 @@ export const VISUAL_WIDGETS = [
   'call-return',
   'pipe-flow',
   'interval-bars',
+  'node-chain',
+  'tree-view',
 ];
+
+// Collect every valid node path ('' root, then 'L'/'R' steps) in a nested
+// [value, left, right] tree — used to validate tree-view beat targets.
+function treePaths(node, path = '', acc = new Set()) {
+  if (!node) return acc;
+  if (!Array.isArray(node) || node.length !== 3) return acc;
+  acc.add(path);
+  treePaths(node[1], `${path}L`, acc);
+  treePaths(node[2], `${path}R`, acc);
+  return acc;
+}
 
 const isInt = (n) => Number.isInteger(n);
 const isStr = (s) => typeof s === 'string' && s.trim().length > 0;
@@ -140,6 +153,35 @@ const BEAT_RULES = {
     }
     if (beat.tone !== undefined && !['input', 'merged'].includes(beat.tone)) {
       return "tone must be 'input' or 'merged'";
+    }
+    return null;
+  },
+  'node-chain': (visual, beat) => {
+    const len = visual.nodes?.length ?? 0;
+    if (!Array.isArray(visual.nodes) || len === 0) return 'node-chain needs a non-empty `nodes` array';
+    for (const v of visual.nodes) {
+      if (typeof v !== 'string' && typeof v !== 'number') return 'node values must be strings or numbers';
+    }
+    if (beat.pointer !== undefined && beat.pointer !== null) {
+      if (!isInt(beat.pointer) || beat.pointer < 0 || beat.pointer > len - 1) {
+        return `pointer ${beat.pointer} out of range for ${len} nodes`;
+      }
+    }
+    if (beat.pointerLabel !== undefined && !isStr(beat.pointerLabel)) return 'pointerLabel must be a string';
+    if (beat.reversed !== undefined && typeof beat.reversed !== 'boolean') return 'reversed must be a boolean';
+    return null;
+  },
+  'tree-view': (visual, beat) => {
+    if (!Array.isArray(visual.tree) || visual.tree.length !== 3) {
+      return 'tree-view needs a `tree` as a nested [value, left, right] array';
+    }
+    const paths = treePaths(visual.tree);
+    if (beat.active !== undefined && !paths.has(beat.active)) {
+      return `active path "${beat.active}" is not a node in the tree`;
+    }
+    if (beat.visited !== undefined) {
+      if (!Array.isArray(beat.visited)) return 'visited must be an array of node paths';
+      for (const p of beat.visited) if (!paths.has(p)) return `visited path "${p}" is not a node in the tree`;
     }
     return null;
   },

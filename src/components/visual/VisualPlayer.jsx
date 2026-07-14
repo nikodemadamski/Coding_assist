@@ -9,6 +9,8 @@ import BranchFlow from './BranchFlow.jsx';
 import CallReturn from './CallReturn.jsx';
 import PipeFlow from './PipeFlow.jsx';
 import IntervalBars from './IntervalBars.jsx';
+import NodeChain from './NodeChain.jsx';
+import TreeView from './TreeView.jsx';
 
 // Tap-through player for a visual block: renders the widget at the current
 // beat, shows the caption, and advances one beat per tap. Widgets register
@@ -24,6 +26,8 @@ const WIDGETS = {
   'call-return': CallReturn,
   'pipe-flow': PipeFlow,
   'interval-bars': IntervalBars,
+  'node-chain': NodeChain,
+  'tree-view': TreeView,
 };
 
 export default function VisualPlayer({ visual, onDone = null }) {
