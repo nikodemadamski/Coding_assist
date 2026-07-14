@@ -15,6 +15,7 @@ import { LESSONS_CH5 } from './lessons-ch5.js';
 import { LESSONS_CH6 } from './lessons-ch6.js';
 import { LESSONS_CH7 } from './lessons-ch7.js';
 import { LESSONS_CH8 } from './lessons-ch8.js';
+import { LESSONS_CH9 } from './lessons-ch9.js';
 
 export const LESSON_CHAPTERS = [
   {
@@ -57,6 +58,11 @@ export const LESSON_CHAPTERS = [
     label: 'Linked lists & trees',
     blurb: 'Nodes, pointers, and recursion on real structures.',
   },
+  {
+    key: 'graphs-dp',
+    label: 'Graphs, DP & the deep end',
+    blurb: 'BFS/DFS, memo tables, and bit tricks — every pattern.',
+  },
 ];
 
 // Path order — prereqs always point backwards into this list.
@@ -69,6 +75,7 @@ export const LESSONS = [
   ...LESSONS_CH6,
   ...LESSONS_CH7,
   ...LESSONS_CH8,
+  ...LESSONS_CH9,
 ];
 
 const BY_ID = Object.fromEntries(LESSONS.map((l) => [l.id, l]));

@@ -19,6 +19,8 @@ export const VISUAL_WIDGETS = [
   'interval-bars',
   'node-chain',
   'tree-view',
+  'graph-view',
+  'dp-table',
 ];
 
 // Collect every valid node path ('' root, then 'L'/'R' steps) in a nested
@@ -182,6 +184,49 @@ const BEAT_RULES = {
     if (beat.visited !== undefined) {
       if (!Array.isArray(beat.visited)) return 'visited must be an array of node paths';
       for (const p of beat.visited) if (!paths.has(p)) return `visited path "${p}" is not a node in the tree`;
+    }
+    return null;
+  },
+  'graph-view': (visual, beat) => {
+    if (!Array.isArray(visual.nodes) || visual.nodes.length === 0) return 'graph-view needs a `nodes` array';
+    const ids = new Set();
+    for (const n of visual.nodes) {
+      if (!n || !isStr(n.id) || typeof n.x !== 'number' || typeof n.y !== 'number') {
+        return 'each node needs { id: string, x: number, y: number }';
+      }
+      ids.add(n.id);
+    }
+    if (!Array.isArray(visual.edges)) return 'graph-view needs an `edges` array';
+    for (const e of visual.edges) {
+      if (!Array.isArray(e) || e.length !== 2 || !ids.has(e[0]) || !ids.has(e[1])) {
+        return `edge ${JSON.stringify(e)} must join two existing node ids`;
+      }
+    }
+    for (const key of ['active']) {
+      if (beat[key] !== undefined && !ids.has(beat[key])) return `${key} "${beat[key]}" is not a node id`;
+    }
+    for (const key of ['visited', 'frontier']) {
+      if (beat[key] !== undefined) {
+        if (!Array.isArray(beat[key])) return `${key} must be an array of node ids`;
+        for (const id of beat[key]) if (!ids.has(id)) return `${key} id "${id}" is not a node`;
+      }
+    }
+    return null;
+  },
+  'dp-table': (visual, beat) => {
+    if (!Array.isArray(visual.grid) || visual.grid.length === 0 || !Array.isArray(visual.grid[0])) {
+      return 'dp-table needs a non-empty 2-D `grid`';
+    }
+    const rows = visual.grid.length;
+    const inRange = ([r, c]) => Number.isInteger(r) && Number.isInteger(c) && r >= 0 && r < rows && c >= 0 && c < visual.grid[r].length;
+    if (beat.active !== undefined) {
+      if (!Array.isArray(beat.active) || beat.active.length !== 2 || !inRange(beat.active)) {
+        return `active ${JSON.stringify(beat.active)} is out of the grid`;
+      }
+    }
+    if (beat.deps !== undefined) {
+      if (!Array.isArray(beat.deps)) return 'deps must be an array of [row, col]';
+      for (const d of beat.deps) if (!Array.isArray(d) || !inRange(d)) return `dep ${JSON.stringify(d)} is out of the grid`;
     }
     return null;
   },

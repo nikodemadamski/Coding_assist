@@ -4321,6 +4321,82 @@ details.hint[open] summary {
   fill: var(--gold);
 }
 
+/* ---- graph-view (graphs: BFS / DFS) ---- */
+.vw-graph {
+  display: flex;
+  justify-content: center;
+}
+.vw-graph-svg {
+  width: 100%;
+  max-width: 320px;
+  height: 220px;
+}
+.vw-graph-edge {
+  stroke: var(--line);
+  stroke-width: 0.8;
+}
+.vw-graph-node circle {
+  fill: var(--panel);
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.vw-graph-node text {
+  fill: var(--text);
+  font-family: var(--font-code);
+  font-size: 6px;
+}
+.vw-graph-node.frontier circle {
+  stroke: var(--gold);
+  stroke-dasharray: 2 1.5;
+}
+.vw-graph-node.visited circle {
+  fill: color-mix(in srgb, var(--jade) 22%, var(--panel));
+  stroke: var(--jade);
+}
+.vw-graph-node.active circle {
+  fill: color-mix(in srgb, var(--gold) 30%, var(--panel));
+  stroke: var(--gold);
+  stroke-width: 1.6;
+}
+.vw-graph-node.active text {
+  fill: var(--gold);
+}
+
+/* ---- dp-table (dynamic programming) ---- */
+.vw-dp {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+}
+.vw-dp-grid {
+  border-collapse: collapse;
+  font-family: var(--font-code);
+  font-size: 0.9rem;
+}
+.vw-dp-label {
+  color: var(--text-dim);
+  font-weight: 500;
+  padding: 0 8px;
+  font-size: 0.8rem;
+}
+.vw-dp-cell {
+  width: 40px;
+  height: 40px;
+  text-align: center;
+  border: 1.5px solid var(--line);
+  background: var(--panel);
+}
+.vw-dp-cell.dep {
+  border-color: var(--jade);
+  background: color-mix(in srgb, var(--jade) 16%, var(--panel));
+}
+.vw-dp-cell.active {
+  border-color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 26%, var(--panel));
+  color: var(--gold);
+  font-weight: 600;
+}
+
 /* ---- arrange (Parsons) drag-to-order ---- */
 .ln-arrange-hint-line {
   color: var(--text-dim);

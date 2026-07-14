@@ -11,6 +11,8 @@ import PipeFlow from './PipeFlow.jsx';
 import IntervalBars from './IntervalBars.jsx';
 import NodeChain from './NodeChain.jsx';
 import TreeView from './TreeView.jsx';
+import GraphView from './GraphView.jsx';
+import DpTable from './DpTable.jsx';
 
 // Tap-through player for a visual block: renders the widget at the current
 // beat, shows the caption, and advances one beat per tap. Widgets register
@@ -28,6 +30,8 @@ const WIDGETS = {
   'interval-bars': IntervalBars,
   'node-chain': NodeChain,
   'tree-view': TreeView,
+  'graph-view': GraphView,
+  'dp-table': DpTable,
 };
 
 export default function VisualPlayer({ visual, onDone = null }) {
