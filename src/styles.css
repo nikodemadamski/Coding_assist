@@ -8303,3 +8303,321 @@ p,
     transition: none;
   }
 }
+
+/* ── the question bank ──────────────────────────────────────────────────────
+   A hundred and fifty-nine questions need a way in that isn't scrolling. The
+   bar answers the three things you actually ask the list: where is that one,
+   what have I not done, and what keeps biting me. */
+.bank-bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  margin: var(--s-5) 0 var(--s-4);
+}
+.bank-search {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--text-dim);
+  transition: border-color var(--dur-1) var(--ease);
+}
+.bank-search:focus-within {
+  border-color: var(--sky);
+  color: var(--text);
+}
+.bank-search svg {
+  flex: none;
+}
+.bank-search-input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--t-body);
+}
+.bank-search-input::placeholder {
+  color: var(--text-dim);
+}
+/* the browser's own clear affordance is inconsistent across engines, so the
+   search owns one that matches everything else here */
+.bank-search-input::-webkit-search-cancel-button {
+  display: none;
+}
+.bank-search-clear {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: var(--r-full);
+  background: var(--panel-2);
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.bank-search-clear:hover {
+  color: var(--text);
+}
+.bank-filters {
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin: 0;
+}
+/* The count lives on the chip, so a filter never promises rows it can't show. */
+.chip-n {
+  margin-left: var(--s-2);
+  font-family: var(--font-code);
+  font-size: var(--t-micro);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.65;
+}
+.chip.is-empty {
+  opacity: 0.42;
+}
+.bank-gap {
+  width: var(--s-4);
+}
+.bank-clear {
+  margin-left: auto;
+  color: var(--crimson-bright);
+}
+.bank-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  margin: var(--s-5) 0 var(--s-3);
+}
+.bank-head-note {
+  color: var(--gold);
+}
+.bank-empty {
+  padding: var(--s-6) 0;
+  max-width: var(--measure);
+}
+.bank-empty-line {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--t-xl);
+  font-weight: 600;
+}
+.bank-empty-hint {
+  margin: var(--s-2) 0 var(--s-4);
+  color: var(--text-dim);
+}
+
+/* ── a row you can read at a glance ─────────────────────────────────────── */
+.q-mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--r-full);
+  border: 1.5px solid color-mix(in srgb, var(--text-dim) 40%, transparent);
+  font-size: var(--t-tiny);
+  font-weight: 700;
+  line-height: 1;
+  color: transparent;
+}
+.q-mark.done {
+  border-color: var(--jade);
+  background: color-mix(in srgb, var(--jade) 18%, transparent);
+  color: var(--jade);
+}
+/* Solved rows step back so the unsolved ones lead — this is a to-do list that
+   happens to keep its history, not an archive. */
+.q-card.is-solved .q-title {
+  color: var(--text-dim);
+}
+.q-card.is-solved:hover .q-title {
+  color: var(--text);
+}
+.tag.miss-tag {
+  color: var(--crimson-bright);
+  border-color: color-mix(in srgb, var(--crimson-bright) 45%, transparent);
+  font-family: var(--font-code);
+}
+@media (max-width: 620px) {
+  .bank-clear {
+    margin-left: 0;
+  }
+}
+
+/* ── the mock brief ─────────────────────────────────────────────────────────
+   Five matching cards made every round look equally right for you. Wide rows
+   put the round first, its clock next, and your record on it last — which is
+   the order you actually decide in. */
+.mock-formats {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-3);
+  max-width: 760px;
+  margin-bottom: var(--s-5);
+}
+.mock-format-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--s-5);
+  padding: var(--s-4) var(--s-5);
+  border-radius: var(--r-lg);
+}
+.mock-format-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+.mock-format-card .mock-format-name {
+  font-size: var(--t-xl);
+  letter-spacing: -0.015em;
+}
+.mock-format-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--s-1);
+  flex: none;
+  width: 128px;
+}
+.mock-format-card .mock-format-time {
+  font-family: var(--font-code);
+  font-size: var(--t-lg);
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.mock-format-record {
+  font-size: var(--t-micro);
+  color: var(--text-dim);
+}
+.mock-format-card .cue-orb {
+  color: var(--crimson-bright);
+  flex: none;
+}
+.mock-record {
+  margin: var(--s-3) 0 0;
+  color: var(--text-dim);
+  font-size: var(--t-body);
+}
+.mock-record strong {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 620px) {
+  .mock-format-card {
+    gap: var(--s-3);
+    padding: var(--s-4);
+  }
+  .mock-format-meta {
+    width: 96px;
+  }
+  .mock-format-card .cue-orb {
+    display: none;
+  }
+}
+
+/* ── the guide ──────────────────────────────────────────────────────────────
+   Fifteen hundred words of method. Prose that long needs a way in and a way
+   back, so it gets a rail that lists what's here and marks where you are. */
+.guide-page {
+  max-width: 1060px;
+}
+.guide-layout {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: var(--s-7);
+  align-items: start;
+}
+.guide-rail {
+  position: sticky;
+  top: var(--s-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding-right: var(--s-3);
+  border-right: 1px solid var(--line);
+}
+.guide-rail-head {
+  font-size: var(--t-micro);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: var(--s-2);
+}
+.guide-rail-link {
+  color: var(--text-dim);
+  font-size: var(--t-sm);
+  line-height: 1.4;
+  text-decoration: none;
+  padding: var(--s-2) 0 var(--s-2) var(--s-3);
+  border-left: 2px solid transparent;
+  margin-left: -2px;
+  transition:
+    color var(--dur-1) var(--ease),
+    border-color var(--dur-1) var(--ease);
+}
+.guide-rail-link:hover {
+  color: var(--text);
+}
+.guide-rail-link.active {
+  color: var(--text);
+  font-weight: 600;
+  border-left-color: var(--crimson-bright);
+}
+.guide-body .prose {
+  max-width: var(--measure);
+}
+.guide-body h2 {
+  scroll-margin-top: var(--s-6);
+  margin-top: var(--s-7);
+}
+.guide-body h2:first-child {
+  margin-top: 0;
+}
+@media (max-width: 860px) {
+  .guide-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-4);
+  }
+  /* On a phone the rail becomes a scrollable strip of links above the prose —
+     still a way in, without stealing a third of the width. */
+  .guide-rail {
+    position: static;
+    flex-direction: row;
+    gap: var(--s-2);
+    overflow-x: auto;
+    padding: 0 0 var(--s-2);
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+    scrollbar-width: none;
+  }
+  .guide-rail::-webkit-scrollbar {
+    display: none;
+  }
+  .guide-rail-head {
+    display: none;
+  }
+  .guide-rail-link {
+    white-space: nowrap;
+    padding: var(--s-2) var(--s-3);
+    border-left: none;
+    border-bottom: 2px solid transparent;
+    margin-left: 0;
+  }
+  .guide-rail-link.active {
+    border-left-color: transparent;
+    border-bottom-color: var(--crimson-bright);
+  }
+}

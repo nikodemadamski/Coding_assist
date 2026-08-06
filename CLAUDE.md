@@ -242,6 +242,18 @@ exports `useTactile` — the one framer-motion spring every header control press
 `glyph` so it survives that. Lucide supplies the icons. `eslint.config.js` disables
 `react/no-unknown-property` for DojoFace.jsx only — R3F's JSX intrinsics aren't DOM.
 
+**Browse** is the question bank, not a list: `state/questionFilter.js` (pure, unit-tested)
+does the text match (title/pattern/track/difficulty, case- and punctuation-insensitive) and
+the status axis (`all|todo|due|weak|solved`) derived from your own record; `statusCounts`
+computes each chip's count *under the other live filters*, so a chip never promises rows a
+click can't show — smoke asserts chip count === rows returned. Rows carry a tick, not a
+colour dot, and the mastery pill only appears for `reviewing`/`mastered` (`new` is what the
+missing tick already says; `learning` is the default one solve later).
+
+`Guide.jsx` derives its contents rail from its own `## ` headings and stamps matching ids on
+the rendered `h2`s (marked emits none), so the rail can't drift from the prose;
+IntersectionObserver drives the scroll-spy. On phones the rail becomes a horizontal strip.
+
 App.jsx owns views: home (RoadmapGraph = the map), browse (Picker), track (TrackMap),
 problem/practice/drill (ProblemView / PracticeView), warmup, mock, patterns, quiz, stats,
 guide, learn (LearnView chapter list) / lesson (LessonView player); modals: Settings,

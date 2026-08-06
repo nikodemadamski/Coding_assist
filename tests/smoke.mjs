@@ -667,9 +667,64 @@ try {
   await page.locator('.icon-btn', { hasText: 'Browse' }).click();
   const twoSumCard = page.locator('.q-card', { hasText: 'Two Sum' }).first();
   check(
-    (await twoSumCard.locator('.pill').innerText()).trim() === 'learning',
-    'solve persists after reload (mastery pill turns "learning")'
+    (await twoSumCard.locator('.q-mark.done').count()) === 1,
+    'solve persists after reload (the row is ticked)'
   );
+  check(
+    await twoSumCard.evaluate((el) => el.classList.contains('is-solved')),
+    'and the row reads as solved without opening it'
+  );
+
+  // ---- the bank: find one question in a hundred and fifty-nine -----------
+  const rows = () => page.locator('.q-card').count();
+  const allRows = await rows();
+  check(allRows > 100, `the bank lists the whole path (${allRows} rows)`);
+  // every chip promises a count, and clicking it must deliver exactly that
+  const chip = (label) => page.locator('.chip', { hasText: label }).first();
+  const chipCount = async (label) => Number((await chip(label).locator('.chip-n').innerText()).trim());
+  const promisedTodo = await chipCount(/^not solved/);
+  await chip(/^not solved/).click();
+  await page.waitForTimeout(220);
+  check(
+    (await rows()) === promisedTodo,
+    `the "not solved" chip shows exactly what it promised (${promisedTodo})`
+  );
+  check((await page.locator('.q-card.is-solved').count()) === 0, 'and no solved row leaks into it');
+  const promisedSolved = await chipCount(/^solved/);
+  await chip(/^solved/).click();
+  await page.waitForTimeout(220);
+  check((await rows()) === promisedSolved, `so does "solved" (${promisedSolved})`);
+  check(promisedTodo + promisedSolved === allRows, 'solved and not-solved account for the whole bank');
+
+  // text search, over more than the title
+  await chip(/^all/).click();
+  await page.fill('.bank-search-input', 'two sum');
+  await page.waitForTimeout(260);
+  check((await rows()) < allRows && (await rows()) >= 1, 'typing a title narrows the bank');
+  check(
+    (await page.locator('.q-card').first().innerText()).includes('Two Sum'),
+    'and finds the question you typed'
+  );
+  await page.fill('.bank-search-input', 'TWO-SUM');
+  await page.waitForTimeout(260);
+  check((await rows()) >= 1, 'case and punctuation do not matter');
+  // filters compose rather than replacing each other
+  await page.fill('.bank-search-input', '');
+  await chip(/^sql/).click();
+  await chip(/^not solved/).click();
+  await page.waitForTimeout(260);
+  const composed = await rows();
+  check(
+    composed > 0 && composed < promisedTodo,
+    `track and status compose instead of overriding (${composed} rows)`
+  );
+  // a dead end says so, and offers the way out
+  await page.fill('.bank-search-input', 'zzzznothing');
+  await page.waitForTimeout(260);
+  check((await page.locator('.bank-empty').count()) === 1, 'a search with no answer says so');
+  await page.locator('.bank-empty .btn').click();
+  await page.waitForTimeout(260);
+  check((await rows()) === allRows, 'and clearing the filters brings the whole bank back');
   const storedDraft = await page.evaluate(
     () => JSON.parse(localStorage.getItem('zoro.progress.v1') || '{}')?.drafts?.['py-two-sum'] || ''
   );

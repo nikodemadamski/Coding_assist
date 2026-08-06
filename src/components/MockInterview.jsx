@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import ProblemView from './ProblemView.jsx';
 import Approaches from './Approaches.jsx';
 import Markdown from './Markdown.jsx';
@@ -7,7 +7,9 @@ import {
   pickMockProblem,
   optimalComplexity,
   formatDuration,
+  summarizeMocks,
 } from '../state/mockSession.js';
+import { useReveal } from '../anim/useReveal.js';
 
 // The interview simulator. One timed python problem, hints locked, then a
 // debrief that grades the things a real interviewer grades: did you clarify,
@@ -35,6 +37,13 @@ export default function MockInterview({ questions, progress, onRecordMock, onSol
   const [complexityGuess, setComplexityGuess] = useState('');
   const [communication, setCommunication] = useState(0);
   const [showSolution, setShowSolution] = useState(false);
+
+  // Your own record, so the brief can answer "have I done this round, and how
+  // did it go" beside each one. Records made before formats were logged simply
+  // match no round, which is the honest answer for them.
+  const history = useMemo(() => progress.mock ?? [], [progress.mock]);
+  const { count: taken, passRate } = useMemo(() => summarizeMocks(history), [history]);
+  const briefRef = useReveal('mock-brief');
 
   const question = qid ? questions.find((q) => q.id === qid) : null;
 
@@ -89,27 +98,53 @@ export default function MockInterview({ questions, progress, onRecordMock, onSol
   // ---------------- brief ----------------
   if (phase === 'brief') {
     return (
-      <div className="stats mock">
-        <h1>Mock interview</h1>
-        <p className="mock-intro">
-          The real thing: one problem, a clock, and no hints. Talk through your thinking as if
-          someone&apos;s watching — because in the interview, they are. When the timer stops
-          you&apos;ll grade yourself on the things that actually get scored, then see the model
-          solution. Pick your round:
-        </p>
-        <div className="mock-formats">
-          {MOCK_FORMATS.map((f) => (
-            <button key={f.key} className="mock-format-card" onClick={() => start(f)}>
-              <span className="mock-format-name">{f.label}</span>
-              <span className={`tag diff-${f.difficulty || 'medium'}`}>
-                {f.tracks ? f.tracks.join(' · ') : f.difficulty || 'random'}
-              </span>
-              <span className="mock-format-time">{f.minutes} min</span>
-              <span className="mock-format-blurb">{f.blurb}</span>
-            </button>
-          ))}
+      <div className="stats mock" ref={briefRef}>
+        <header className="page-head" data-reveal>
+          <h1>Mock interview</h1>
+          <p className="page-lede mock-intro">
+            One problem, a clock, and no hints. Talk through your thinking as if someone&apos;s
+            watching — because in the interview, they are. When the timer stops you grade
+            yourself on what actually gets scored, then see the model solution.
+          </p>
+          {taken > 0 && (
+            <p className="mock-record">
+              <strong>{taken}</strong> taken · <strong>{Math.round(passRate * 100)}%</strong>{' '}
+              solved in time
+            </p>
+          )}
+        </header>
+
+        {/* Wide rows, not a grid of look-alikes: the round is the headline and
+            its clock is the number, so picking one is a single glance. Your own
+            record on that round sits beside it, because "have I done this
+            before, and how did it go" is the question you're really asking. */}
+        <div className="mock-formats" data-reveal>
+          {MOCK_FORMATS.map((f) => {
+            const past = history.filter((m) => m.format === f.key);
+            const won = past.filter((m) => m.passed).length;
+            return (
+              <button key={f.key} className="mock-format-card" onClick={() => start(f)}>
+                <span className="mock-format-main">
+                  <span className="mock-format-name">{f.label}</span>
+                  <span className="mock-format-blurb">{f.blurb}</span>
+                </span>
+                <span className="mock-format-meta">
+                  <span className={`tag diff-${f.difficulty || 'medium'}`}>
+                    {f.tracks ? f.tracks.join(' · ') : f.difficulty || 'random'}
+                  </span>
+                  <span className="mock-format-time">{f.minutes} min</span>
+                  <span className="mock-format-record">
+                    {past.length ? `${won}/${past.length} passed` : 'not attempted'}
+                  </span>
+                </span>
+                <span className="cue-orb" aria-hidden="true">
+                  →
+                </span>
+              </button>
+            );
+          })}
         </div>
-        <button className="btn" onClick={onExit}>
+        <button className="btn" onClick={onExit} data-reveal>
           ← Back to the dojo
         </button>
       </div>

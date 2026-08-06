@@ -194,3 +194,20 @@ their place there:
 Blur belongs on sticky and fixed elements only — never on scrolling content, where it
 repaints every frame. And a phone gets icons, not a wrapped second row: the labels stay
 in the DOM, hidden, so every button keeps its name.
+
+## Lists you have to search
+
+A hundred and fifty-nine of anything is not a list, it is a bank — and the difference is
+that a bank has to answer questions. Browse answers the three you actually ask it: *where
+is that one*, *what have I not done*, and *what keeps biting me*. Track and difficulty
+were never any of those.
+
+Two rules keep a filter bar honest:
+
+1. **A chip carries the count it would return**, computed under whatever else is already
+   filtered. A control that promises rows it cannot show is worse than no control.
+2. **A dead end says so and offers the way out.** An empty list with no explanation reads
+   as a broken page.
+
+And rows earn their ink: a tick for done, a tag only when it says something the row does
+not already. "Learning" on every solved row is not information, it is noise with a border.

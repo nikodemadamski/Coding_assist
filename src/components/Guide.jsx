@@ -1,8 +1,7 @@
+import { useEffect, useRef, useState } from 'react';
 import Markdown from './Markdown.jsx';
 
-const GUIDE = `# The Sensei's path to a Google / Anthropic offer
-
-You are not "a mere monkey." You are someone who hasn't yet built the reps. Interviews at
+const GUIDE = `You are not "a mere monkey." You are someone who hasn't yet built the reps. Interviews at
 these firms don't test raw IQ — they test **pattern recognition under mild pressure, out
 loud, without bugs.** That is a *trainable* skill, and this dojo is built to train exactly it.
 
@@ -105,10 +104,85 @@ that part is on you. Show up, clear your reviews, drill your misses, explain you
 
 Now close this page and go clear today's reviews. 🥋`;
 
+// The section list is derived from the prose itself rather than kept alongside
+// it, so the contents rail can never drift from the page it indexes — edit a
+// heading and the rail follows.
+const SECTIONS = GUIDE.split('\n')
+  .filter((line) => line.startsWith('## '))
+  .map((line) => {
+    const label = line.slice(3).trim();
+    return { label, id: slugify(label) };
+  });
+
+function slugify(text) {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
+// The guide is the longest read in the app — 1,500 words of method. Prose that
+// long needs a way in and a way back: a rail that says what's here, and marks
+// where you are as you scroll.
 export default function Guide() {
+  const bodyRef = useRef(null);
+  const [active, setActive] = useState(SECTIONS[0]?.id ?? '');
+
+  // marked doesn't emit ids, so they're stamped on after render — by the same
+  // slug rule the rail uses, which is what keeps the two in agreement.
+  useEffect(() => {
+    const root = bodyRef.current;
+    if (!root) return undefined;
+    const heads = [...root.querySelectorAll('h2')];
+    for (const h of heads) h.id = slugify(h.textContent || '');
+
+    // Scroll-spy: the last heading to have crossed the top of the reading area
+    // is the one you're in. An observer, not a scroll listener.
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) setActive(e.target.id);
+        }
+      },
+      { rootMargin: '-72px 0px -70% 0px', threshold: 0 }
+    );
+    for (const h of heads) io.observe(h);
+    return () => io.disconnect();
+  }, []);
+
   return (
     <div className="stats guide-page">
-      <Markdown text={GUIDE} />
+      <header className="page-head" data-reveal>
+        <h1>How to train</h1>
+        <p className="page-lede">
+          The method this whole app is built around — what to do daily, in what order, and
+          what &ldquo;on pace&rdquo; actually looks like.
+        </p>
+      </header>
+
+      <div className="guide-layout">
+        <nav className="guide-rail" aria-label="Sections">
+          <span className="guide-rail-head">On this page</span>
+          {SECTIONS.map((s) => (
+            <a
+              key={s.id}
+              href={`#${s.id}`}
+              className={`guide-rail-link ${active === s.id ? 'active' : ''}`}
+              aria-current={active === s.id ? 'true' : undefined}
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById(s.id)?.scrollIntoView({ block: 'start' });
+                setActive(s.id);
+              }}
+            >
+              {s.label}
+            </a>
+          ))}
+        </nav>
+        <div className="guide-body" ref={bodyRef}>
+          <Markdown text={GUIDE} />
+        </div>
+      </div>
     </div>
   );
 }
