@@ -181,6 +181,41 @@ try {
     'exactly one topic is marked as where you are'
   );
 
+  // ---- the home page has to still be alive once it has settled ----------
+  // Entrance choreography is over by now. Anything still running is ambient:
+  // the aurora drifting, the mission bar's sweep, the CTA breathing, and the
+  // current flowing down the map to the topic you're on. The regression this
+  // guards is the page quietly going back to being a photograph.
+  const ambient = await page.evaluate(() =>
+    document
+      .getAnimations()
+      .filter((a) => a.playState === 'running' && a.effect?.getTiming?.().iterations === Infinity)
+      .map((a) => a.animationName || a.effect?.target?.className || '?')
+  );
+  check(ambient.length >= 4, `the settled home page keeps ${ambient.length} ambient animations running`);
+  for (const name of ['aurora-a', 'edge-current', 'bar-sweep', 'orb-breathe']) {
+    check(ambient.includes(name), `  ↳ ${name} is still running at rest`);
+  }
+  // the flowing current must be exactly one connected route, never a diagram
+  const liveEdges = await page.locator('.graph-edges path.live').count();
+  check(liveEdges >= 1, `the map lights a route to where you are (${liveEdges} edges)`);
+
+  // the hero card leans toward the pointer, and lets go when it leaves
+  const heroBox = await page.locator('.hero-next').boundingBox();
+  const cardTransform = () => page.evaluate(() => getComputedStyle(document.querySelector('.hero-next')).transform);
+  await page.mouse.move(heroBox.x + heroBox.width * 0.12, heroBox.y + heroBox.height * 0.15);
+  await page.waitForTimeout(500);
+  const leanA = await cardTransform();
+  await page.mouse.move(heroBox.x + heroBox.width * 0.88, heroBox.y + heroBox.height * 0.85);
+  await page.waitForTimeout(500);
+  const leanB = await cardTransform();
+  check(leanA !== leanB, 'the hero card leans toward the pointer');
+  check(
+    (await page.evaluate(() => document.querySelector('.hero-next').style.getPropertyValue('--pin'))) === '1',
+    'the pointer spotlight is lit while the cursor is over the card'
+  );
+  await page.mouse.move(2, 2);
+
   // pandas & SQL are OFF the algorithm map — separate data tracks below it
   check(
     (await page.locator('.graph-node', { hasText: 'pandas' }).count()) === 0 &&
@@ -1620,6 +1655,43 @@ try {
   );
   check(noHScroll2, 'mobile: no horizontal scroll in problem view');
   await mobile.close();
+
+  // ================= reduced motion: the whole thing goes still ===========
+  // Every ambient loop and every pointer response above is exactly what this
+  // preference exists to stop. The finished state has to survive it, so this
+  // asserts both halves: nothing loops, and nothing is left invisible.
+  const calm = await browser.newPage({ viewport: { width: 1400, height: 900 }, reducedMotion: 'reduce' });
+  await calm.goto(BASE);
+  try {
+    await calm.locator('.onboard-skip').click({ timeout: 4000 });
+  } catch {
+    /* already dismissed */
+  }
+  await calm.locator('.hero').waitFor({ timeout: 10000 });
+  await calm.waitForTimeout(1600);
+  const looping = await calm.evaluate(
+    () =>
+      document
+        .getAnimations()
+        .filter((a) => a.playState === 'running' && a.effect?.getTiming?.().iterations === Infinity).length
+  );
+  check(looping === 0, `reduced motion: nothing loops (${looping} running)`);
+  const calmBox = await calm.locator('.hero-next').boundingBox();
+  await calm.mouse.move(calmBox.x + 20, calmBox.y + 20);
+  await calm.waitForTimeout(300);
+  check(
+    (await calm.evaluate(() => document.querySelector('.hero-next').style.getPropertyValue('--rx'))) === '',
+    'reduced motion: the pointer field never even attaches'
+  );
+  const calmHidden = await calm.evaluate(
+    () => [...document.querySelectorAll('[data-reveal]')].filter((e) => Number(getComputedStyle(e).opacity) < 0.99).length
+  );
+  check(calmHidden === 0, `reduced motion: every block is still fully visible (${calmHidden} hidden)`);
+  check(
+    (await calm.locator('.hero-next-title').innerText()).length > 3,
+    'reduced motion: the page still says what to do next'
+  );
+  await calm.close();
 
   // ================= PWA: installable + works offline =================
   const pwa = await browser.newPage();

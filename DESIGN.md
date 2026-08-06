@@ -145,3 +145,25 @@ Motion here is load-bearing, not decoration:
 Every one of those collapses to its finished state under `prefers-reduced-motion`, and
 the smoke test asserts the finished state rather than the movement: a map left
 half-drawn or a number that lands on a lie is the only failure that matters.
+
+## Ambient motion
+
+Entrance animations play once and then the page is a photograph. A surface that is
+supposed to feel alive needs the other half: motion that is still there when you are
+just sitting looking at it.
+
+Three rules keep that from becoming noise:
+
+1. **A loop is either information or invisible.** The current running down the map to
+   the topic you are on is information — it points at you. The aurora drift, the bar
+   sweep and the CTA's halo are deliberately below the threshold where you would notice
+   them twice: 19-24 second cycles, 1.5% scale, one sweep every few seconds.
+2. **The more often it plays, the smaller it is.** A chip you press daily gets 120ms and
+   a 14% nudge on its number. An arrival you see once gets 600ms of full choreography.
+3. **Pointer response goes through CSS variables, not JS animation.** The hook writes
+   `--px/--py/--rx/--ry`; a CSS transition does the smoothing. That is interruption-safe
+   for free, costs one transform per frame, and never re-renders React.
+
+Everything above animates `transform`, `opacity` or `filter` only — never a layout
+property — and every one of them is switched off wholesale under
+`prefers-reduced-motion`, where the finished state is what the rules resolve to anyway.

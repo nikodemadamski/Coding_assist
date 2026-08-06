@@ -95,6 +95,14 @@ circle, not the positioned group, so scale never fights the translate.
 Widgets whose text/DOM anime mutates are keyed per beat (`key={beatIndex}`) so React
 reconciliation never fights the animation.
 
+`usePointerField.js` is the *ambient* half — the surface that keeps responding once the
+entrance is over. It writes `--px/--py` (pointer position, %), `--rx/--ry` (a tilt in
+degrees) and `--pin` on an element and lets CSS smooth them, so per-frame cost is one
+transform, it's interruption-safe by construction, and React never re-renders. Updates
+coalesce into one rAF. Under reduced motion it attaches **no listeners at all**. Home uses
+it twice: the hero (aurora lean) and `.hero-next` (4° tilt + a spotlight that tracks the
+cursor).
+
 `useReveal.js` is the app-level entrance choreography: a view calls `useReveal(key)` for a ref
 on its root, tags its blocks `data-reveal`, and every tagged block cascades in (opacity+rise,
 `presets.reveal`). It runs in a **layout** effect so anime sets opacity 0 before paint (no
@@ -171,7 +179,22 @@ display scale with the page's one red CTA — and `.hero-actions` (reviews / war
 / drill / readiness ring). `.learn-lane` is the Python curriculum, deliberately quieter
 than `.hero-next` (smoke asserts the size ratio). The map draws itself in on mount: every
 `path[data-edge]` animates `stroke-dashoffset` to 0 on a stagger and the nodes cascade
-behind them; the current topic keeps a slow halo. Smoke asserts both settle.
+behind them; the current topic keeps a slow halo.
+
+**Ambient motion** — the page stays alive at rest, and every loop is either information or
+below the notice threshold: the aurora (two `.hero::before/::after` fields drifting on 19s
+/ 24s keyframes, leaning with the pointer), `bar-sweep` on the mission bar, `orb-breathe`
+on the one CTA, and `edge-current` — a travelling dash down the map edges returned by
+`liveRouteFor(GRAPH_EDGES, currentKey)` (roadmapGraph.js, unit-tested: always exactly one
+connected walk, and never empty — at the top of the map it lights the way *out*). Note
+`currentKey` follows the next unsolved question **that lives on the map**, not `nextUp` —
+the path interleaves pandas/SQL, and the algorithm map must never lose its "you are here".
+The mount draw-in clears its inline dash values on `.live` edges in `onComplete` so the CSS
+loop can take over. `.map-head/.graph-fit/.data-tracks` use `animation-timeline: view()`
+(scroll-driven, no JS) and therefore carry **no** `data-reveal` — one owner per element.
+Smoke asserts the settled page keeps ≥4 infinite animations running, that the card leans
+under the pointer, and that a `reducedMotion:'reduce'` context has **zero** loops, no
+pointer vars and nothing left invisible.
 
 **The stage** is the shared full-height shell for one-thing-at-a-time surfaces (lesson
 player, warm-up run): `.stage` (h100%, flex col) → `.stage-top` (exit · `.stage-kicker` +

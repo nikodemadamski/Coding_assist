@@ -3,6 +3,7 @@ import { useFocusTrap } from './useFocusTrap.js';
 import { useReveal } from '../anim/useReveal.js';
 import { useAnime, stagger } from '../anim/useAnime.js';
 import { presets } from '../anim/presets.js';
+import { usePointerField } from '../anim/usePointerField.js';
 import ReadinessRing from './ReadinessRing.jsx';
 import CountUp from './CountUp.jsx';
 import { loadUiPrefs } from '../state/uiPrefs.js';
@@ -26,6 +27,7 @@ import {
   GRAPH_H,
   NODE_W,
   NODE_H,
+  liveRouteFor,
 } from '../data/roadmapGraph.js';
 
 const MASTERY_LABEL = { new: 'new', learning: 'learning', reviewing: 'reviewing', mastered: 'mastered' };
@@ -64,31 +66,6 @@ export default function RoadmapGraph({
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-
-  // The map builds itself on arrival: every edge draws from its source to its
-  // target (stroke-dashoffset, the classic SVG line-draw), and the topic nodes
-  // pop in behind them on a stagger. It reads as the path being laid out for
-  // you rather than a diagram that was always there. useAnime collapses both
-  // to their finished state under prefers-reduced-motion.
-  const play = useAnime();
-  const canvasRef = useRef(null);
-  useEffect(() => {
-    const root = canvasRef.current;
-    if (!root) return;
-    const paths = [...root.querySelectorAll('.graph-edges path[data-edge]')];
-    for (const el of paths) {
-      const len = el.getTotalLength?.() ?? 0;
-      el.style.strokeDasharray = String(len);
-      el.style.strokeDashoffset = String(len);
-    }
-    play(paths, {
-      strokeDashoffset: 0,
-      duration: 700,
-      ease: 'outQuad',
-      delay: stagger(24, { start: 160 }),
-    });
-    play(root.querySelectorAll('.graph-node'), presets.enter());
-  }, [play]);
 
   const byCat = useMemo(() => {
     const m = new Map();
@@ -160,6 +137,63 @@ export default function RoadmapGraph({
   const openStats = openCat ? (stats[openCat] ?? { total: 0, solved: 0 }) : null;
 
   const revealRef = useReveal('home');
+  // The hero lights up under the cursor; the next-problem card also leans
+  // toward it. Both are pure CSS-variable writes — see usePointerField.
+  const heroFieldRef = usePointerField();
+  const nextFieldRef = usePointerField(4);
+  // Which topic you're standing in on the ALGORITHM map, and the route that
+  // lights up to show it. Note this is not always the category of `nextUp`:
+  // the path interleaves pandas and SQL questions, and when one of those is
+  // next, the algorithm map would otherwise lose its "you are here" entirely.
+  // The map answers "where am I on the map", so it walks to the next unsolved
+  // question that actually lives on it.
+  const mapKeys = useMemo(() => new Set(GRAPH_NODES.map((n) => n.key)), []);
+  const nextOnMap = useMemo(
+    () =>
+      nextOnPath(
+        questions.filter((q) => mapKeys.has(categoryKeyOf(q.pattern))),
+        (id) => isSolved(progress.solved[id])
+      ),
+    [questions, progress, mapKeys]
+  );
+  const currentKey = nextOnMap ? categoryKeyOf(nextOnMap.pattern) : null;
+  const liveEdges = useMemo(() => liveRouteFor(GRAPH_EDGES, currentKey), [currentKey]);
+
+  // The map builds itself on arrival: every edge draws from its source to its
+  // target (stroke-dashoffset, the classic SVG line-draw), and the topic nodes
+  // pop in behind them on a stagger. It reads as the path being laid out for
+  // you rather than a diagram that was always there. useAnime collapses both
+  // to their finished state under prefers-reduced-motion.
+  const play = useAnime();
+  const canvasRef = useRef(null);
+  useEffect(() => {
+    const root = canvasRef.current;
+    if (!root) return;
+    const paths = [...root.querySelectorAll('.graph-edges path[data-edge]')];
+    for (const el of paths) {
+      const len = el.getTotalLength?.() ?? 0;
+      el.style.strokeDasharray = String(len);
+      el.style.strokeDashoffset = String(len);
+    }
+    play(paths, {
+      strokeDashoffset: 0,
+      duration: 700,
+      ease: 'outQuad',
+      delay: stagger(24, { start: 160 }),
+      onComplete: () => {
+        // Once an edge has finished drawing, drop the inline dash values so the
+        // `.live` rule can take over and run its travelling current. Leaving
+        // them set would pin the dash pattern and kill the loop.
+        for (const el of paths) {
+          if (!el.classList.contains('live')) continue;
+          el.style.removeProperty('stroke-dasharray');
+          el.style.removeProperty('stroke-dashoffset');
+        }
+      },
+    });
+    play(root.querySelectorAll('.graph-node'), presets.enter());
+  }, [play, liveEdges]);
+
   const name = useMemo(() => loadUiPrefs().name, []);
   const streak = currentStreak(progress.streak);
   const hello = greeting(new Date().getHours(), name, { streak, solvedToday: pulse.solves });
@@ -178,7 +212,7 @@ export default function RoadmapGraph({
           scroll. It greets you, names the next problem in display type, and
           puts one red button under it. Everything else on this page is
           smaller than this on purpose. */}
-      <section className="hero" data-reveal>
+      <section className="hero" data-reveal ref={heroFieldRef}>
         <div className="hero-lead">
           <h1 className="hero-title">{hello}</h1>
           {/* One live status line under the greeting: what's waiting, then where
@@ -214,7 +248,7 @@ export default function RoadmapGraph({
 
         {/* The one loud thing. */}
         {nextUp ? (
-          <button className="hero-next" onClick={() => onOpenQuestion(nextUp.id)}>
+          <button className="hero-next" onClick={() => onOpenQuestion(nextUp.id)} ref={nextFieldRef}>
             <span className="hero-next-kicker">
               {solvedCount === 0 ? 'Start here' : 'Next problem'}
               {pathStep(nextUp.id) && <span className="step-num">{pathStep(nextUp.id)}</span>}
@@ -329,7 +363,7 @@ export default function RoadmapGraph({
         </div>
       )}
 
-      <div className="map-head" data-reveal>
+      <div className="map-head">
         <h2>
           The path — {shownNodes.length} topics, in order
           <span className="map-head-count">
@@ -342,7 +376,7 @@ export default function RoadmapGraph({
         </p>
       </div>
 
-      <div className="graph-fit" data-reveal ref={fitRef} style={{ height: GRAPH_H * scale }}>
+      <div className="graph-fit" ref={fitRef} style={{ height: GRAPH_H * scale }}>
         <div
           className="graph-canvas"
           ref={canvasRef}
@@ -375,16 +409,18 @@ export default function RoadmapGraph({
             </defs>
             {GRAPH_EDGES.map((edge, i) => {
               const d = edgePath(edge);
+              // The route down to the topic you're on carries a slow travelling
+              // current, so the map points at you instead of being read.
+              const live = liveEdges.has(`${edge[0]}>${edge[1]}`);
               return d ? (
                 <path
                   key={i}
                   data-edge
+                  className={live ? 'live' : ''}
                   d={d}
                   fill="none"
-                  stroke="#e9e7de"
                   strokeWidth="2.5"
                   markerEnd="url(#arrow)"
-                  opacity="0.85"
                 />
               ) : null;
             })}
@@ -396,7 +432,7 @@ export default function RoadmapGraph({
             const done = st.total > 0 && st.solved === st.total;
             // "You are here": the topic your next step belongs to, so the map
             // answers "where am I?" at a glance instead of only "how much left".
-            const current = !done && nextUp && categoryKeyOf(nextUp.pattern) === n.key;
+            const current = !done && currentKey === n.key;
             const started = !done && !current && st.solved > 0;
             return (
               <button
@@ -417,7 +453,7 @@ export default function RoadmapGraph({
       </div>
 
       {/* Data tracks — separate entities, not woven into the algorithm map */}
-      <div className="data-tracks" data-reveal>
+      <div className="data-tracks">
         <span className="data-tracks-label">Data tracks — their own map, off the algorithm path</span>
         <div className="data-tracks-row">
           {[

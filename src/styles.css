@@ -7330,17 +7330,69 @@ p,
 /* A soft light behind the hero so the top of the page has depth without a
    single box or border being drawn. It sits under everything and never
    intercepts a click. */
-.hero::before {
+/* The aurora. Two coloured fields that drift on their own forever and lean
+   toward the cursor when there is one — so the top of the page is never a
+   still photograph, with or without a pointer. Both layers move by transform
+   only; the gradients themselves are never recomputed. */
+.hero::before,
+.hero::after {
   content: '';
   position: absolute;
-  inset: -12% -20% 20% -20%;
+  inset: -18% -24% 14% -24%;
   pointer-events: none;
   z-index: -1;
-  background:
-    radial-gradient(48% 60% at 18% 22%, color-mix(in srgb, var(--crimson) 16%, transparent), transparent 70%),
-    radial-gradient(42% 55% at 82% 8%, color-mix(in srgb, var(--sky) 14%, transparent), transparent 72%);
-  filter: blur(6px);
-  opacity: 0.9;
+  will-change: transform;
+}
+.hero::before {
+  background: radial-gradient(
+    46% 58% at 22% 26%,
+    color-mix(in srgb, var(--crimson) 20%, transparent),
+    transparent 70%
+  );
+  animation: aurora-a 19s ease-in-out infinite;
+  transform: translate3d(calc((var(--px, 50%) - 50%) * 0.06), calc((var(--py, 50%) - 50%) * 0.06), 0);
+}
+.hero::after {
+  background: radial-gradient(
+    40% 52% at 78% 10%,
+    color-mix(in srgb, var(--sky) 18%, transparent),
+    transparent 72%
+  );
+  animation: aurora-b 24s ease-in-out infinite;
+  transform: translate3d(calc((var(--px, 50%) - 50%) * -0.09), calc((var(--py, 50%) - 50%) * -0.05), 0);
+}
+/* The drift and the pointer lean both want the transform, so the drift runs as
+   a keyframe on a wrapper-free element and simply wins while it plays; the
+   pointer offset is folded into the keyframe's own translate. */
+@keyframes aurora-a {
+  0%,
+  100% {
+    transform: translate3d(calc((var(--px, 50%) - 50%) * 0.06), calc((var(--py, 50%) - 50%) * 0.06), 0)
+      scale(1);
+  }
+  50% {
+    transform: translate3d(
+        calc((var(--px, 50%) - 50%) * 0.06 + 5%),
+        calc((var(--py, 50%) - 50%) * 0.06 - 3%),
+        0
+      )
+      scale(1.12);
+  }
+}
+@keyframes aurora-b {
+  0%,
+  100% {
+    transform: translate3d(calc((var(--px, 50%) - 50%) * -0.09), calc((var(--py, 50%) - 50%) * -0.05), 0)
+      scale(1.06);
+  }
+  50% {
+    transform: translate3d(
+        calc((var(--px, 50%) - 50%) * -0.09 - 6%),
+        calc((var(--py, 50%) - 50%) * -0.05 + 4%),
+        0
+      )
+      scale(0.94);
+  }
 }
 .hero-lead {
   grid-area: lead;
@@ -7437,32 +7489,37 @@ p,
     border-color var(--dur-2) var(--ease),
     transform var(--dur-1) var(--ease);
 }
-/* A sheen that slides across on hover — the card acknowledges the pointer
-   without anything moving out of place. */
+/* A spotlight that follows the cursor across the card, and a lean toward it.
+   Both are driven by the custom properties usePointerField writes, so the only
+   per-frame work is one transform and one gradient origin. The lean is 4° at
+   the corners — enough to read as a physical object, small enough that the
+   text never looks distorted. */
+.hero-next {
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transform-style: preserve-3d;
+  transition:
+    border-color var(--dur-2) var(--ease),
+    transform 420ms var(--ease);
+}
 .hero-next::after {
   content: '';
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(
-    100deg,
-    transparent 38%,
-    color-mix(in srgb, var(--text) 7%, transparent) 50%,
-    transparent 62%
+  background: radial-gradient(
+    260px circle at var(--px, 50%) var(--py, 50%),
+    color-mix(in srgb, var(--crimson-bright) 16%, transparent),
+    transparent 68%
   );
-  transform: translateX(-100%);
-  transition: transform 0.7s var(--ease);
+  opacity: var(--pin, 0);
+  transition: opacity 320ms var(--ease);
 }
 .hero-next:hover,
 .hero-next:focus-visible {
   border-color: color-mix(in srgb, var(--crimson) 55%, var(--line));
 }
-.hero-next:hover::after,
-.hero-next:focus-visible::after {
-  transform: translateX(100%);
-}
 .hero-next:active {
-  transform: scale(0.995);
+  transform: perspective(900px) scale(0.992);
 }
 .hero-next-kicker {
   display: flex;
@@ -7763,4 +7820,180 @@ p,
 .set-name-input:focus-visible {
   border-color: var(--sky);
   outline: none;
+}
+
+/* ── the map's live route ───────────────────────────────────────────────────
+   A current runs down the edges from the top of the map to the topic you're
+   standing in. It's the only looping animation on the page that carries
+   information: it points at you, so "where am I" is answered by the shape of
+   the map before you read a label. Marked by pathEdgesTo(), which guarantees
+   exactly one connected walk. */
+.graph-edges path.live {
+  stroke: var(--gold);
+  stroke-width: 3;
+  stroke-dasharray: 7 11;
+  animation: edge-current 1.5s linear infinite;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--gold) 45%, transparent));
+}
+@keyframes edge-current {
+  to {
+    stroke-dashoffset: -18;
+  }
+}
+
+/* ── the mission bar ────────────────────────────────────────────────────────
+   A light travels the solved portion while there's still path left to walk,
+   and stops the moment you finish it. Progress that is still moving looks
+   different from progress that is done. */
+.hero-bar {
+  position: relative;
+}
+.hero-bar-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, #fff 55%, transparent),
+    transparent
+  );
+  transform: translateX(-100%);
+  animation: bar-sweep 3.4s var(--ease) infinite;
+}
+@keyframes bar-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  55%,
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+/* ── the quick actions ──────────────────────────────────────────────────────
+   Chips you press many times a day, so the feedback is 120ms and tiny: the
+   number leads, the chip follows. Anything bigger becomes noise by Thursday. */
+.hero-act {
+  transition:
+    border-color 120ms var(--ease),
+    transform 160ms var(--ease),
+    background-color 120ms var(--ease);
+}
+.hero-act .hero-act-n {
+  display: inline-block;
+  transition: transform 160ms var(--ease);
+}
+.hero-act:hover:not(:disabled) .hero-act-n,
+.hero-act:focus-visible .hero-act-n {
+  transform: scale(1.14);
+}
+.hero-act:hover:not(:disabled) {
+  background: var(--panel-2);
+}
+.hero-act:active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
+}
+
+/* ── the cue orb, breathing ─────────────────────────────────────────────────
+   The one action on the page gets a slow halo so the eye finds it without
+   anything jumping. 5s and 1.5% — deliberately below the threshold where a
+   loop becomes something you notice twice. */
+.hero-next-cue .cue-orb {
+  animation: orb-breathe 5s var(--ease) infinite;
+}
+@keyframes orb-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--crimson-bright) 40%, transparent);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 7px color-mix(in srgb, var(--crimson-bright) 0%, transparent);
+    transform: scale(1.015);
+  }
+}
+
+/* ── scroll-driven: the map and the data tracks rise as they enter ──────────
+   A view-progress timeline, so the motion is tied 1:1 to the scroll rather
+   than fired once by a timer. No JS, no observer, no scroll listener — and it
+   simply doesn't apply on engines that lack it, leaving the finished state. */
+/* Nothing here carries `data-reveal`: a block gets one owner, never two. The
+   mount cascade takes what is already on screen; the scroll timeline takes
+   what you have to travel to. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .map-head,
+    .data-tracks {
+      animation: rise-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 78%;
+    }
+    .graph-fit {
+      animation: settle-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 45%;
+    }
+  }
+}
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes settle-in {
+  from {
+    opacity: 0.35;
+    transform: scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── the map nodes, under a pointer ─────────────────────────────────────── */
+.graph-node .graph-node-label {
+  display: block;
+  transition: transform 160ms var(--ease);
+}
+.graph-node:hover .graph-node-label,
+.graph-node:focus-visible .graph-node-label {
+  transform: translateY(-1px);
+}
+.graph-node:active {
+  transform: translateY(-1px) scale(0.985);
+}
+
+/* ── one switch turns the whole thing off ───────────────────────────────────
+   Everything above is either a loop or a pointer response, which is exactly
+   what reduced motion exists to stop. The finished state is always the state
+   these rules resolve to, so removing them leaves a correct page. */
+@media (prefers-reduced-motion: reduce) {
+  .hero::before,
+  .hero::after,
+  .graph-edges path.live,
+  .hero-bar-fill::after,
+  .hero-next-cue .cue-orb {
+    animation: none;
+  }
+  .hero-next,
+  .hero-act,
+  .hero-act .hero-act-n,
+  .graph-node .graph-node-label {
+    transition: none;
+    transform: none;
+  }
+  .hero-next::after {
+    display: none;
+  }
+  .hero-bar-fill::after {
+    display: none;
+  }
 }

@@ -52,3 +52,60 @@ export const GRAPH_EDGES = [
 // Categories that live OFF the algorithm map — the data tracks and the
 // imported-questions catch-all. Used to keep the graph/roadmap tests honest.
 export const OFF_MAP_CATEGORIES = ['pandas', 'sql', 'other'];
+
+// The chain of edges from the top of the map down to `key` — the route you
+// actually took to arrive where you are. The home page animates a travelling
+// current along exactly these edges, so "you are here" is legible from the
+// shape of the map before you read a single label.
+//
+// Shortest route wins when a topic has two parents (trees is reachable via both
+// linked-list and binary-search): one lit path reads as a route, two read as a
+// diagram. Returns a Set of "from>to" keys — cheap to test an edge against
+// while rendering. Unknown keys and cycles both yield an empty set.
+export function pathEdgesTo(edges, key) {
+  const live = new Set();
+  if (!key) return live;
+  const parents = new Map(); // node -> the edge that first reached it
+  const roots = new Set(edges.map(([from]) => from));
+  for (const [, to] of edges) roots.delete(to);
+  if (!roots.size) return live;
+
+  // BFS down from the roots, so the first edge to reach a node is on a
+  // shortest route to it.
+  const queue = [...roots];
+  const seen = new Set(queue);
+  while (queue.length) {
+    const node = queue.shift();
+    if (node === key) break;
+    for (const [from, to] of edges) {
+      if (from !== node || seen.has(to)) continue;
+      seen.add(to);
+      parents.set(to, [from, to]);
+      queue.push(to);
+    }
+  }
+  if (!seen.has(key)) return live;
+
+  for (let at = key; parents.has(at); ) {
+    const [from, to] = parents.get(at);
+    live.add(`${from}>${to}`);
+    at = from;
+  }
+  return live;
+}
+
+// What the home map should actually light up for the topic you're on.
+//
+// Normally that's the route down to you. But at the very top of the map there
+// IS no route in — a brand-new learner standing on warm-ups would see a dead
+// map, which is exactly the person who most needs it to point somewhere. So in
+// that one case it lights the way OUT instead: where this topic leads next.
+export function liveRouteFor(edges, key) {
+  const toHere = pathEdgesTo(edges, key);
+  if (toHere.size || !key) return toHere;
+  const onward = new Set();
+  for (const [from, to] of edges) {
+    if (from === key) onward.add(`${from}>${to}`);
+  }
+  return onward;
+}
