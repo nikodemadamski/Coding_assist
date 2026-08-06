@@ -82,7 +82,7 @@ final state — `ease:'linear'`, duration 0); it also exports `stagger`, `stopAn
 — kill in-flight tweens so overlapping animations don't fight) and `useTimeline` (createTimeline,
 reduced-motion aware — call-return sequences args-in→body→return on it). `presets.js` is the
 shared vocabulary widgets compose with — a single shared `spring()` gives natural settling
-physics; presets `slideTo/glideY/pulse/fadeSwap/popIn/shade/popOut/enter/scramble` (enter =
+physics; presets `slideTo/glideY/pulse/fadeSwap/popIn/shade/popOut/enter/reveal/scramble` (enter =
 staggered spring group entrance; scramble = scrambleText reveal). v4 note: `ease` not `easing`,
 ease names drop the prefix (`outCubic`, `inOutQuad`, `outBack`), transforms use `x`/`y`.
 Widgets in `src/components/visual/` (ListCells/VarBoxes/LoopTape/DictLookup/StackTower/
@@ -91,6 +91,14 @@ VisualPlayer tap-through host) speak presets only. SVG widgets (tree/graph) puls
 circle, not the positioned group, so scale never fights the translate.
 Widgets whose text/DOM anime mutates are keyed per beat (`key={beatIndex}`) so React
 reconciliation never fights the animation.
+
+`useReveal.js` is the app-level entrance choreography: a view calls `useReveal(key)` for a ref
+on its root, tags its blocks `data-reveal`, and every tagged block cascades in (opacity+rise,
+`presets.reveal`). It runs in a **layout** effect so anime sets opacity 0 before paint (no
+flash) and the CSS baseline stays the finished state (never blank if the effect can't run);
+the stagger step shrinks with group size so long lists finish inside ~620ms. Used by home
+(RoadmapGraph), Stats, Patterns, Learn and Browse — NOT ProblemView (the editor must not
+move). Smoke's `checkRevealSettled` asserts nothing is left transparent.
 
 ## State (src/state/) — pure modules, all unit-tested
 
@@ -144,6 +152,14 @@ both themes must pass AA). Display serif is **h1/h2 only**; h3/h4 are sans.
 
 Bars/meters animate `transform: scaleX/scaleY(var(--fill))` with the JSX passing
 `style={{ '--fill': 0..1 }}` — never an animated width.
+
+Shared page furniture: `.page-head` (kicker + one loud title + one-line lede) opens every
+full-page view; `.cue-orb` nests a primary action's arrow in its own disc (the one thing
+that moves on hover); `ReadinessRing.jsx` draws the readiness score as a dial (arc sweeps
+on mount, final offset also inline so it's right without JS). Stats lays out on `.bento`
+— a 12-col grid whose cells run 7/5 · 5/7 · 5/7 · 12 · 7/5 and collapse to full width
+under 1000px; Patterns is a two-up grid whose open card spans the row. Deliberately
+asymmetric: smoke asserts the bento cells do NOT all share one width.
 
 **Gate:** `CI=1 npx impeccable@3.5.0 detect src/` and `… detect http://localhost:4200
 [--viewport 390x844]` must both come back empty (it prints nothing when clean). It

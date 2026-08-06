@@ -50,6 +50,22 @@ const browser = await chromium.launch(
   process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}
 );
 
+// Every view that opts into the entrance cascade tags its blocks with
+// `data-reveal` and animates them from opacity 0. If a cascade ever failed to
+// run (or ran against a detached node), the page would render *blank* — the one
+// failure mode this motion system can cause. So: after any view settles, no
+// tagged block may still be transparent.
+async function checkRevealSettled(page, where) {
+  await page.waitForTimeout(1200);
+  const bad = await page.evaluate(() =>
+    [...document.querySelectorAll('[data-reveal]')].filter(
+      (el) => Number(getComputedStyle(el).opacity) < 0.99
+    ).length
+  );
+  const n = await page.locator('[data-reveal]').count();
+  check(n > 0 && bad === 0, `${where}: all ${n} entrance blocks settle fully visible (${bad} stuck)`);
+}
+
 async function setEditor(page, code) {
   await page.click('.cm-content');
   await page.keyboard.press('ControlOrMeta+a');
@@ -152,8 +168,14 @@ try {
   await page.locator('.track-map-head .btn', { hasText: 'Back to the map' }).click();
   check((await page.locator('.graph-node').count()) >= 15, 'back returns to the algorithm map');
 
+  await checkRevealSettled(page, 'Home');
+
   // guided next step: what's next AND why it's worth doing
   check(await page.locator('.next-step-card').isVisible(), 'a guided "your next step" card is shown');
+  check(
+    (await page.locator('.next-step-cue .cue-orb').count()) === 1,
+    'the hero call-to-action nests its arrow in its own disc'
+  );
   check(
     (await page.locator('.next-step-why').innerText()).length > 20,
     'the next-step card explains why the question matters'
@@ -674,11 +696,21 @@ try {
     'the pattern shows recognition cues'
   );
 
+  // the reference is a two-up grid, and the card you open claims the whole row
+  // so its template never has to wrap into half a gutter
+  const [closedW, openW] = await page.evaluate(() => {
+    const open = document.querySelector('.pattern-card.open');
+    const closed = document.querySelector('.pattern-card:not(.open)');
+    return [closed?.getBoundingClientRect().width ?? 0, open?.getBoundingClientRect().width ?? 0];
+  });
+  check(openW > closedW * 1.5, `the open pattern card spans the full row (${Math.round(closedW)} → ${Math.round(openW)}px)`);
+
   // data-track template sections: pandas and SQL cards live alongside algorithms
   check(
     (await page.locator('.pattern-section-head').allInnerTexts()).join(' ').includes('SQL'),
     'the guide has a SQL section'
   );
+  await checkRevealSettled(page, 'Patterns');
   await page.locator('.pattern-card-head', { hasText: 'Window functions' }).click();
   check(
     (await page.locator('.pattern-card.open .pattern-template').innerText()).includes('OVER'),
@@ -966,7 +998,7 @@ try {
   await openLibrary(page, 'Stats');
   // readiness card: score, four dimensions, pace vs target, advice
   check(await page.locator('.ready-card').isVisible(), 'Stats leads with the interview-readiness card');
-  const readyScore = Number(await page.locator('.ready-num').innerText());
+  const readyScore = Number(await page.locator('.ready-card .ready-ring-num').innerText());
   check(readyScore > 0 && readyScore < 100, `readiness score is a real 0-100 number (${readyScore})`);
   check((await page.locator('.ready-part').count()) >= 4, 'readiness breaks into its scored dimensions');
   check(
@@ -974,6 +1006,22 @@ try {
     'pace chip compares your median to the target time'
   );
   check((await page.locator('.ready-card .ready-advice').innerText()).includes('Biggest gap'), 'the card says what to fix first');
+  check(
+    (await page.locator('.ready-card .ready-ring-arc').count()) === 1,
+    'the readiness score is drawn as a dial, not a line of text'
+  );
+  // the bento is deliberately asymmetric: cells must NOT all be the same width
+  const bentoWidths = await page.evaluate(() =>
+    [...document.querySelectorAll('.bento > .bento-cell')].map((el) =>
+      Math.round(el.getBoundingClientRect().width)
+    )
+  );
+  check(bentoWidths.length >= 8, `Stats lays out as a bento of cells (${bentoWidths.length})`);
+  check(
+    new Set(bentoWidths).size >= 3,
+    `bento cells carry different weights rather than a uniform grid (${new Set(bentoWidths).size} widths)`
+  );
+  await checkRevealSettled(page, 'Stats');
 
   check((await page.locator('.fc-day').count()) === 7, 'review forecast shows the next 7 days');
   const fcToday = await page.locator('.fc-day').first().innerText();
@@ -1019,7 +1067,11 @@ try {
   check(await page.locator('.today-strip').isVisible(), 'home shows a Today pulse strip');
   const pulseText = await page.locator('.today-strip').innerText();
   check(/[1-9]\d* solved/.test(pulseText), `pulse counts today's solves (${pulseText.match(/\d+ solved/)?.[0]})`);
-  check(/Readiness \d+\/100/.test(pulseText.replace(/\s+/g, ' ')), 'pulse carries the readiness score');
+  const readyDial = (await page.locator('.today-ready').innerText()).replace(/\s+/g, ' ');
+  check(
+    /^\d+ Interview readiness/.test(readyDial),
+    `home carries the readiness dial with its score (${readyDial.slice(0, 40)})`
+  );
   await page.locator('.today-ready').click();
   check(await page.locator('.ready-card').isVisible(), 'the readiness chip jumps to the Stats breakdown');
   await page.locator('.header-logo').click();

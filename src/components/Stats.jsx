@@ -1,4 +1,6 @@
 import { useMemo } from 'react';
+import { useReveal } from '../anim/useReveal.js';
+import ReadinessRing from './ReadinessRing.jsx';
 import {
   beltFor,
   currentStreak,
@@ -72,12 +74,10 @@ const READY_PART_LABEL = {
 
 function ReadinessCard({ ready }) {
   return (
-    <section className="ready-card">
-      <div className="ready-left">
-        <div className="ready-score" role="img" aria-label={`Interview readiness ${ready.score} out of 100`}>
-          <span className="ready-num">{ready.score}</span>
-          <span className="ready-of">/100</span>
-        </div>
+    <section className="ready-card bento-cell b-ready" data-reveal>
+      <div className="ready-left" role="img" aria-label={`Interview readiness ${ready.score} out of 100`}>
+        <span className="bento-kicker">Interview readiness</span>
+        <ReadinessRing score={ready.score} size={168} label="/100" />
         <div className="ready-level">{ready.level}</div>
       </div>
       <div className="ready-parts">
@@ -124,7 +124,7 @@ const TRACK_LABEL = { python: 'python', pandas: 'pandas', sql: 'SQL' };
 // track, weakest highlighted — so a lopsided preparation is visible at a glance.
 function TrackFitnessCard({ fit }) {
   return (
-    <section className="track-fit">
+    <section className="track-fit bento-cell b-tracks" data-reveal>
       <h3>Fitness by track</h3>
       <div className="ready-parts">
         {fit.tracks.map((t) => (
@@ -224,13 +224,20 @@ export default function Stats({ questions, progress, backupInfo = null, onBackup
   }, [questions, progress]);
 
   const pct = total ? Math.round((solvedCount / total) * 100) : 0;
+  const revealRef = useReveal('stats');
 
   return (
-    <div className="stats">
-      <h1>Training record</h1>
+    <div className="stats stats-page" ref={revealRef}>
+      <header className="page-head" data-reveal>
+        <span className="page-kicker">Your record</span>
+        <h1>Training record</h1>
+        <p className="page-lede">
+          Everything the dojo knows about how ready you are — and the one thing worth fixing next.
+        </p>
+      </header>
 
       {backupInfo?.nudge && onBackupNow && (
-        <div className="backup-nudge" role="status">
+        <div className="backup-nudge" role="status" data-reveal>
           <span>
             {solvedCount} solves live only in this browser
             {backupInfo.daysSince != null
@@ -244,21 +251,22 @@ export default function Stats({ questions, progress, backupInfo = null, onBackup
         </div>
       )}
 
-      {/* Am I ready? — the number the whole app exists to move */}
-      <ReadinessCard ready={ready} />
+      {/* A bento, not a stack. Cells carry their own weight (7/5 · 5/7 · 12),
+          so the eye lands on readiness first and the page reads as a dashboard
+          instead of a scroll of identical panels. */}
+      <div className="bento">
+        {/* Am I ready? — the number the whole app exists to move */}
+        <ReadinessCard ready={ready} />
 
-      {/* The same idea sliced by track: lopsided prep shows up here */}
-      <TrackFitnessCard fit={trackFit} />
-
-      {/* Journey hero — the whole path at a glance */}
-      <section className="journey-card">
-        <div className="journey-top">
+        {/* Journey — the whole path at a glance, belt and mastery mix */}
+        <section className="journey-card bento-cell b-journey" data-reveal>
+          <span className="bento-kicker">The path</span>
           <div className="journey-headline">
             <span className="journey-count">
               {solvedCount}
               <span className="journey-of"> / {total}</span>
             </span>
-            <span className="journey-sub">problems solved · {pct}% of the path</span>
+            <span className="journey-sub">solved · {pct}% of the path</span>
           </div>
           <div className="journey-belt">
             <span className="belt-name" style={{ color: belt.color }}>
@@ -271,120 +279,136 @@ export default function Stats({ questions, progress, backupInfo = null, onBackup
               {belt.next ? `${belt.next.threshold - solvedCount} to ${belt.next.name}` : 'max rank'}
             </span>
           </div>
-        </div>
 
-        <JourneyBar mastery={mastery} total={total} />
-        <div className="journey-legend">
-          {MASTERY_ORDER.map((k) => (
-            <span className="journey-legend-item" key={k}>
-              <span className={`journey-dot seg-${k}`} aria-hidden="true" />
-              {mastery[k]} {MASTERY_LABEL[k]}
-            </span>
-          ))}
-        </div>
-      </section>
-
-      <div className="stat-grid">
-        <div className="stat-tile">
-          <div className="v">{streak}</div>
-          <div className="l">day streak</div>
-        </div>
-        <div className="stat-tile">
-          <div className="v">{mastery.mastered}</div>
-          <div className="l">mastered</div>
-        </div>
-        <div className="stat-tile">
-          <div className="v">{dueCount}</div>
-          <div className="l">reviews due</div>
-        </div>
-        <div className="stat-tile">
-          <div className="v">{mockStats.count}</div>
-          <div className="l">mock interviews</div>
-        </div>
-        <div className="stat-tile">
-          <div className="v">
-            {(progress.bigo?.right || 0) + (progress.bigo?.wrong || 0) > 0
-              ? `${Math.round(
-                  (100 * (progress.bigo?.right || 0)) /
-                    ((progress.bigo?.right || 0) + (progress.bigo?.wrong || 0))
-                )}%`
-              : '—'}
-          </div>
-          <div className="l">Big-O accuracy</div>
-        </div>
-      </div>
-
-      <h2 style={{ margin: '22px 0 8px' }}>
-        Review forecast <span className="count">what&apos;s landing this week</span>
-      </h2>
-      <Forecast forecast={forecast} />
-
-      <h2 style={{ margin: '22px 0 8px' }}>Attendance</h2>
-      <Calendar progress={progress} />
-
-      <h2 style={{ margin: '22px 0 8px' }}>Progress by topic</h2>
-      <ProgressRows rows={byTopic} />
-
-      <h2 style={{ margin: '22px 0 8px' }}>
-        Mock interviews <span className="count">timed, no hints — the real test</span>
-      </h2>
-      {mockStats.count === 0 ? (
-        <p style={{ color: 'var(--text-dim)' }}>
-          No mock interviews yet. Run one from the home screen — it&apos;s the closest this app
-          gets to the real thing, and the fastest way to find out if you&apos;re ready.
-        </p>
-      ) : (
-        <>
-          <div className="stat-grid">
-            <div className="stat-tile">
-              <div className="v">{mockStats.count}</div>
-              <div className="l">interviews taken</div>
-            </div>
-            <div className="stat-tile">
-              <div className="v">{Math.round(mockStats.passRate * 100)}%</div>
-              <div className="l">solved in time</div>
-            </div>
-            <div className="stat-tile">
-              <div className="v">{mockStats.cleanPasses}</div>
-              <div className="l">clean passes</div>
-            </div>
-            <div className="stat-tile">
-              <div className="v">{mockStats.avgTimeMs ? formatDuration(mockStats.avgTimeMs) : '—'}</div>
-              <div className="l">avg time used</div>
-            </div>
-          </div>
-          <div className="mock-log">
-            {recentMocks.map((m, i) => (
-              <div className="mock-log-row" key={i}>
-                <span className={`mock-log-dot ${m.passed ? 'pass' : 'fail'}`} aria-hidden="true" />
-                <span className="mock-log-title">{m.title}</span>
-                <span className={`tag diff-${m.difficulty}`}>{m.difficulty}</span>
-                <span className="mock-log-meta">
-                  {m.passed ? (m.ranOutOfTime ? 'solved (over time)' : 'solved') : m.ranOutOfTime ? 'time up' : 'ended'}
-                  {' · '}
-                  {formatDuration(m.timeMs)}
-                </span>
-              </div>
+          <JourneyBar mastery={mastery} total={total} />
+          <div className="journey-legend">
+            {MASTERY_ORDER.map((k) => (
+              <span className="journey-legend-item" key={k}>
+                <span className={`journey-dot seg-${k}`} aria-hidden="true" />
+                {mastery[k]} {MASTERY_LABEL[k]}
+              </span>
             ))}
           </div>
-        </>
-      )}
+        </section>
 
-      <h2 style={{ margin: '22px 0 8px' }}>
-        Where you slip <span className="count">{totalMistakes} wrong submits total</span>
-      </h2>
-      {troublesome.length === 0 ? (
-        <p style={{ color: 'var(--text-dim)' }}>No mistakes logged yet — they&apos;ll show here.</p>
-      ) : (
-        <div className="slip-list">
-          {troublesome.map(({ q, mistakes }) => (
-            <div className="slip-row" key={q.id}>
-              <span className="slip-title">{q.title}</span>
-              <span className="slip-n">✗ {mistakes}</span>
+        {/* Five numbers worth glancing at, in a tight block rather than a row
+            of look-alike cards spanning the page. */}
+        <section className="bento-cell b-metrics" data-reveal>
+          <span className="bento-kicker">At a glance</span>
+          <div className="stat-grid">
+            <div className="stat-tile">
+              <div className="v">{streak}</div>
+              <div className="l">day streak</div>
             </div>
-          ))}
-        </div>
-      )}
+            <div className="stat-tile">
+              <div className="v">{mastery.mastered}</div>
+              <div className="l">mastered</div>
+            </div>
+            <div className="stat-tile">
+              <div className="v">{dueCount}</div>
+              <div className="l">reviews due</div>
+            </div>
+            <div className="stat-tile">
+              <div className="v">{mockStats.count}</div>
+              <div className="l">mock interviews</div>
+            </div>
+            <div className="stat-tile">
+              <div className="v">
+                {(progress.bigo?.right || 0) + (progress.bigo?.wrong || 0) > 0
+                  ? `${Math.round(
+                      (100 * (progress.bigo?.right || 0)) /
+                        ((progress.bigo?.right || 0) + (progress.bigo?.wrong || 0))
+                    )}%`
+                  : '—'}
+              </div>
+              <div className="l">Big-O accuracy</div>
+            </div>
+          </div>
+        </section>
+
+        <section className="bento-cell b-forecast" data-reveal>
+          <span className="bento-kicker">Review forecast</span>
+          <h3 className="bento-title">What&apos;s landing this week</h3>
+          <Forecast forecast={forecast} />
+        </section>
+
+        {/* The same readiness idea sliced by track: lopsided prep shows up here */}
+        <TrackFitnessCard fit={trackFit} />
+
+        <section className="bento-cell b-topics" data-reveal>
+          <span className="bento-kicker">Coverage</span>
+          <h3 className="bento-title">Progress by topic</h3>
+          <ProgressRows rows={byTopic} />
+        </section>
+
+        <section className="bento-cell b-calendar" data-reveal>
+          <span className="bento-kicker">Attendance</span>
+          <Calendar progress={progress} />
+        </section>
+
+        <section className="bento-cell b-mocks" data-reveal>
+          <span className="bento-kicker">Mock interviews</span>
+          <h3 className="bento-title">Timed, no hints — the real test</h3>
+          {mockStats.count === 0 ? (
+            <p className="bento-empty">
+              None yet. Run one from the home screen — it&apos;s the closest this app gets to the
+              real thing, and the fastest way to find out if you&apos;re ready.
+            </p>
+          ) : (
+            <>
+              <div className="stat-grid">
+                <div className="stat-tile">
+                  <div className="v">{mockStats.count}</div>
+                  <div className="l">interviews taken</div>
+                </div>
+                <div className="stat-tile">
+                  <div className="v">{Math.round(mockStats.passRate * 100)}%</div>
+                  <div className="l">solved in time</div>
+                </div>
+                <div className="stat-tile">
+                  <div className="v">{mockStats.cleanPasses}</div>
+                  <div className="l">clean passes</div>
+                </div>
+                <div className="stat-tile">
+                  <div className="v">{mockStats.avgTimeMs ? formatDuration(mockStats.avgTimeMs) : '—'}</div>
+                  <div className="l">avg time used</div>
+                </div>
+              </div>
+              <div className="mock-log">
+                {recentMocks.map((m, i) => (
+                  <div className="mock-log-row" key={i}>
+                    <span className={`mock-log-dot ${m.passed ? 'pass' : 'fail'}`} aria-hidden="true" />
+                    <span className="mock-log-title">{m.title}</span>
+                    <span className={`tag diff-${m.difficulty}`}>{m.difficulty}</span>
+                    <span className="mock-log-meta">
+                      {m.passed ? (m.ranOutOfTime ? 'solved (over time)' : 'solved') : m.ranOutOfTime ? 'time up' : 'ended'}
+                      {' · '}
+                      {formatDuration(m.timeMs)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </section>
+
+        <section className="bento-cell b-slips" data-reveal>
+          <span className="bento-kicker">Where you slip</span>
+          <h3 className="bento-title">{totalMistakes} wrong submits total</h3>
+          {troublesome.length === 0 ? (
+            <p className="bento-empty">No mistakes logged yet — they&apos;ll show here.</p>
+          ) : (
+            <div className="slip-list">
+              {troublesome.map(({ q, mistakes }) => (
+                <div className="slip-row" key={q.id}>
+                  <span className="slip-title">{q.title}</span>
+                  <span className="slip-n">✗ {mistakes}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

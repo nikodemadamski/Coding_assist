@@ -8,6 +8,7 @@ import {
 } from '../state/progress.js';
 import { todaysMisses, isGoalMetToday } from '../state/activity.js';
 import { ROADMAP, categoryKeyOf, categoryOf, byPathOrder, pathStep, nextOnPath } from '../data/roadmap.js';
+import { useReveal } from '../anim/useReveal.js';
 
 const TRACKS = ['all', 'python', 'pandas', 'sql'];
 const DIFFICULTIES = ['all', 'easy', 'medium', 'hard'];
@@ -101,11 +102,13 @@ export default function Picker({
 
   const nothingDue = counts.due === 0;
 
+  const revealRef = useReveal('browse');
+
   return (
-    <div className="picker">
+    <div className="picker" ref={revealRef}>
       {/* ---- Welcome (first visit, nothing solved yet) ---- */}
       {brandNew && (
-        <section className="welcome-card">
+        <section className="welcome-card" data-reveal>
           <h2>Welcome to the dojo</h2>
           <p>
             This is a <strong>{questions.length}-step path</strong> from &ldquo;I barely know
@@ -118,7 +121,7 @@ export default function Picker({
       )}
 
       {/* ---- Today's Practice ---- */}
-      <section className="today-card">
+      <section className="today-card" data-reveal>
         <div className="today-head">
           <h2>Today&apos;s practice</h2>
           <span className="today-progress">
@@ -189,7 +192,7 @@ export default function Picker({
       </section>
 
       {/* ---- browse ---- */}
-      <div className="filters" role="group" aria-label="Filters">
+      <div className="filters" role="group" aria-label="Filters" data-reveal>
         {TRACKS.map((t) => (
           <button
             key={t}
@@ -222,7 +225,7 @@ export default function Picker({
       </h2>
 
       {groups.map(({ cat, qs }) => (
-        <section key={cat.key} id={`cat-${cat.key}`} className="pattern-group">
+        <section key={cat.key} id={`cat-${cat.key}`} className="pattern-group" data-reveal>
           <h3 className="pattern-head">
             <span>
               {cat.label}

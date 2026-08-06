@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFocusTrap } from './useFocusTrap.js';
+import { useReveal } from '../anim/useReveal.js';
+import ReadinessRing from './ReadinessRing.jsx';
 import { ROADMAP, categoryKeyOf, byPathOrder, pathStep, nextOnPath } from '../data/roadmap.js';
 import {
   isSolved,
@@ -149,10 +151,12 @@ export default function RoadmapGraph({
   const openList = openCat ? (byCat.get(openCat) ?? []) : [];
   const openStats = openCat ? (stats[openCat] ?? { total: 0, solved: 0 }) : null;
 
+  const revealRef = useReveal('home');
+
   return (
-    <div className="stats roadmap-home">
+    <div className="stats roadmap-home" ref={revealRef}>
       {brandNew && (
-        <section className="welcome-card">
+        <section className="welcome-card" data-reveal>
           <h2>Welcome to the dojo</h2>
           <p>
             This map is your whole journey — <strong>{questions.length} questions</strong> from
@@ -175,7 +179,7 @@ export default function RoadmapGraph({
       <div className="home-top">
       {/* Guided next step: what to do next, and why it's worth doing */}
       {nextUp && (
-        <button className="next-step-card" onClick={() => onOpenQuestion(nextUp.id)}>
+        <button className="next-step-card" onClick={() => onOpenQuestion(nextUp.id)} data-reveal>
           <span className="next-step-head">
             <span className="next-step-kicker">Your next step</span>
             <span className="next-step-title">
@@ -184,10 +188,22 @@ export default function RoadmapGraph({
             </span>
           </span>
           {nextUp.why && <span className="next-step-why">{nextUp.why}</span>}
-          <span className="next-step-cue">Open →</span>
+          <span className="next-step-foot">
+            <span className={`tag diff-${nextUp.difficulty}`}>{nextUp.difficulty}</span>
+            <span className="next-step-pattern">{nextUp.pattern}</span>
+            {/* The arrow lives in its own disc rather than sitting naked beside
+                the word — it's the one thing that moves on hover, which is what
+                makes the whole card read as pressable. */}
+            <span className="next-step-cue">
+              Open
+              <span className="cue-orb" aria-hidden="true">
+                →
+              </span>
+            </span>
+          </span>
         </button>
       )}
-        <div className="home-rail">
+        <div className="home-rail" data-reveal>
       {/* Learn Python entry — above the daily strip for beginners. Self-hides
           once the whole curriculum is done. */}
       {onLearn && lessonInfo && lessonInfo.done < lessonInfo.total && brandNew && (
@@ -259,16 +275,28 @@ export default function RoadmapGraph({
           <span className={`today-chip ${pulse.goalMet ? 'good' : ''}`}>
             {pulse.goalMet ? '✓ daily goal met' : 'goal: solve 1 + clear reviews'}
           </span>
-          {onStats && (
-            <button
-              className="today-ready"
-              onClick={onStats}
-              title="Interview readiness — coverage, retention, mocks, pace. Click for the breakdown."
-            >
-              Readiness <strong>{ready.score}</strong>/100 →
-            </button>
-          )}
         </div>
+      )}
+
+      {/* Readiness gets its own object rather than a chip lost in the row above:
+          it's the one number the whole app exists to move, and the dial reads
+          from across the room. */}
+      {!brandNew && onStats && (
+        <button
+          className="today-ready"
+          onClick={onStats}
+          title="Interview readiness — coverage, retention, mocks, pace. Click for the breakdown."
+          aria-label={`Interview readiness ${ready.score} out of 100 — see the breakdown`}
+        >
+          <ReadinessRing score={ready.score} size={64} />
+          <span className="today-ready-text">
+            <span className="today-ready-label">Interview readiness</span>
+            <span className="today-ready-cue">{ready.level} · see the breakdown</span>
+          </span>
+          <span className="cue-orb" aria-hidden="true">
+            →
+          </span>
+        </button>
       )}
 
         </div>
@@ -276,7 +304,7 @@ export default function RoadmapGraph({
 
       {/* The questions that keep biting — one tap from the front door */}
       {weak.length > 0 && (
-        <div className="weak-row">
+        <div className="weak-row" data-reveal>
           <span className="weak-label">Sharpen:</span>
           {weak.map(({ q, mistakes }) => (
             <button
@@ -291,12 +319,12 @@ export default function RoadmapGraph({
         </div>
       )}
 
-      <p className="map-hint">
+      <p className="map-hint" data-reveal>
         Learn top to bottom — arrows mean &ldquo;learn this pattern first.&rdquo; Click a topic
         to open its questions.
       </p>
 
-      <div className="graph-fit" ref={fitRef} style={{ height: GRAPH_H * scale }}>
+      <div className="graph-fit" data-reveal ref={fitRef} style={{ height: GRAPH_H * scale }}>
         <div
           className="graph-canvas"
           style={{
@@ -369,7 +397,7 @@ export default function RoadmapGraph({
       </div>
 
       {/* Data tracks — separate entities, not woven into the algorithm map */}
-      <div className="data-tracks">
+      <div className="data-tracks" data-reveal>
         <span className="data-tracks-label">Data tracks — their own map, off the algorithm path</span>
         <div className="data-tracks-row">
           {[

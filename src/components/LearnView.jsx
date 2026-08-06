@@ -1,5 +1,6 @@
 import { LESSONS, LESSON_CHAPTERS, nextLesson, prereqsMet, isLessonComplete, lessonCounts } from '../data/lessons.js';
 import { dueLessonIds } from '../state/lessonProgress.js';
+import { useReveal } from '../anim/useReveal.js';
 
 // "Learn Python from zero" — the curriculum home. A quiet chapter list, not a
 // second graph: done lessons get a check, the next one an arrow, and lessons
@@ -16,16 +17,21 @@ export default function LearnView({ progress, onOpenLesson, onStartReview, onBac
       .filter(Boolean)
       .join(', ');
 
-  return (
-    <div className="stats learn">
-      <h1>Learn Python — from zero</h1>
-      <p className="learn-intro">
-        Read a little, do a lot. Each lesson is a few minutes: one idea, then real exercises
-        the engine checks. Finished lessons come back as quick skill checks, spaced out so
-        they stick — then the path is your playground.
-      </p>
+  const revealRef = useReveal('learn');
 
-      <div className="learn-status">
+  return (
+    <div className="stats learn" ref={revealRef}>
+      <header className="page-head" data-reveal>
+        <span className="page-kicker">Course</span>
+        <h1>Learn Python — from zero</h1>
+        <p className="page-lede learn-intro">
+          Read a little, do a lot. Each lesson is a few minutes: one idea, then real exercises
+          the engine checks. Finished lessons come back as quick skill checks, spaced out so
+          they stick — then the path is your playground.
+        </p>
+      </header>
+
+      <div className="learn-status" data-reveal>
         <span className="learn-count">
           {done}/{total} lessons
         </span>
@@ -46,7 +52,7 @@ export default function LearnView({ progress, onOpenLesson, onStartReview, onBac
         const lessons = LESSONS.filter((l) => l.chapter === ch.key);
         if (lessons.length === 0) {
           return (
-            <section className="learn-chapter" key={ch.key}>
+            <section className="learn-chapter" key={ch.key} data-reveal>
               <h2 className="learn-chapter-head">
                 {chIdx + 1} · {ch.label}
               </h2>
@@ -55,7 +61,7 @@ export default function LearnView({ progress, onOpenLesson, onStartReview, onBac
           );
         }
         return (
-          <section className="learn-chapter" key={ch.key}>
+          <section className="learn-chapter" key={ch.key} data-reveal>
             <h2 className="learn-chapter-head">
               <span className="learn-chapter-n">{chIdx + 1}</span>
               {ch.label}

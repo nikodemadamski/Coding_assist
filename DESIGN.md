@@ -65,3 +65,34 @@ mild letterspacing, sentence case — never long runs of uppercase.
 - No coloured left-edge tabs. State is shown by the element's own border colour,
   a small dot, or a label — not by a 3px stripe down one side.
 - Overlays (modal, popover, menu) may use shadow; page cards may not.
+
+## Layout
+
+Full-page views open with a **page head**: a micro kicker, one title at hero scale,
+and a single line of lede. Same shape everywhere — that repetition is what makes
+separate screens read as one product.
+
+Grids are **deliberately asymmetric**. An equal-width row of three or four cards is
+the default every generator reaches for, and it flattens hierarchy: everything looks
+equally important, so nothing is. Stats is a 12-column bento whose bands run
+7/5 · 5/7 · 5/7 · 12 · 7/5; Patterns is a two-up grid where the card you open claims
+the whole row. Below ~1000px the asymmetry collapses to a single column — it's a
+desktop luxury, not a phone one.
+
+Radius varies by depth: containers take the soft end of the scale (16), elements
+nested inside them take the tight end (8). Uniform radius on everything is the same
+tell as uniform column widths.
+
+## Motion
+
+Content **arrives**; it does not appear. Every page-level view cascades its blocks
+in on mount (opacity + an 18px rise, decelerating, staggered) via `useReveal` — the
+step shrinks as the group grows so a long list still finishes in about 620ms. The
+editor is the exception: nothing about a code surface may move under the cursor.
+
+The animation runs in a layout effect so the opening frame lands before paint, and
+the CSS baseline is always the *finished* state — a cascade that never runs leaves a
+correct page, never a blank one.
+
+Primary actions nest their arrow in its own disc (`.cue-orb`) and move only that
+disc on hover. One small, precise thing moving beats the whole card sliding.

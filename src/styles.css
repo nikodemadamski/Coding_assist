@@ -5993,3 +5993,446 @@ p,
     animation: none;
   }
 }
+
+/* ── page header ────────────────────────────────────────────────────────────
+   Every full-page view opens the same way: a small kicker, one loud title, and
+   a single line saying what the page is for. Repeating the shape across pages
+   is what makes the app feel like one product rather than a pile of screens. */
+.page-head {
+  margin: 0 0 var(--s-5);
+}
+.page-kicker,
+.bento-kicker {
+  display: block;
+  font-size: var(--t-micro);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-dim);
+}
+.page-head h1 {
+  margin: var(--s-2) 0 0;
+  font-size: clamp(30px, 4.4vw, 46px);
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.page-lede {
+  margin: var(--s-3) 0 0;
+  max-width: var(--measure);
+  color: var(--text-dim);
+  font-size: var(--t-lg);
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+/* ── the bento ──────────────────────────────────────────────────────────────
+   A 12-column grid whose cells deliberately do NOT all weigh the same: the
+   bands run 7/5 · 5/7 · 5/7 · 12 · 7/5, so the page has a reading rhythm and
+   readiness owns the top-left where the eye lands first. Below 900px every
+   cell drops to full width — asymmetry is a desktop luxury, not a phone one. */
+.bento {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--s-4);
+  align-items: start;
+}
+.bento-cell {
+  /* Softer on the container, tighter on everything nested inside it. */
+  border-radius: var(--r-lg);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: var(--s-5);
+  min-width: 0;
+  grid-column: span 12;
+}
+.b-ready {
+  grid-column: span 7;
+}
+.b-journey {
+  grid-column: span 5;
+}
+.b-metrics {
+  grid-column: span 5;
+}
+.b-forecast {
+  grid-column: span 7;
+}
+.b-tracks {
+  grid-column: span 5;
+}
+.b-topics {
+  grid-column: span 7;
+}
+.b-calendar {
+  grid-column: span 12;
+}
+.b-mocks {
+  grid-column: span 7;
+}
+.b-slips {
+  grid-column: span 5;
+}
+.bento-title {
+  margin: var(--s-2) 0 var(--s-4);
+  font-family: var(--font-display);
+  font-size: var(--t-xl);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+.bento-empty {
+  margin: var(--s-2) 0 0;
+  color: var(--text-dim);
+  font-size: var(--t-sm);
+  line-height: 1.55;
+  max-width: var(--measure);
+}
+@media (max-width: 1000px) {
+  .bento-cell {
+    grid-column: span 12 !important;
+  }
+}
+
+/* ── readiness ring ─────────────────────────────────────────────────────────
+   The score as a dial. The arc sweeps up from zero on arrival, so the number
+   reads as something you moved rather than something that was always there. */
+.ready-ring {
+  position: relative;
+  width: var(--ring-size);
+  height: var(--ring-size);
+  display: grid;
+  place-items: center;
+  --ring-tone: var(--gold);
+}
+.ready-ring.tone-strong {
+  --ring-tone: var(--jade);
+}
+.ready-ring.tone-early {
+  --ring-tone: var(--crimson-bright);
+}
+.ready-ring svg {
+  position: absolute;
+  inset: 0;
+}
+.ready-ring-track {
+  stroke: color-mix(in srgb, var(--text-dim) 22%, transparent);
+}
+.ready-ring-arc {
+  stroke: var(--ring-tone);
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--ring-tone) 32%, transparent));
+}
+.ready-ring-core {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  font-family: var(--font-display);
+  line-height: 1;
+}
+.ready-ring-num {
+  font-size: calc(var(--ring-size) * 0.31);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.ready-ring-label {
+  font-size: calc(var(--ring-size) * 0.11);
+  color: var(--text-dim);
+}
+
+/* ── readiness cell ─────────────────────────────────────────────────────── */
+.ready-card.bento-cell {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--s-6);
+  align-items: center;
+  margin: 0;
+  padding: var(--s-5);
+}
+.ready-card .ready-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+  text-align: center;
+}
+.ready-card .ready-level {
+  font-size: var(--t-sm);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .ready-card.bento-cell {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-5);
+    justify-items: center;
+  }
+  .ready-card .ready-parts {
+    width: 100%;
+  }
+}
+
+/* ── journey cell ───────────────────────────────────────────────────────── */
+.journey-card.bento-cell {
+  margin: 0;
+}
+.journey-card.bento-cell .journey-headline {
+  display: block;
+  margin: var(--s-3) 0 var(--s-4);
+}
+.journey-card.bento-cell .journey-count {
+  display: block;
+  font-size: clamp(38px, 5vw, 54px);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+.journey-card.bento-cell .journey-sub {
+  display: block;
+  margin-top: var(--s-2);
+}
+.journey-card.bento-cell .journey-belt {
+  margin-bottom: var(--s-4);
+}
+
+/* ── metrics block ──────────────────────────────────────────────────────── */
+.b-metrics .stat-grid {
+  grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+  margin: var(--s-3) 0 0;
+  gap: var(--s-2);
+}
+.b-metrics .stat-tile,
+.b-mocks .stat-tile {
+  background: var(--panel-2);
+  border-color: transparent;
+  border-radius: var(--r-sm);
+  padding: var(--s-3);
+}
+.b-mocks .stat-grid {
+  margin: 0 0 var(--s-4);
+}
+.b-forecast .forecast-row,
+.b-tracks .ready-parts,
+.b-topics .prog-rows {
+  margin-top: var(--s-2);
+}
+.b-slips .slip-list,
+.b-mocks .mock-log {
+  margin-top: 0;
+}
+.stats-page {
+  max-width: 1120px;
+}
+.track-fit.bento-cell {
+  margin: 0;
+}
+.track-fit.bento-cell h3 {
+  margin: 0 0 var(--s-3);
+}
+
+/* ── the cue orb ────────────────────────────────────────────────────────────
+   A nested disc for the arrow on a primary action. The arrow never sits naked
+   next to the label: giving it its own enclosure makes the whole control read
+   as a machined object, and gives hover one clear thing to move. */
+.cue-orb {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--r-full);
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  font-size: var(--t-sm);
+  line-height: 1;
+  flex: none;
+  transition:
+    transform var(--dur-1) var(--ease),
+    background var(--dur-1) var(--ease);
+}
+.btn .cue-orb {
+  margin-left: var(--s-2);
+  width: 22px;
+  height: 22px;
+}
+.btn:hover .cue-orb,
+.next-step-card:hover .cue-orb,
+.next-step-card:focus-visible .cue-orb {
+  transform: translate(3px, -1px) scale(1.06);
+  background: color-mix(in srgb, currentColor 26%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cue-orb {
+    transition: none;
+  }
+}
+
+/* ── home hero: the next step ───────────────────────────────────────────────
+   This is the one loud thing on the front door. Display type at hero scale, a
+   kicker above it, and the metadata + call to action pinned to the base line,
+   so the card answers "what now?" before you read a word of it. */
+.next-step-card .next-step-title {
+  font-size: clamp(24px, 3.2vw, 38px);
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.next-step-card .next-step-kicker {
+  letter-spacing: 0.16em;
+}
+.next-step-foot {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  margin-top: var(--s-4);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--line);
+}
+.next-step-pattern {
+  font-family: var(--font-code);
+  font-size: var(--t-tiny);
+  color: var(--text-dim);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.next-step-cue {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-left: auto;
+  font-weight: 600;
+  font-size: var(--t-sm);
+  color: var(--crimson-bright);
+}
+
+/* ── readiness chip on the front door ───────────────────────────────────── */
+.today-ready {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  margin: 0;
+  padding: var(--s-3);
+  border-radius: var(--r-lg);
+  background: var(--panel);
+  color: var(--text);
+  text-align: left;
+  font-size: var(--t-body);
+}
+.today-ready:hover,
+.today-ready:focus-visible {
+  border-color: color-mix(in srgb, var(--gold) 45%, var(--line));
+  color: var(--text);
+}
+.today-ready-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  line-height: 1.15;
+}
+.today-ready-label {
+  font-weight: 600;
+  font-size: var(--t-sm);
+  color: var(--text);
+}
+.today-ready-cue {
+  font-size: var(--t-micro);
+  color: var(--text-dim);
+}
+
+/* ── patterns: a two-up grid that opens to full width ───────────────────────
+   Sixteen identical full-width rows was a list pretending to be a reference.
+   Paired columns halve the scroll, and the card you open claims the whole row
+   so its template never wraps into a gutter. */
+.pattern-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-3);
+  max-width: 1060px;
+  align-items: start;
+}
+.pattern-card {
+  border-radius: var(--r-lg);
+}
+.pattern-card.open {
+  grid-column: 1 / -1;
+  box-shadow: var(--shadow-pop);
+}
+.pattern-card-head {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--s-1) var(--s-3);
+  padding: var(--s-4);
+}
+.pattern-card-name {
+  grid-column: 1;
+}
+.pattern-card-when {
+  grid-column: 1;
+  line-height: 1.45;
+}
+.pattern-card-meta {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+.pattern-card.open .pattern-card-head {
+  grid-template-columns: minmax(140px, auto) 1fr auto;
+  align-items: center;
+}
+.pattern-card.open .pattern-card-name,
+.pattern-card.open .pattern-card-when {
+  grid-column: auto;
+}
+.pattern-card.open .pattern-card-meta {
+  grid-column: auto;
+  grid-row: auto;
+}
+.patterns .pattern-section {
+  max-width: 1060px;
+}
+.patterns-head {
+  max-width: 1060px;
+}
+.patterns .patterns-quiz-btn {
+  margin-top: var(--s-4);
+}
+@media (max-width: 800px) {
+  .pattern-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* Belt inside the bento cell: name on the left, remaining on the right, and the
+   strip spanning the full width beneath them — the old right-aligned column was
+   built for a two-up header row that no longer exists. */
+.journey-card.bento-cell .journey-belt {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: var(--s-2) var(--s-3);
+}
+.journey-card.bento-cell .journey-belt .belt-name {
+  grid-column: 1;
+}
+.journey-card.bento-cell .journey-belt-next {
+  grid-column: 2;
+  text-align: right;
+}
+.journey-card.bento-cell .journey-belt .belt-strip {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  width: 100%;
+  height: 8px;
+}
+.today-ready .today-ready-text {
+  flex: 1;
+  min-width: 0;
+}
+.today-ready .cue-orb {
+  color: var(--gold);
+  flex: none;
+}

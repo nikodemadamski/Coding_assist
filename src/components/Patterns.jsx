@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useReveal } from '../anim/useReveal.js';
 import { PATTERN_GUIDE } from '../data/patternGuide.js';
 import { categoryKeyOf } from '../data/roadmap.js';
 import { isSolved } from '../state/progress.js';
@@ -30,22 +31,30 @@ export default function Patterns({ questions, progress, onOpenQuestion, onQuiz, 
     { label: 'SQL', cards: PATTERN_GUIDE.filter((p) => p.track === 'sql') },
   ];
 
+  const revealRef = useReveal('patterns');
+
   return (
-    <div className="stats patterns">
-      <h1>Patterns — the templates you must know</h1>
-      <p className="patterns-intro">
-        Interviews are pattern recognition under pressure. Learn to spot which of these a problem
-        is, and the code skeleton comes almost for free. Skim them, then drill the linked problems
-        until the shape is automatic.
-      </p>
-      {onQuiz && (
-        <button className="btn btn-primary patterns-quiz-btn" onClick={onQuiz}>
-          Quiz me — name the pattern
-        </button>
-      )}
+    <div className="stats patterns" ref={revealRef}>
+      <header className="page-head patterns-head" data-reveal>
+        <span className="page-kicker">Reference</span>
+        <h1>The templates you must know</h1>
+        <p className="page-lede patterns-intro">
+          Interviews are pattern recognition under pressure. Learn to spot which of these a
+          problem is, and the code skeleton comes almost for free. Skim them, then drill the
+          linked problems until the shape is automatic.
+        </p>
+        {onQuiz && (
+          <button className="btn btn-primary patterns-quiz-btn" onClick={onQuiz}>
+            Quiz me — name the pattern
+            <span className="cue-orb" aria-hidden="true">
+              →
+            </span>
+          </button>
+        )}
+      </header>
 
       {sections.map((section) => (
-      <div className="pattern-section" key={section.label}>
+      <div className="pattern-section" key={section.label} data-reveal>
         <h2 className="pattern-section-head">{section.label}</h2>
       <div className="pattern-cards">
         {section.cards.map((p) => {

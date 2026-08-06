@@ -30,6 +30,16 @@ export const presets = {
   // A staggered spring entrance for a whole group of cells at once — anime.js's
   // flagship move (delay: stagger). Fed an array/NodeList of targets on mount.
   enter: () => ({ scale: [0.6, 1], opacity: [0, 1], ease: settle, delay: stagger(45) }),
+  // A whole view arriving: each tagged block rises and fades in, one beat after
+  // the next. Deliberately NOT a spring — body copy that overshoots reads as
+  // jitter, so this is a heavy, single-direction settle (see useReveal).
+  reveal: (step = 45) => ({
+    opacity: [0, 1],
+    y: [18, 0],
+    duration: DUR.slow,
+    ease: 'outCubic',
+    delay: stagger(step),
+  }),
   // Reveal an element's text with a randomized character scramble (anime.js v4
   // scrambleText) — the element's textContent must already be the target string;
   // this plays the scramble→settle. Teaches "this expression produces this text".
