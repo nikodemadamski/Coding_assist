@@ -6826,3 +6826,484 @@ p,
     min-width: 62px;
   }
 }
+
+/* ── the lesson stage ───────────────────────────────────────────────────────
+   The learn player used to be a small card floating in a screen of empty dark:
+   a 160px exercise on a 900px page, with its buttons in a different place at
+   every step. It's now a stage that fills the viewport — header, one centred
+   thing to do, and a persistent action bar at the bottom that tints with the
+   outcome. Same shape for the read, the drills and the finish, so the surface
+   never reshuffles under you. */
+.stage {
+  max-width: none;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.stage-top {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-3) var(--s-5);
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+.stage-where {
+  flex: 1;
+  min-width: 0;
+}
+.stage-kicker {
+  display: block;
+  font-size: var(--t-micro);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.stage-top h1 {
+  margin: 0;
+  font-size: var(--t-lg);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Where you are, as a bar that fills — eight identical dots were something you
+   had to count before they told you anything. */
+.stage-prog {
+  display: flex;
+  gap: 3px;
+  flex: 0 1 260px;
+  min-width: 90px;
+}
+.stage-prog-seg {
+  flex: 1;
+  height: 5px;
+  border-radius: var(--r-full);
+  background: var(--line);
+  transition: background-color var(--dur-2) var(--ease);
+}
+.stage-prog-seg.done {
+  background: var(--jade);
+}
+.stage-prog-seg.now {
+  background: var(--gold);
+}
+
+.stage-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* .ln-item keeps its name (it is the step) but stops being a card — the stage
+   is the card now. */
+/* A "step" fills the stage between the header and the action bar: its body
+   scrolls, its bar never moves. .ln-item keeps its name (it *is* the lesson
+   step) but stops being a card — the stage is the card now. */
+.stage-step,
+.stage .ln-item {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}
+.stage-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: var(--s-6) var(--s-5);
+}
+/* `margin: auto 0` centres a short step vertically and gets out of the way the
+   moment the content is taller than the stage. */
+.stage-inner {
+  width: 100%;
+  max-width: 760px;
+  margin: auto;
+}
+
+/* ── the action bar ─────────────────────────────────────────────────────── */
+.stage-foot {
+  flex: none;
+  border-top: 1px solid var(--line);
+  background: var(--panel);
+  transition:
+    background-color var(--dur-2) var(--ease),
+    border-color var(--dur-2) var(--ease);
+}
+.stage-foot-inner {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: var(--s-4) var(--s-5) calc(var(--s-4) + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+}
+.stage-foot-note {
+  color: var(--text-dim);
+  font-size: var(--t-sm);
+  min-width: 0;
+}
+.stage-foot .stage-foot-actions {
+  margin: 0 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex: none;
+}
+.stage-foot.good {
+  background: color-mix(in srgb, var(--jade) 12%, var(--panel));
+  border-top-color: color-mix(in srgb, var(--jade) 45%, var(--line));
+}
+.stage-foot.shown {
+  background: color-mix(in srgb, var(--gold) 12%, var(--panel));
+  border-top-color: color-mix(in srgb, var(--gold) 45%, var(--line));
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage-foot,
+  .stage-prog-seg {
+    transition: none;
+  }
+}
+
+/* ── the step itself, at reading scale ──────────────────────────────────── */
+.stage .ln-item-ask {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2.4vw, 27px);
+  font-weight: 600;
+  line-height: 1.22;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+  margin: 0 0 var(--s-5);
+}
+.stage .ln-code {
+  font-size: var(--t-lg);
+  padding: var(--s-4) var(--s-5);
+  border-radius: var(--r-md);
+  margin: 0 0 var(--s-4);
+}
+.stage .ln-read {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: var(--t-lg);
+  line-height: 1.62;
+}
+.stage .ln-answer-row .wu-input {
+  font-size: var(--t-lg);
+  padding: var(--s-3) var(--s-4);
+}
+.stage .ln-outcome {
+  margin-top: var(--s-5);
+  padding-top: var(--s-4);
+}
+.stage .ln-outcome-line {
+  font-size: var(--t-lg);
+  line-height: 1.55;
+}
+.stage .ln-nudge {
+  font-size: var(--t-lg);
+}
+
+/* ── the finish ─────────────────────────────────────────────────────────── */
+.stage-done .ln-done {
+  background: none;
+  border: none;
+  padding: 0;
+  max-width: 560px;
+  text-align: center;
+}
+.ln-done-score {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(56px, 9vw, 92px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  color: var(--jade);
+}
+.ln-done-of {
+  font-size: 0.42em;
+  color: var(--text-dim);
+  letter-spacing: -0.02em;
+}
+.stage-done .ln-done h1 {
+  margin: var(--s-4) 0 var(--s-2);
+  font-size: clamp(26px, 3.4vw, 38px);
+  letter-spacing: -0.025em;
+}
+.stage-done .ln-done-line {
+  margin: 0 auto;
+  max-width: var(--measure);
+  font-size: var(--t-lg);
+}
+.stage-done .ln-transfer {
+  align-items: center;
+  margin-top: var(--s-6);
+}
+.stage-done .ln-transfer-link {
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  .stage-top {
+    gap: var(--s-3);
+    padding: var(--s-2) var(--s-3);
+  }
+  .stage-top h1 {
+    font-size: var(--t-body);
+  }
+  .stage-prog {
+    flex-basis: 90px;
+  }
+  .stage-scroll {
+    padding: var(--s-5) var(--s-4);
+  }
+  .stage-foot-inner {
+    padding: var(--s-3) var(--s-4) calc(var(--s-3) + env(safe-area-inset-bottom, 0px));
+    gap: var(--s-3);
+  }
+  .stage .ln-code {
+    font-size: var(--t-body);
+  }
+}
+
+/* Inside the stage the widget is the thing you're looking at, so it gets a
+   surface of its own and real height — and its tap-through button steps down
+   to a secondary weight, because the bottom bar owns the one red action on
+   screen. */
+.stage .vw-player {
+  gap: var(--s-4);
+  padding: var(--s-5);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  margin: var(--s-4) 0 0;
+}
+.stage .vw-player .vw {
+  min-height: 190px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.stage .vw-caption {
+  font-size: var(--t-lg);
+  line-height: 1.45;
+}
+.stage .vw-controls .btn-primary {
+  background: var(--panel-2);
+  border-color: var(--line);
+  color: var(--text);
+}
+.stage .vw-controls .btn-primary:hover {
+  border-color: var(--text-dim);
+  background: var(--panel-2);
+}
+/* the read example's Run-it and the predict proof sit inline, not stretched */
+.stage .ln-prove,
+.stage .ln-run-row {
+  align-items: flex-start;
+}
+.stage .ln-prove .btn {
+  align-self: flex-start;
+}
+.stage .ln-read-tabs {
+  margin-top: var(--s-4);
+}
+
+/* ── warm-up: pick a level ──────────────────────────────────────────────────
+   Three matching columns made all three levels look equally right for you.
+   Wide rows put the level first and your best run on the right, so choosing
+   and self-assessing happen in the same glance. */
+.wu-levels {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-3);
+  max-width: 760px;
+  margin-bottom: var(--s-5);
+}
+.wu-level-card {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--s-5);
+  padding: var(--s-4) var(--s-5);
+  border-radius: var(--r-lg);
+  transform: none;
+}
+.wu-level-card:hover {
+  transform: none;
+}
+.wu-level-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  flex: 1;
+  min-width: 0;
+}
+.wu-level-card .wu-level-name {
+  font-size: var(--t-xl);
+  letter-spacing: -0.015em;
+}
+.wu-level-score {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--s-1);
+  flex: none;
+  width: 130px;
+}
+.wu-level-best-n {
+  font-family: var(--font-display);
+  font-size: var(--t-2xl);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--jade);
+  font-variant-numeric: tabular-nums;
+}
+.wu-level-best-l,
+.wu-level-fresh {
+  font-size: var(--t-micro);
+  color: var(--text-dim);
+  text-align: right;
+}
+.wu-level-bar {
+  display: block;
+  width: 100%;
+  height: 4px;
+  border-radius: var(--r-full);
+  background: var(--panel-2);
+  overflow: hidden;
+}
+.wu-level-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--jade);
+  transform: scaleX(var(--fill, 0));
+  transform-origin: left center;
+}
+.wu-level-card .cue-orb {
+  color: var(--gold);
+}
+.wu-score-of {
+  color: var(--text-dim);
+  font-size: 0.5em;
+  letter-spacing: -0.01em;
+}
+@media (max-width: 620px) {
+  .wu-level-card {
+    gap: var(--s-3);
+    padding: var(--s-4);
+  }
+  .wu-level-score {
+    width: 92px;
+  }
+  .wu-level-card .cue-orb {
+    display: none;
+  }
+}
+
+/* ── warm-up: the run, on the shared stage ──────────────────────────────── */
+.warmup.stage {
+  max-width: none;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.stage .wu-runbar {
+  max-width: none;
+}
+.stage .wu-run-count {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--t-xl);
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.wu-run-of {
+  color: var(--text-dim);
+  font-size: var(--t-sm);
+  font-weight: 500;
+}
+/* The countdown reads as a number AND as a bar under the header: the number
+   for "how long have I got", the bar for the peripheral-vision panic. */
+.wu-clock {
+  font-family: var(--font-code);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-lg);
+  font-weight: 600;
+  color: var(--text-dim);
+  min-width: 46px;
+  text-align: right;
+}
+.wu-clock.low {
+  color: var(--crimson-bright);
+}
+.stage .wu-run-streak {
+  margin-left: 0;
+  min-width: 34px;
+  text-align: right;
+  font-size: var(--t-lg);
+  font-weight: 600;
+}
+.stage .wu-timerbar {
+  flex: none;
+  max-width: none;
+  height: 3px;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: var(--panel-2);
+}
+.stage .wu-card {
+  background: none;
+  border: none;
+  padding: 0;
+  max-width: 760px;
+  animation: none;
+}
+.stage .wu-prompt {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 3vw, 34px);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  margin-bottom: var(--s-5);
+}
+.stage .wu-input {
+  font-size: var(--t-xl);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+}
+.stage .wu-run-streak {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.05;
+  min-width: 52px;
+}
+.wu-streak-n {
+  font-family: var(--font-display);
+  font-size: var(--t-xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.wu-streak-l {
+  font-size: var(--t-micro);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}

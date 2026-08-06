@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { WARMUP_LEVELS, WARMUP_SETS, checkAnswer } from '../data/warmups.js';
+import { useReveal } from '../anim/useReveal.js';
 
 // Warm-up mode: rapid-fire "type the Python" drills, like stretching before
 // the workout. Pick a difficulty, then answer one-liners against a countdown.
@@ -29,6 +30,7 @@ export default function WarmupView({ progress, onResult, onExit }) {
   const qStartRef = useRef(0);
   const endedRef = useRef(false);
 
+  const pickRef = useReveal('warmup-pick');
   const levelDef = WARMUP_LEVELS.find((l) => l.key === level);
   const [track, setTrack] = useState('python');
   const limitMs = (levelDef?.seconds ?? 0) * 1000;
@@ -99,14 +101,16 @@ export default function WarmupView({ progress, onResult, onExit }) {
   // ---------- pick screen ----------
   if (!level) {
     return (
-      <div className="stats warmup">
-        <h1>Warm-up</h1>
-        <p className="wu-intro">
-          Like stretching before the gym: quick one-line drills to get the brain juices
-          flowing. Pick a track, type the answer, hit Enter, beat the clock. One mistake — or
-          one expired timer — ends the run. How far down the 50 can you get?
-        </p>
-        <div className="wu-tracks" role="group" aria-label="Warm-up track">
+      <div className="stats warmup" ref={pickRef}>
+        <header className="page-head" data-reveal>
+          <span className="page-kicker">Before the workout</span>
+          <h1>Warm-up</h1>
+          <p className="page-lede wu-intro">
+            Quick one-line drills to get the brain moving. Pick a track, type the answer, hit
+            Enter, beat the clock. One mistake — or one expired timer — ends the run.
+          </p>
+        </header>
+        <div className="wu-tracks" role="group" aria-label="Warm-up track" data-reveal>
           <button
             className={`chip ${track === 'python' ? 'active' : ''}`}
             onClick={() => setTrack('python')}
@@ -126,32 +130,46 @@ export default function WarmupView({ progress, onResult, onExit }) {
             sql
           </button>
         </div>
+        {/* Wide rows, not three matching columns: the level is the headline and
+            your best run is the number on the right, so a glance answers both
+            "which one?" and "how am I doing?" */}
         <div className="wu-levels">
           {WARMUP_LEVELS.filter((l) => l.track === track).map((l) => {
+            const size = WARMUP_SETS[l.key].length;
             const best = progress.warmup?.[l.key]?.best ?? 0;
             const runs = progress.warmup?.[l.key]?.runs ?? 0;
             return (
-              <button key={l.key} className="wu-level-card" onClick={() => start(l.key)}>
-                <span className="wu-level-name">{l.label}</span>
-                <span className="wu-level-blurb">{l.blurb}</span>
-                <span className="wu-level-meta">
-                  {WARMUP_SETS[l.key].length} questions · {l.seconds}s each
+              <button key={l.key} className="wu-level-card" onClick={() => start(l.key)} data-reveal>
+                <span className="wu-level-main">
+                  <span className="wu-level-name">{l.label}</span>
+                  <span className="wu-level-blurb">{l.blurb}</span>
+                  <span className="wu-level-meta">
+                    {size} questions · {l.seconds}s each
+                  </span>
                 </span>
-                <span className="wu-level-best">
+                <span className="wu-level-score">
                   {runs > 0 ? (
                     <>
-                      best <strong>{best}/{WARMUP_SETS[l.key].length}</strong> · {runs} run
-                      {runs === 1 ? '' : 's'}
+                      <span className="wu-level-best-n">{best}</span>
+                      <span className="wu-level-best-l">
+                        best of {size} · {runs} run{runs === 1 ? '' : 's'}
+                      </span>
+                      <span className="wu-level-bar" aria-hidden="true">
+                        <span className="wu-level-bar-fill" style={{ '--fill': best / size }} />
+                      </span>
                     </>
                   ) : (
-                    'not attempted yet'
+                    <span className="wu-level-fresh">not attempted yet</span>
                   )}
+                </span>
+                <span className="cue-orb" aria-hidden="true">
+                  →
                 </span>
               </button>
             );
           })}
         </div>
-        <button className="btn" onClick={onExit}>
+        <button className="btn" onClick={onExit} data-reveal>
           ← Back to the dojo
         </button>
       </div>
@@ -170,10 +188,16 @@ export default function WarmupView({ progress, onResult, onExit }) {
 
     return (
       <div className="stats warmup">
-        <h1>
-          Warm-up — {levelDef.track === 'sql' ? 'SQL ' : levelDef.track === 'pandas' ? 'pandas ' : ''}
-          {levelDef.label}
-        </h1>
+        <header className="page-head">
+          <span className="page-kicker">
+            Warm-up · {levelDef.track === 'sql' ? 'SQL ' : levelDef.track === 'pandas' ? 'pandas ' : ''}
+            {levelDef.label}
+          </span>
+          <h1>
+            {got}
+            <span className="wu-score-of"> / {total}</span>
+          </h1>
+        </header>
         {result.reason === 'finished' && (
           <div className="solved-banner">Perfect run — all {total} answered. Fully warm.</div>
         )}
@@ -277,46 +301,70 @@ export default function WarmupView({ progress, onResult, onExit }) {
   }
 
   // ---------- run screen ----------
+  // The same stage the lesson player uses: header, one thing to do dead centre,
+  // one action bar. The countdown is the header's progress bar, so the clock
+  // and "where am I in the fifty" live in the same strip instead of stacking
+  // two more rows on top of the prompt.
   const pct = limitMs ? (timeLeft / limitMs) * 100 : 0;
+  const secsLeft = Math.ceil(timeLeft / 1000);
   return (
-    <div className="stats warmup">
-      <div className="wu-runbar">
-        <button className="icon-btn" onClick={onExit} aria-label="Quit warm-up">
+    <div className="warmup stage">
+      <header className="stage-top wu-runbar">
+        <button className="icon-btn stage-exit" onClick={onExit} aria-label="Quit warm-up">
           ✕
         </button>
-        <span className="wu-run-level">{levelDef.label}</span>
-        <span className="wu-run-count">
-          {idx + 1} / {queue.length}
+        <span className="stage-where">
+          <span className="stage-kicker">Warm-up · {levelDef.label}</span>
+          <h1 className="wu-run-count">
+            {idx + 1} <span className="wu-run-of">of {queue.length}</span>
+          </h1>
         </span>
-        <span className="wu-run-streak">{correct.length}</span>
-      </div>
+        <span className={`wu-clock ${pct < 30 ? 'low' : ''}`} role="timer" aria-label={`${secsLeft} seconds left`}>
+          {secsLeft}s
+        </span>
+        <span className="wu-run-streak" title="Answers in a row this run">
+          <span className="wu-streak-n">{correct.length}</span>
+          <span className="wu-streak-l">streak</span>
+        </span>
+      </header>
       <div
         className={`wu-timerbar ${pct < 30 ? 'low' : ''}`}
-        role="timer"
-        aria-label={`${Math.ceil(timeLeft / 1000)} seconds left`}
+        aria-hidden="true"
       >
         <div className="wu-timer-fill" style={{ '--fill': pct / 100 }} />
       </div>
-      <div className="wu-card" key={idx}>
-        <div className="wu-prompt">{item?.prompt}</div>
-        <input
-          ref={inputRef}
-          className="wu-input"
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && submit()}
-          placeholder="type the Python…"
-          spellCheck="false"
-          autoCapitalize="off"
-          autoComplete="off"
-          aria-label="Your answer"
-        />
-        <div className="wu-hint-row">
-          <span>Enter ↵ to submit — one wrong answer ends the run</span>
-          <button className="btn" onClick={submit} disabled={!input.trim()}>
-            Submit
-          </button>
+      <div className="stage-body">
+        <div className="stage-step" key={idx}>
+          <div className="stage-scroll">
+            <div className="stage-inner wu-card">
+              <div className="wu-prompt">{item?.prompt}</div>
+              <input
+                ref={inputRef}
+                className="wu-input"
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && submit()}
+                placeholder="type the Python…"
+                spellCheck="false"
+                autoCapitalize="off"
+                autoComplete="off"
+                aria-label="Your answer"
+              />
+            </div>
+          </div>
+          <div className="stage-foot">
+            <div className="stage-foot-inner">
+              <span className="stage-foot-note">
+                Enter ↵ to submit — one wrong answer ends the run
+              </span>
+              <div className="stage-foot-actions">
+                <button className="btn btn-primary" onClick={submit} disabled={!input.trim()}>
+                  Submit
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

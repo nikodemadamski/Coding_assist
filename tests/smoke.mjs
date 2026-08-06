@@ -870,15 +870,41 @@ try {
     (await page.locator('.ln-stdout').innerText()).includes('welcome to the dojo'),
     'the read example runs through the real engine'
   );
+  // the stage: one action bar, always in the same place, plus a progress bar
+  // that means something (one segment per exercise, not eight dots to count)
+  check(
+    (await page.locator('.stage-foot .btn', { hasText: 'Start the drills' }).count()) === 1,
+    'the read step\'s action lives in the stage action bar'
+  );
   await page.locator('button', { hasText: 'Start the drills' }).click();
   await page.locator('.ln-item').waitFor({ timeout: 5000 });
 
   const lesson1 = LESSONS[0];
+  check(
+    (await page.locator('.stage-prog-seg').count()) === lesson1.items.length,
+    `progress shows one segment per exercise (${lesson1.items.length})`
+  );
+  check((await page.locator('.stage-prog-seg.now').count()) === 1, 'exactly one segment marks where you are');
+  check(
+    (await page.locator('.stage-kicker').innerText()).length > 0,
+    'the header says which chapter you are in'
+  );
   // Item 1: answer correctly.
   await page.fill('.ln-item .wu-input', lesson1.items[0].answer);
   await page.locator('.ln-item .btn', { hasText: 'Check' }).click();
   check((await page.locator('.ln-outcome').innerText()).includes('✓'), 'a correct answer is accepted with its why');
-  await page.locator('.ln-next').click();
+  check(
+    (await page.locator('.stage-foot.good').count()) === 1,
+    'the action bar turns green on a correct answer'
+  );
+  // Enter carries on, so a whole lesson can be done without the mouse
+  await page.locator('.stage-top').click();
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(200);
+  check(
+    (await page.locator('.stage-prog-seg.done').count()) === 1,
+    'Enter advances to the next exercise'
+  );
   // Item 2: miss twice — nudge, then reveal.
   await page.fill('.ln-item .wu-input', 'definitely wrong');
   await page.locator('.ln-item .btn', { hasText: 'Check' }).click();
@@ -888,6 +914,10 @@ try {
   check(
     (await page.locator('.ln-outcome').innerText()).includes(lesson1.items[1].answer),
     'the second miss reveals the answer'
+  );
+  check(
+    (await page.locator('.stage-foot.shown').count()) === 1,
+    'a revealed answer tints the action bar amber, not green'
   );
   await page.locator('.ln-next').click();
   // Items 3..N: answer correctly from the bank; the missed item returns once.
@@ -906,10 +936,10 @@ try {
     'the completion screen counts first-try answers'
   );
   check(
-    (await page.locator('.ln-done').innerText()).includes('Next lesson'),
-    'completion offers the next lesson'
+    (await page.locator('.stage-foot').innerText()).includes('Next lesson'),
+    'completion offers the next lesson from the action bar'
   );
-  await page.locator('.ln-done .btn', { hasText: 'Back to Learn' }).click();
+  await page.locator('.stage-foot .btn', { hasText: 'Back to Learn' }).click();
   check(
     (await page.locator('.learn-lesson.done').count()) === 1,
     'the finished lesson is checked off on the Learn page'
@@ -1029,7 +1059,7 @@ try {
     (await page.locator('.ln-done h1').innerText()).includes('Skill check passed'),
     'four correct answers pass the skill check'
   );
-  await page.locator('.ln-done .btn', { hasText: 'Continue' }).click();
+  await page.locator('.stage-foot .btn', { hasText: 'Continue' }).click();
   check(
     await page.locator('.pv-toolbar').isVisible(),
     'the session continues into the question queue after the check'
@@ -1286,7 +1316,9 @@ try {
   );
   await page.locator('button', { hasText: 'Change level' }).click();
   check(
-    (await page.locator('.wu-level-card', { hasText: 'Beginner' }).innerText()).includes('best 3/50'),
+    /3\s*best of 50/.test(
+      (await page.locator('.wu-level-card', { hasText: 'Beginner' }).innerText()).replace(/\s+/g, ' ')
+    ),
     'best streak persists on the level card'
   );
 

@@ -96,3 +96,23 @@ correct page, never a blank one.
 
 Primary actions nest their arrow in its own disc (`.cue-orb`) and move only that
 disc on hover. One small, precise thing moving beats the whole card sliding.
+
+## The stage
+
+Surfaces that ask for one thing at a time — a lesson exercise, a warm-up prompt — use
+the **stage**: a full-height shell with a header, one centred thing to do, and a
+persistent action bar pinned to the bottom.
+
+Three rules make it work:
+
+1. **The primary action never moves.** It lives in the bottom bar for every step, in
+   every phase. A learner should never hunt for the button, and should never re-learn
+   where it is between a read step and a drill.
+2. **The bar carries the verdict.** Correct tints it jade, revealed tints it amber. The
+   feedback arrives where the eye already is, instead of in a box somewhere above.
+3. **Short content centres, long content grows.** `margin: auto` on the inner block, in
+   a flex column — a one-line question sits in the middle of the screen instead of
+   clinging to the top of a mostly-empty page.
+
+Progress is a bar of segments, one per step, not a row of dots. Dots have to be counted
+before they say anything.

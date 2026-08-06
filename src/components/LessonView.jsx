@@ -5,7 +5,7 @@ import Results from './Results.jsx';
 import VisualizerModal from './VisualizerModal.jsx';
 import VisualPlayer from './visual/VisualPlayer.jsx';
 import { checkAnswer } from '../data/warmups.js';
-import { itemAsQuestion } from '../data/lessons.js';
+import { itemAsQuestion, LESSON_CHAPTERS } from '../data/lessons.js';
 import { runQuestion } from '../engine/runnerClient.js';
 import { runPythonSnippet } from '../engine/pyClient.js';
 
@@ -19,6 +19,40 @@ import { runPythonSnippet } from '../engine/pyClient.js';
 //                 onReviewResult(id, passed)
 
 const FIX_REVEAL_AFTER = 3; // failed runs before "Show the fix" / "Show the order" appears
+
+// The action bar every step shares. One bar, always in the same place, tinted
+// by the outcome — so "what do I press now?" is never a question, and the
+// answer never moves. It's the single change that turns a page of cards into
+// something you can sit inside for twenty minutes.
+function Foot({ tone = '', note = null, children }) {
+  return (
+    <div className={`stage-foot ${tone}`}>
+      <div className="stage-foot-inner">
+        {note && <span className="stage-foot-note">{note}</span>}
+        <div className="stage-foot-actions ln-run-row">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+// Enter advances once a step is settled. Typing answers already uses Enter to
+// submit; this covers the "read the explanation, carry on" half, so a whole
+// lesson can be done without the mouse leaving the keyboard.
+function useAdvanceKey(active, go) {
+  useEffect(() => {
+    if (!active) return undefined;
+    const onKey = (e) => {
+      if (e.key !== 'Enter' || e.ctrlKey || e.metaKey || e.altKey) return;
+      const t = e.target;
+      if (t?.tagName === 'INPUT' || t?.tagName === 'TEXTAREA' || t?.isContentEditable) return;
+      if (document.querySelector('.modal-backdrop')) return;
+      e.preventDefault();
+      go();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [active, go]);
+}
 
 // A shuffled [0..n-1] guaranteed NOT already in order (so an arrange puzzle
 // always starts scrambled).
@@ -90,14 +124,29 @@ function ItemPlayer({ lesson, item, idx, onResolved }) {
   }
 
   const typed = item.type === 'predict' || item.type === 'type';
+  const firstTryArrange = state === 'correct' && failedRuns === 0;
+  const advance = () =>
+    onResolved(
+      item.type === 'arrange'
+        ? { firstTry: firstTryArrange, missed: state !== 'correct' }
+        : { firstTry, missed: !firstTry }
+    );
+  useAdvanceKey(resolved, advance);
 
   // A standalone visual item: tap through the beats, then "Got it →". Never
   // fails — it's understanding, not a test.
   if (item.type === 'visual') {
     return (
       <div className="ln-item">
-        {item.caption && <p className="ln-item-ask">{item.caption}</p>}
-        <VisualPlayer visual={item} onDone={() => onResolved({ firstTry: true, missed: false })} />
+        <div className="stage-scroll">
+          <div className="stage-inner">
+            {item.caption && <p className="ln-item-ask">{item.caption}</p>}
+            <VisualPlayer
+              visual={item}
+              onDone={() => onResolved({ firstTry: true, missed: false })}
+            />
+          </div>
+        </div>
       </div>
     );
   }
@@ -144,6 +193,8 @@ function ItemPlayer({ lesson, item, idx, onResolved }) {
 
     return (
       <div className="ln-item">
+        <div className="stage-scroll">
+          <div className="stage-inner">
         <p className="ln-item-ask">{item.brief}</p>
         <p className="ln-arrange-hint-line">Drag the lines into the right order (indentation is done for you).</p>
         <ol
@@ -187,32 +238,33 @@ function ItemPlayer({ lesson, item, idx, onResolved }) {
             </li>
           ))}
         </ol>
-        {!resolved && (
-          <div className="ln-run-row">
-            <button className="btn btn-primary" onClick={checkArrange} disabled={running}>
-              {running ? 'Running…' : 'Check'}
-            </button>
-            {failedRuns >= FIX_REVEAL_AFTER && (
-              <button className="btn" onClick={revealOrder}>
-                Show the order
-              </button>
-            )}
-            {failedRuns >= 1 && item.hint && <span className="ln-hint">Hint: {item.hint}</span>}
-          </div>
-        )}
         {report && !resolved && <Results report={report} question={itemAsQuestion(lesson, item, idx)} />}
         {resolved && (
           <div className={`ln-outcome ${state === 'correct' ? 'good' : 'shown'}`}>
             <p className="ln-outcome-line">
               {state === 'correct' ? '✓ Assembled and passing — that is the shape.' : 'Here it is, in order.'}
             </p>
-            <button
-              className="btn btn-primary ln-next"
-              onClick={() => onResolved({ firstTry: state === 'correct' && failedRuns === 0, missed: state !== 'correct' })}
-            >
+          </div>
+        )}
+          </div>
+        </div>
+        {resolved ? (
+          <Foot tone={state === 'correct' ? 'good' : 'shown'}>
+            <button className="btn btn-primary ln-next" onClick={advance}>
               Next →
             </button>
-          </div>
+          </Foot>
+        ) : (
+          <Foot note={failedRuns >= 1 && item.hint ? `Hint: ${item.hint}` : null}>
+            {failedRuns >= FIX_REVEAL_AFTER && (
+              <button className="btn" onClick={revealOrder}>
+                Show the order
+              </button>
+            )}
+            <button className="btn btn-primary" onClick={checkArrange} disabled={running}>
+              {running ? 'Running…' : 'Check'}
+            </button>
+          </Foot>
         )}
       </div>
     );
@@ -220,129 +272,141 @@ function ItemPlayer({ lesson, item, idx, onResolved }) {
 
   return (
     <div className="ln-item">
-      {item.type === 'predict' && (
-        <>
-          <p className="ln-item-ask">What does this print?</p>
-          <pre className="ln-code">{item.code}</pre>
-        </>
-      )}
-      {item.type === 'type' && <p className="ln-item-ask">{item.prompt}</p>}
-      {(item.type === 'fix' || item.type === 'write') && (
-        <p className="ln-item-ask">{item.brief}</p>
-      )}
-      {item.type === 'watch' && <p className="ln-item-ask">{item.caption}</p>}
-
-      {typed && (
-        <div className="ln-answer-row">
-          <input
-            ref={inputRef}
-            className="wu-input"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && submitTyped()}
-            placeholder={item.type === 'predict' ? 'the exact output…' : 'type the Python…'}
-            spellCheck="false"
-            autoCapitalize="off"
-            autoComplete="off"
-            disabled={resolved}
-            aria-label="Your answer"
-          />
-          {!resolved && (
-            <button className="btn btn-primary" onClick={submitTyped}>
-              Check
-            </button>
+      <div className="stage-scroll">
+        <div className="stage-inner">
+          {item.type === 'predict' && (
+            <>
+              <p className="ln-item-ask">What does this print?</p>
+              <pre className="ln-code">{item.code}</pre>
+            </>
           )}
-        </div>
-      )}
+          {item.type === 'type' && <p className="ln-item-ask">{item.prompt}</p>}
+          {(item.type === 'fix' || item.type === 'write') && (
+            <p className="ln-item-ask">{item.brief}</p>
+          )}
+          {item.type === 'watch' && <p className="ln-item-ask">{item.caption}</p>}
 
-      {typed && !resolved && attempts === 1 && (
-        <p className="ln-nudge">Not quite — look again. What exactly would Python do?</p>
-      )}
-
-      {(item.type === 'fix' || item.type === 'write') && (
-        <>
-          <div className="ln-editor">
-            <Editor track="python" value={code} onChange={setCode} fontSize={14} />
-          </div>
-          <div className="ln-run-row">
-            <button className="btn btn-primary" onClick={runCode} disabled={running}>
-              {running ? 'Running…' : 'Run'}
-            </button>
-            {!resolved && failedRuns >= FIX_REVEAL_AFTER && !showFix && (
-              <button className="btn" onClick={() => setShowFix(true)}>
-                Show the fix
-              </button>
-            )}
-            {item.hint && !resolved && failedRuns >= 1 && (
-              <span className="ln-hint">Hint: {item.hint}</span>
-            )}
-          </div>
-          {report && <Results report={report} question={itemAsQuestion(lesson, item, idx)} />}
-          {showFix && !resolved && (
-            <div className="ln-reveal">
-              <pre className="ln-code">{item.solution}</pre>
-              <button className="btn" onClick={() => setState('revealed')}>
-                Got it — continue
-              </button>
+          {typed && (
+            <div className="ln-answer-row">
+              <input
+                ref={inputRef}
+                className="wu-input"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && submitTyped()}
+                placeholder={item.type === 'predict' ? 'the exact output…' : 'type the Python…'}
+                spellCheck="false"
+                autoCapitalize="off"
+                autoComplete="off"
+                disabled={resolved}
+                aria-label="Your answer"
+              />
             </div>
           )}
-        </>
-      )}
 
-      {item.type === 'watch' && !resolved && (
-        <>
-          <pre className="ln-code">{item.code}</pre>
-          <button className="btn btn-viz" onClick={() => setViz(true)}>
-            Step through it →
-          </button>
-          {viz && (
-            <VisualizerModal
-              question={itemAsQuestion(lesson, item, idx)}
-              code={item.code}
-              label={lesson.title}
-              onClose={() => {
-                setViz(false);
-                setState('correct');
-              }}
-            />
+          {typed && !resolved && attempts === 1 && (
+            <p className="ln-nudge">Not quite — look again. What exactly would Python do?</p>
           )}
-        </>
-      )}
 
-      {resolved && (
-        <div className={`ln-outcome ${state === 'correct' ? 'good' : 'shown'}`}>
-          {state === 'correct' ? (
-            <p className="ln-outcome-line">✓ {item.why || 'Exactly.'}</p>
-          ) : (
+          {(item.type === 'fix' || item.type === 'write') && (
             <>
-              {typed && (
-                <p className="ln-outcome-line">
-                  The answer: <code>{item.answer}</code>
-                  {item.accept?.length ? <> (also fine: {item.accept.join(' · ')})</> : null}
-                </p>
-              )}
-              {item.why && <p className="ln-outcome-line">{item.why}</p>}
-              {item.type === 'predict' && (
-                <div className="ln-prove">
-                  <button className="btn" onClick={proveIt} disabled={runOut?.pending}>
-                    {runOut?.pending ? 'Running…' : 'Run it — see for yourself'}
-                  </button>
-                  {runOut && !runOut.pending && (
-                    <pre className="ln-code ln-stdout">
-                      {runOut.status === 'ok' ? runOut.stdout.trimEnd() : runOut.message}
-                    </pre>
-                  )}
+              <div className="ln-editor">
+                <Editor track="python" value={code} onChange={setCode} fontSize={14} />
+              </div>
+              {report && <Results report={report} question={itemAsQuestion(lesson, item, idx)} />}
+              {showFix && !resolved && (
+                <div className="ln-reveal">
+                  <pre className="ln-code">{item.solution}</pre>
                 </div>
               )}
             </>
           )}
-          <button
-            className="btn btn-primary ln-next"
-            onClick={() => onResolved({ firstTry, missed: !firstTry })}
-          >
+
+          {item.type === 'watch' && !resolved && (
+            <>
+              <pre className="ln-code">{item.code}</pre>
+              {viz && (
+                <VisualizerModal
+                  question={itemAsQuestion(lesson, item, idx)}
+                  code={item.code}
+                  label={lesson.title}
+                  onClose={() => {
+                    setViz(false);
+                    setState('correct');
+                  }}
+                />
+              )}
+            </>
+          )}
+
+          {resolved && (
+            <div className={`ln-outcome ${state === 'correct' ? 'good' : 'shown'}`}>
+              {state === 'correct' ? (
+                <p className="ln-outcome-line">✓ {item.why || 'Exactly.'}</p>
+              ) : (
+                <>
+                  {typed && (
+                    <p className="ln-outcome-line">
+                      The answer: <code>{item.answer}</code>
+                      {item.accept?.length ? <> (also fine: {item.accept.join(' · ')})</> : null}
+                    </p>
+                  )}
+                  {item.why && <p className="ln-outcome-line">{item.why}</p>}
+                  {item.type === 'predict' && (
+                    <div className="ln-prove">
+                      <button className="btn" onClick={proveIt} disabled={runOut?.pending}>
+                        {runOut?.pending ? 'Running…' : 'Run it — see for yourself'}
+                      </button>
+                      {runOut && !runOut.pending && (
+                        <pre className="ln-code ln-stdout">
+                          {runOut.status === 'ok' ? runOut.stdout.trimEnd() : runOut.message}
+                        </pre>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {resolved ? (
+        <Foot tone={state === 'correct' ? 'good' : 'shown'}>
+          <button className="btn btn-primary ln-next" onClick={advance}>
             Next →
           </button>
-        </div>
+        </Foot>
+      ) : (
+        <Foot note={item.hint && failedRuns >= 1 ? `Hint: ${item.hint}` : null}>
+          {(item.type === 'fix' || item.type === 'write') && (
+            <>
+              {failedRuns >= FIX_REVEAL_AFTER && !showFix && (
+                <button className="btn" onClick={() => setShowFix(true)}>
+                  Show the fix
+                </button>
+              )}
+              {showFix && (
+                <button className="btn" onClick={() => setState('revealed')}>
+                  Got it — continue
+                </button>
+              )}
+              <button className="btn btn-primary" onClick={runCode} disabled={running}>
+                {running ? 'Running…' : 'Run'}
+              </button>
+            </>
+          )}
+          {typed && (
+            <button className="btn btn-primary" onClick={submitTyped}>
+              Check
+            </button>
+          )}
+          {item.type === 'watch' && (
+            <button className="btn btn-primary btn-viz" onClick={() => setViz(true)}>
+              Step through it →
+            </button>
+          )}
+        </Foot>
       )}
     </div>
   );
@@ -418,17 +482,46 @@ export default function LessonView({
     setPhase('done');
   }
 
+  const chapterLabel =
+    LESSON_CHAPTERS.find((c) => c.key === lesson.chapter)?.label ?? '';
+
+  // The header every phase shares: one way out, where you are, how far along.
+  // `progress` is a 0..1 fill for the read/done bookends and a segment list for
+  // the drills, because "3 of 8" is a different fact from "part 1 of 3".
+  function StageTop({ exitLabel, exitGlyph, segments = null, note = null }) {
+    return (
+      <header className="stage-top">
+        <button className="icon-btn stage-exit" onClick={onExit} aria-label={exitLabel}>
+          {exitGlyph}
+        </button>
+        <span className="stage-where">
+          {chapterLabel && <span className="stage-kicker">{chapterLabel}</span>}
+          <h1>{lesson.title}</h1>
+        </span>
+        {segments && (
+          <span
+            className="stage-prog"
+            role="img"
+            aria-label={`Exercise ${Math.min(pos + 1, segments.length)} of ${segments.length}`}
+          >
+            {segments.map((s, i) => (
+              <span key={i} className={`stage-prog-seg ${s}`} />
+            ))}
+          </span>
+        )}
+        {note && <span className="ln-minutes">{note}</span>}
+      </header>
+    );
+  }
+
   // ---------- read ----------
   if (phase === 'read') {
     return (
-      <div className="stats ln-page">
-        <div className="ln-top">
-          <button className="icon-btn" onClick={onExit} aria-label="Back to Learn">
-            ←
-          </button>
-          <h1>{lesson.title}</h1>
-          <span className="ln-minutes">{lesson.minutes} min</span>
-        </div>
+      <div className="ln-page stage">
+        <StageTop exitLabel="Back to Learn" exitGlyph="←" note={`${lesson.minutes} min`} />
+        <div className="stage-body">
+          <div className="stage-scroll">
+            <div className="stage-inner">
         <div className="ln-read">
           <Markdown text={lesson.read.text} />
           {lesson.read.visual && (
@@ -468,10 +561,15 @@ export default function LessonView({
               </div>
             </>
           )}
+            </div>
+            </div>
+          </div>
+          <Foot note={`${lesson.items.length} exercises`}>
+            <button className="btn btn-primary ln-start" onClick={() => setPhase('items')}>
+              Start the drills →
+            </button>
+          </Foot>
         </div>
-        <button className="btn btn-primary ln-start" onClick={() => setPhase('items')}>
-          Start the drills →
-        </button>
       </div>
     );
   }
@@ -480,8 +578,14 @@ export default function LessonView({
   if (phase === 'done') {
     const passed = mode !== 'review' || firstTryCount >= Math.min(3, total);
     return (
-      <div className="stats ln-page">
-        <div className="ln-done">
+      <div className="ln-page stage stage-done">
+        <div className="stage-body">
+          <div className="stage-scroll">
+            <div className="stage-inner ln-done">
+          <span className="ln-done-score" aria-hidden="true">
+            {firstTryCount}
+            <span className="ln-done-of">/{total}</span>
+          </span>
           <h1>
             {mode === 'review'
               ? passed
@@ -499,22 +603,6 @@ export default function LessonView({
                 ? ' — the ones you missed came back around. That is how it sticks.'
                 : ' — clean run.'}
           </p>
-          <div className="ln-done-actions">
-            {mode === 'learn' && onNextLesson && nextLessonTitle && (
-              <button className="btn btn-primary" onClick={onNextLesson}>
-                Next lesson: {nextLessonTitle} →
-              </button>
-            )}
-            {mode === 'review' ? (
-              <button className="btn btn-primary" onClick={() => (onDone ?? onExit)()}>
-                Continue →
-              </button>
-            ) : (
-              <button className="btn" onClick={onExit}>
-                Back to Learn
-              </button>
-            )}
-          </div>
           {mode === 'learn' && lesson.transfer && (
             <div className="ln-transfer">
               <span className="ln-transfer-label">Put it to work</span>
@@ -533,33 +621,50 @@ export default function LessonView({
               )}
             </div>
           )}
+            </div>
+          </div>
+          <Foot tone={passed ? 'good' : 'shown'} note={missed.length ? `${missed.length} came back around` : null}>
+            <div className="ln-done-actions">
+              {mode === 'review' ? (
+                <button className="btn btn-primary" onClick={() => (onDone ?? onExit)()}>
+                  Continue →
+                </button>
+              ) : (
+                <>
+                  <button className="btn" onClick={onExit}>
+                    Back to Learn
+                  </button>
+                  {onNextLesson && nextLessonTitle && (
+                    <button className="btn btn-primary" onClick={onNextLesson}>
+                      Next lesson: {nextLessonTitle} →
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </Foot>
         </div>
       </div>
     );
   }
 
   // ---------- items ----------
+  // One segment per exercise, including any that came back around — a bar you
+  // watch fill, not eight identical dots you have to count.
+  const segments = queue.map((_, i) => (i < pos ? 'done' : i === pos ? 'now' : ''));
+
   return (
-    <div className="stats ln-page">
-      <div className="ln-top">
-        <button className="icon-btn" onClick={onExit} aria-label="End lesson">
-          ✕
-        </button>
-        <h1>{lesson.title}</h1>
-        <span className="ln-dots" aria-label={`Exercise ${Math.min(pos + 1, total)} of ${total}`}>
-          {baseQueue.map((_, i) => (
-            <span key={i} className={`ln-dot ${i < pos ? 'done' : i === pos ? 'now' : ''}`} />
-          ))}
-          {requeued && <span className="ln-dot-extra">+{queue.length - total}</span>}
-        </span>
+    <div className="ln-page stage">
+      <StageTop exitLabel="End lesson" exitGlyph="✕" segments={segments} />
+      <div className="stage-body">
+        <ItemPlayer
+          key={`${idx}-${pos}`}
+          lesson={lesson}
+          item={item}
+          idx={idx}
+          onResolved={handleResolved}
+        />
       </div>
-      <ItemPlayer
-        key={`${idx}-${pos}`}
-        lesson={lesson}
-        item={item}
-        idx={idx}
-        onResolved={handleResolved}
-      />
     </div>
   );
 }

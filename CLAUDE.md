@@ -159,7 +159,15 @@ Bars/meters animate `transform: scaleX/scaleY(var(--fill))` with the JSX passing
 Shared page furniture: `.page-head` (kicker + one loud title + one-line lede) opens every
 full-page view; `.cue-orb` nests a primary action's arrow in its own disc (the one thing
 that moves on hover); `ReadinessRing.jsx` draws the readiness score as a dial (arc sweeps
-on mount, final offset also inline so it's right without JS). Stats lays out on `.bento`
+on mount, final offset also inline so it's right without JS).
+
+**The stage** is the shared full-height shell for one-thing-at-a-time surfaces (lesson
+player, warm-up run): `.stage` (h100%, flex col) → `.stage-top` (exit · `.stage-kicker` +
+h1 · `.stage-prog` segments) → `.stage-body` → `.stage-step` (flex col; `.ln-item` is the
+lesson's alias) → `.stage-scroll` (the only scroller) + `.stage-inner` (max 760px,
+`margin:auto` so a short step centres and a long one just grows) → `.stage-foot` (the
+persistent action bar; `.good` tints jade, `.shown` tints gold). Every primary action for
+a step lives in the foot — never inline — so the button never moves between steps. Stats lays out on `.bento`
 — a 12-col grid whose cells run 7/5 · 5/7 · 5/7 · 12 · 7/5 and collapse to full width
 under 1000px; Patterns is a two-up grid whose open card spans the row. Deliberately
 asymmetric: smoke asserts the bento cells do NOT all share one width.
