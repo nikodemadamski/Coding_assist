@@ -1,5 +1,29 @@
 import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import {
+  Search,
+  LibraryBig,
+  Compass,
+  Settings as SettingsIcon,
+  Sun,
+  Moon,
+  GraduationCap,
+  BarChart3,
+  Shapes,
+  ScrollText,
+  ChevronDown,
+} from 'lucide-react';
 import { beltFor, currentStreak, isSolved } from '../state/progress.js';
+import DojoLogo from './header/DojoLogo.jsx';
+import NavButton from './header/NavButton.jsx';
+import { StreakChip, BeltChip, useTactile } from './header/HeaderChips.jsx';
+
+const LIBRARY = [
+  { key: 'learn', label: 'Learn', note: 'python from zero', icon: GraduationCap },
+  { key: 'stats', label: 'Stats', note: 'readiness & record', icon: BarChart3 },
+  { key: 'patterns', label: 'Patterns', note: 'the templates', icon: Shapes },
+  { key: 'guide', label: 'Sensei', note: 'how to train', icon: ScrollText },
+];
 
 export default function Header({
   progress,
@@ -18,8 +42,10 @@ export default function Header({
   const solvedCount = Object.values(progress.solved).filter(isSolved).length;
   const belt = beltFor(solvedCount);
   const streak = currentStreak(progress.streak);
+  const reduced = useReducedMotion();
+  const tactile = useTactile();
 
-  // Library menu: Stats / Patterns / Sensei live behind one header item.
+  // Library menu: Learn / Stats / Patterns / Sensei live behind one header item.
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
   useEffect(() => {
@@ -36,6 +62,7 @@ export default function Header({
     };
   }, [menuOpen]);
 
+  const handlers = { learn: onLearn, stats: onStats, patterns: onPatterns, guide: onGuide };
   const go = (fn) => () => {
     setMenuOpen(false);
     fn();
@@ -43,86 +70,99 @@ export default function Header({
 
   return (
     <header className="header">
-      <button className="header-logo" onClick={onHome} aria-label="ZoroClaude Dojo — home">
-        <span className="blade" aria-hidden="true">
-          ⚔
-        </span>
-        <span className="logo-long">ZoroClaude&nbsp;</span>Dojo
-      </button>
+      <DojoLogo onClick={onHome} theme={theme} />
+
       <div className="header-spacer" />
-      <span className="streak" title="Current streak (days with at least one solve)">
-        {streak} day{streak === 1 ? '' : 's'}
-      </span>
-      <span
-        className="belt-chip"
-        title={
-          belt.next
-            ? `${belt.name} belt — ${belt.next.threshold - solvedCount} solve(s) to ${belt.next.name}`
-            : 'Black belt — mastery'
-        }
+
+      <StreakChip streak={streak} />
+      <BeltChip belt={belt} solvedCount={solvedCount} />
+
+      <NavButton
+        icon={Search}
+        className="btn-search"
+        onClick={onSearch}
+        title="Search questions (Ctrl+K or /)"
       >
-        {belt.name} belt
-        {belt.next && (
-          <span className="belt-count">
-            {solvedCount}/{belt.next.threshold}
-          </span>
-        )}
-        <span className="belt-strip" role="img" aria-label={`Belt progress toward next rank`}>
-          <span
-            className="belt-strip-fill"
-            style={{ '--fill': belt.progress, background: belt.color }}
-          />
-        </span>
-      </span>
-      <button className="icon-btn btn-search" onClick={onSearch} title="Search questions (Ctrl+K or /)">
         Search <kbd className="kbd-hint">⌘K</kbd>
-      </button>
-      <button className="icon-btn" onClick={onBrowse}>
+      </NavButton>
+
+      <NavButton icon={Compass} onClick={onBrowse}>
         Browse
-      </button>
+      </NavButton>
+
       <div className="hdr-menu" ref={menuRef}>
-        <button
-          className="icon-btn hdr-menu-btn"
+        <NavButton
+          icon={LibraryBig}
+          className={`hdr-menu-btn ${menuOpen ? 'is-open' : ''}`}
           onClick={() => setMenuOpen((o) => !o)}
           aria-haspopup="menu"
           aria-expanded={menuOpen}
         >
-          Library <span className="hdr-caret" aria-hidden="true">▾</span>
-        </button>
-        {menuOpen && (
-          <div className="hdr-menu-pop" role="menu">
-            <button role="menuitem" onClick={go(onLearn)}>
-              Learn <span className="hdr-menu-note">python from zero</span>
-            </button>
-            <button role="menuitem" onClick={go(onStats)}>
-              Stats <span className="hdr-menu-note">readiness &amp; record</span>
-            </button>
-            <button role="menuitem" onClick={go(onPatterns)}>
-              Patterns <span className="hdr-menu-note">the templates</span>
-            </button>
-            <button role="menuitem" onClick={go(onGuide)}>
-              Sensei <span className="hdr-menu-note">how to train</span>
-            </button>
-          </div>
-        )}
+          Library
+          <motion.span
+            className="hdr-caret"
+            aria-hidden="true"
+            animate={{ rotate: menuOpen ? 180 : 0 }}
+            transition={tactile.transition}
+          >
+            <ChevronDown size={13} strokeWidth={2.4} />
+          </motion.span>
+        </NavButton>
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.div
+              className="hdr-menu-pop"
+              role="menu"
+              initial={reduced ? false : { opacity: 0, y: -6, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={reduced ? { opacity: 0 } : { opacity: 0, y: -4, scale: 0.98 }}
+              transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 520, damping: 34 }}
+            >
+              {LIBRARY.map(({ key, label, note, icon: Icon }) => (
+                <button key={key} role="menuitem" onClick={go(handlers[key])}>
+                  <Icon size={15} strokeWidth={2} aria-hidden="true" />
+                  {label} <span className="hdr-menu-note">{note}</span>
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-      <button
-        className="icon-btn"
+
+      <NavButton
+        className="hdr-icon-only"
         onClick={onToggleTheme}
         aria-label={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
         title={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
-      >
-        {theme === 'light' ? '🌙' : '☀️'}
-      </button>
-      <button
-        className="icon-btn"
+        /* The two glyphs spin past each other, so the switch reads as one
+           control changing rather than two icons swapping. It goes through
+           `glyph` because it is the button's whole content — a phone hides
+           labels, and this must survive that. */
+        glyph={
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={theme}
+              className="hdr-theme-glyph"
+              initial={reduced ? false : { rotate: -70, opacity: 0, scale: 0.7 }}
+              animate={{ rotate: 0, opacity: 1, scale: 1 }}
+              exit={reduced ? { opacity: 0 } : { rotate: 70, opacity: 0, scale: 0.7 }}
+              transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 460, damping: 28 }}
+            >
+              {theme === 'light' ? <Moon size={16} strokeWidth={2} /> : <Sun size={16} strokeWidth={2} />}
+            </motion.span>
+          </AnimatePresence>
+        }
+      />
+
+      <NavButton
+        icon={SettingsIcon}
         onClick={onSettings}
         aria-label="Settings"
         title={backupNudge ? 'Your progress has not been backed up in a while' : undefined}
       >
         Settings
         {backupNudge && <span className="backup-dot" aria-hidden="true" />}
-      </button>
+      </NavButton>
     </header>
   );
 }

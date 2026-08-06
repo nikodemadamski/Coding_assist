@@ -26,4 +26,13 @@ export default [
       'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     },
   },
+  {
+    // react-three-fiber renders three.js objects through JSX intrinsics
+    // (<mesh>, <torusGeometry>, <pointLight>…). eslint-plugin-react only knows
+    // the DOM, so every one of their props reads as an unknown attribute. The
+    // rule is switched off for the 3D scene only — everywhere else it still
+    // catches real typos.
+    files: ['src/components/header/DojoFace.jsx'],
+    rules: { 'react/no-unknown-property': 'off' },
+  },
 ];

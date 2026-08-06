@@ -214,6 +214,24 @@ easing, layout-animating transitions, sub-11px text, contrast failures, long lin
 
 ## UI shell (src/components/)
 
+**The top bar** (`Header.jsx` + `components/header/`) is frosted glass: sticky, translucent
+`--panel`, `backdrop-filter: blur(18px) saturate(150%)`, no border — a gradient hairline
+`::after` instead (blur on a *sticky* element is the one place it's free; never on scrolling
+content). The brand is **dojo**: `DojoLogo.jsx` renders `DojoFace.jsx`, an @react-three/fiber
+scene where the two `o`s are eye rings whose pupils track the pointer and blink on a random
+timer, the `j`'s tittle is the nose, and a half-torus is the smile — every letter built from
+primitives, never loaded 3D type. It idles, leans toward the cursor, and scatters sparks on
+click. **It is behind `React.lazy`** so three.js (222KB gz) lands in its own chunk and never
+blocks first paint; reduced motion, no WebGL, and a failed chunk (an error boundary) all fall
+back to the same inline `FlatMark` SVG, so the brand is never missing. three.js can't parse
+`var(--…)`, so `useThemeColors` resolves the tokens to real values, keyed on `theme`.
+`HeaderChips.jsx` holds the streak/belt chips (CSS-only tooltips, glowing `--belt` fill) and
+exports `useTactile` — the one framer-motion spring every header control presses with.
+`NavButton.jsx` wraps its children in `.hdr-btn-label`, which phones hide (visually, never
+`display:none` — it's the accessible name); a button whose icon IS its content passes it as
+`glyph` so it survives that. Lucide supplies the icons. `eslint.config.js` disables
+`react/no-unknown-property` for DojoFace.jsx only — R3F's JSX intrinsics aren't DOM.
+
 App.jsx owns views: home (RoadmapGraph = the map), browse (Picker), track (TrackMap),
 problem/practice/drill (ProblemView / PracticeView), warmup, mock, patterns, quiz, stats,
 guide, learn (LearnView chapter list) / lesson (LessonView player); modals: Settings,

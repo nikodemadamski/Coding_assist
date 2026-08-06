@@ -167,3 +167,22 @@ Three rules keep that from becoming noise:
 Everything above animates `transform`, `opacity` or `filter` only — never a layout
 property — and every one of them is switched off wholesale under
 `prefers-reduced-motion`, where the finished state is what the rules resolve to anyway.
+
+## The top bar
+
+Frosted glass, sticky, and made of objects rather than runs of text. Three things earn
+their place there:
+
+- **The mark is the one playful thing in the app.** `dojo` is a face — the two o's are
+  eyes that follow you and blink, the j's tittle is a nose, and there is a smile. It is
+  the only place the product allows itself a joke, which is exactly why it works: a
+  training log that is stern everywhere else can afford one warm corner.
+- **Status is chips, not text.** The streak and the belt are objects you can read at a
+  glance and interrogate on hover. A live streak earns colour; a dead one stays grey,
+  because a zero that glows is a nag.
+- **Everything presses the same way.** One spring, shared by every control in the bar, so
+  a chip and a nav button feel like the same material.
+
+Blur belongs on sticky and fixed elements only — never on scrolling content, where it
+repaints every frame. And a phone gets icons, not a wrapped second row: the labels stay
+in the DOM, hidden, so every button keeps its name.

@@ -7997,3 +7997,309 @@ p,
     display: none;
   }
 }
+
+/* ═══ the top bar ═══════════════════════════════════════════════════════════
+   Frosted glass, sticky, and made of objects rather than runs of text. The
+   blur is on a fixed element (never on scrolling content), which is the one
+   place it costs nothing per frame. */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 70;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-4);
+  background: color-mix(in srgb, var(--panel) 72%, transparent);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border-bottom: none;
+  box-shadow: 0 1px 0 0 color-mix(in srgb, var(--line) 70%, transparent);
+}
+/* Glass wants a lit top edge, not a border on all four sides: a hairline that
+   fades out toward the ends reads as a highlight catching the light. */
+.header::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--text) 22%, transparent) 22%,
+    color-mix(in srgb, var(--crimson-bright) 26%, transparent) 50%,
+    color-mix(in srgb, var(--text) 22%, transparent) 78%,
+    transparent
+  );
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .header {
+    background: var(--panel);
+  }
+}
+
+/* ── the mark ───────────────────────────────────────────────────────────── */
+.dojo-logo {
+  gap: var(--s-2);
+  padding: 0 var(--s-2) 0 0;
+  border-radius: var(--r-md);
+  cursor: pointer;
+}
+.dojo-mark {
+  display: block;
+  width: 104px;
+  height: 40px;
+  flex: none;
+}
+.dojo-mark canvas,
+.dojo-flat {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.dojo-word {
+  font-family: var(--font-display);
+  font-size: var(--t-xl);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--text);
+  transition: color var(--dur-1) var(--ease);
+}
+/* The canvas already spells the word, so on wide screens the text is the
+   accessible name and a hover echo — not a second wordmark shouting alongside
+   the first. It comes back whenever the canvas isn't what you're looking at. */
+.dojo-logo:not(.is-flat) .dojo-word {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.dojo-logo.is-hot .dojo-word {
+  color: var(--crimson-bright);
+}
+
+/* ── status chips ───────────────────────────────────────────────────────── */
+.hdr-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-1) var(--s-3);
+  border-radius: var(--r-full);
+  border: 1px solid color-mix(in srgb, var(--line) 90%, transparent);
+  background: color-mix(in srgb, var(--panel-2) 70%, transparent);
+  font-size: var(--t-tiny);
+  color: var(--text-dim);
+  white-space: nowrap;
+  cursor: default;
+}
+.hdr-chip:focus-visible {
+  outline: none;
+}
+.hdr-chip-icon {
+  flex: none;
+  opacity: 0.75;
+}
+.hdr-chip-n {
+  font-family: var(--font-code);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text);
+}
+.hdr-chip-l {
+  letter-spacing: 0.02em;
+}
+/* A live streak earns colour; a dead one stays quiet, because a zero that
+   glows is just a nag. */
+.streak-chip.is-alive {
+  border-color: color-mix(in srgb, var(--gold) 45%, transparent);
+  background: color-mix(in srgb, var(--gold) 12%, transparent);
+}
+.streak-chip.is-alive .hdr-chip-icon,
+.streak-chip.is-alive .hdr-chip-n {
+  color: var(--gold);
+  opacity: 1;
+}
+.belt-chip {
+  --belt: var(--text-dim);
+}
+.belt-chip .belt-chip-name {
+  color: var(--text);
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.belt-count-of {
+  color: var(--text-dim);
+  font-weight: 400;
+}
+.header .belt-strip {
+  width: 54px;
+  height: 5px;
+  border: none;
+  border-radius: var(--r-full);
+  background: color-mix(in srgb, var(--text-dim) 22%, transparent);
+}
+.header .belt-strip-fill {
+  background: var(--belt);
+  border-radius: var(--r-full);
+  transform-origin: left center;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--belt) 65%, transparent);
+}
+
+/* ── tooltips ───────────────────────────────────────────────────────────────
+   A label, not a component: it lives inside the chip, appears on hover or
+   keyboard focus, and never has to be positioned by JS. */
+.hdr-tip {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  translate: -50% 0;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-sm);
+  /* Elevation, not an edge: a tooltip floats, so it takes the shadow and
+     leaves the hairline alone (DESIGN.md — edge OR elevation, never both). */
+  background: var(--panel-2);
+  box-shadow: var(--shadow-modal);
+  color: var(--text);
+  font-size: var(--t-micro);
+  line-height: 1.35;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(-3px);
+  pointer-events: none;
+  transition:
+    opacity 140ms var(--ease),
+    transform 140ms var(--ease);
+  z-index: 80;
+}
+.hdr-chip:hover .hdr-tip,
+.hdr-chip:focus-visible .hdr-tip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── nav buttons ────────────────────────────────────────────────────────── */
+.hdr-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  border-radius: var(--r-md);
+  white-space: nowrap;
+}
+.hdr-btn-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  white-space: nowrap;
+}
+.hdr-btn-icon {
+  flex: none;
+  opacity: 0.7;
+  transition: opacity var(--dur-1) var(--ease);
+}
+.hdr-btn:hover .hdr-btn-icon,
+.hdr-btn:focus-visible .hdr-btn-icon,
+.hdr-menu-btn.is-open .hdr-btn-icon {
+  opacity: 1;
+}
+.hdr-icon-only {
+  padding-inline: var(--s-2);
+}
+.hdr-theme-glyph {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+}
+.header .hdr-caret {
+  display: grid;
+  place-items: center;
+  opacity: 0.6;
+}
+.hdr-menu-btn.is-open {
+  color: var(--text);
+  border-color: var(--text-dim);
+}
+.hdr-menu-pop {
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  box-shadow: var(--shadow-modal);
+  transform-origin: top right;
+}
+.hdr-menu-pop {
+  min-width: 246px;
+}
+.hdr-menu-pop button {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+/* The note is a gloss on the label, so it sits at the far end and never wraps
+   under it — a two-line menu row reads as a paragraph, not a choice. */
+.hdr-menu-pop .hdr-menu-note {
+  margin-left: auto;
+  white-space: nowrap;
+}
+.hdr-menu-pop button svg {
+  flex: none;
+  opacity: 0.6;
+}
+
+/* ── narrow viewports ───────────────────────────────────────────────────────
+   The bar sheds status before it sheds actions: on a phone you are here to
+   navigate, and the streak and belt both live on the home screen anyway. */
+@media (max-width: 900px) {
+  .dojo-mark {
+    width: 68px;
+    height: 28px;
+  }
+}
+@media (max-width: 760px) {
+  .header .hdr-chip {
+    display: none;
+  }
+}
+/* Under 700px the bar is one row of glyphs. Five icon+label buttons cannot fit
+   a 390px phone, and wrapping to two rows costs vertical space the content
+   needs more. The labels stay in the DOM — hidden, not removed — so every
+   button keeps its accessible name. */
+@media (max-width: 700px) {
+  .hdr-btn-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .header .hdr-btn {
+    padding: var(--s-2);
+    gap: 0;
+  }
+  .hdr-btn-icon {
+    opacity: 1;
+  }
+  /* Settings still needs somewhere to hang its backup dot. */
+  .header .hdr-btn {
+    position: relative;
+  }
+}
+@media (max-width: 560px) {
+  .header {
+    padding: var(--s-2) var(--s-3);
+  }
+  .dojo-mark {
+    width: 58px;
+    height: 24px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hdr-tip,
+  .dojo-word,
+  .hdr-btn-icon {
+    transition: none;
+  }
+}

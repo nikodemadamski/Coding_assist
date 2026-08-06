@@ -101,6 +101,45 @@ try {
 
   check(await page.locator('.header-logo').isVisible(), 'app loads with header');
 
+  // ---- the top bar ------------------------------------------------------
+  check(
+    (await page.locator('.header-logo').getAttribute('aria-label')) === 'dojo — home',
+    'the brand is "dojo"'
+  );
+  // The 3D mark is lazy so three.js never blocks first paint; until it lands
+  // (or forever, without WebGL) the flat mark stands in, so the brand is
+  // never missing.
+  await page
+    .locator('.dojo-mark canvas')
+    .waitFor({ timeout: 8000 })
+    .catch(() => {});
+  const markShapes = await page.locator('.dojo-mark canvas, .dojo-flat').count();
+  check(markShapes === 1, 'the logo renders exactly one mark — 3D, or the flat fallback');
+  check(
+    await page.evaluate(() => {
+      const cs = getComputedStyle(document.querySelector('.header'));
+      return cs.position === 'sticky' && /blur/.test(cs.backdropFilter || cs.webkitBackdropFilter || '');
+    }),
+    'the bar is sticky frosted glass'
+  );
+  const chipText = (await page.locator('.hdr-chip').allInnerTexts()).join(' ').replace(/\s+/g, ' ');
+  check((await page.locator('.hdr-chip').count()) === 2, 'streak and belt are chips');
+  check(/day/.test(chipText) && /belt|White|Yellow/i.test(chipText), `the chips carry the streak and the belt (${chipText.slice(0, 40)})`);
+  // tooltips are labels inside the chip, revealed on hover — no JS positioning
+  const tipHidden = await page.evaluate(
+    () => Number(getComputedStyle(document.querySelector('.belt-chip .hdr-tip')).opacity)
+  );
+  await page.locator('.belt-chip').hover();
+  await page.waitForTimeout(280);
+  const tipShown = await page.evaluate(
+    () => Number(getComputedStyle(document.querySelector('.belt-chip .hdr-tip')).opacity)
+  );
+  check(tipHidden === 0 && tipShown > 0.9, 'a chip explains itself on hover');
+  check(
+    (await page.locator('.hdr-btn-icon').count()) >= 4,
+    'the nav actions carry icons'
+  );
+
   // ---- light / dark theme toggle (persists across reload) ----
   check(
     (await page.evaluate(() => document.documentElement.dataset.theme)) === 'dark',
@@ -571,7 +610,12 @@ try {
     (await page.evaluate(() => JSON.parse(localStorage.getItem('zoro.progress.v1')).bigo)).wrong === 1,
     'the check-in result is recorded for the accuracy stat'
   );
-  check((await page.locator('.streak').innerText()).includes('1 day'), 'streak increments');
+  const streakChip = (await page.locator('.streak-chip').innerText()).replace(/\s+/g, ' ');
+  check(/^1 day\b/.test(streakChip), `the streak chip counts the day (${streakChip.slice(0, 24)})`);
+  check(
+    (await page.locator('.streak-chip.is-alive').count()) === 1,
+    'a live streak lights its chip'
+  );
 
   // ---- solve → next: the flow never dead-ends ----
   check(
@@ -904,9 +948,11 @@ try {
   await page.locator('.hdr-menu-btn').click();
   check((await page.locator('.hdr-menu-pop button').count()) === 4, 'Library menu holds Learn / Stats / Patterns / Sensei');
   await page.keyboard.press('Escape');
+  await page.locator('.hdr-menu-pop').waitFor({ state: 'detached', timeout: 3000 }).catch(() => {});
   check((await page.locator('.hdr-menu-pop').count()) === 0, 'Esc closes the Library menu');
   await openLibrary(page, 'Sensei');
   check(await page.locator('.guide-page h1').isVisible(), 'Sensei guide page renders');
+  await page.locator('.hdr-menu-pop').waitFor({ state: 'detached', timeout: 3000 }).catch(() => {});
   check((await page.locator('.hdr-menu-pop').count()) === 0, 'picking an item closes the menu');
   await openLibrary(page, 'Stats');
   check(await page.locator('.calendar-block').isVisible(), 'Stats page shows the attendance calendar');
@@ -1654,6 +1700,19 @@ try {
     () => document.documentElement.scrollWidth <= window.innerWidth
   );
   check(noHScroll2, 'mobile: no horizontal scroll in problem view');
+  // the bar goes icon-only rather than wrapping — and keeps its names
+  await mobile.locator('.header-logo').click();
+  await mobile.waitForTimeout(400);
+  const labelHidden = await mobile.evaluate(() => {
+    const el = document.querySelector('.hdr-btn-label');
+    return el ? el.getBoundingClientRect().width <= 2 : false;
+  });
+  check(labelHidden, 'mobile: nav buttons show their icon only');
+  check(
+    (await mobile.locator('.icon-btn[aria-label="Settings"]').count()) === 1 &&
+      (await mobile.locator('.hdr-btn-label', { hasText: 'Browse' }).count()) === 1,
+    'mobile: the hidden labels still name the buttons'
+  );
   await mobile.close();
 
   // ================= reduced motion: the whole thing goes still ===========
