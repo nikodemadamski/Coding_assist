@@ -13,6 +13,7 @@ import { beacon, watchBeacon, typingHeat } from '../../anim/mascotBeacon.js';
 // The whole module is behind React.lazy in DojoLogo.jsx, so three.js lands in
 // its own chunk and the app shell never pays for it on first paint.
 
+const REST_Y = 0.42;
 const EYE_L = -0.62;
 const NOSE_X = 0.34;
 const EYE_R = 1.28;
@@ -280,6 +281,180 @@ function Topknot({ accent, ink }) {
   );
 }
 
+// The belt. Not a costume — a costume is where you are, a belt is what you've
+// earned, so it is always on and it is the one thing the room can never take
+// off you. A sash under the face with a knot and two hanging ends, in the
+// belt's own colour.
+function Belt({ color }) {
+  return (
+    <group position={[NOSE_X, -1.62, 0]}>
+      <mesh>
+        <boxGeometry args={[3.2, 0.17, 0.32]} />
+        <meshStandardMaterial color={color} roughness={0.7} />
+      </mesh>
+      {/* A rim, so a Black belt still reads against a dark page — the darkest
+          rank must not be the one you can't see. */}
+      <mesh position={[0, 0, 0.17]}>
+        <boxGeometry args={[3.2, 0.045, 0.02]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.85} />
+      </mesh>
+      {/* the knot */}
+      <mesh position={[-0.15, 0, 0.16]}>
+        <boxGeometry args={[0.3, 0.27, 0.2]} />
+        <meshStandardMaterial color={color} roughness={0.65} />
+      </mesh>
+      {/* the two ends, hanging */}
+      {[-0.3, 0.01].map((x, i) => (
+        <mesh key={i} position={[x, -0.25, 0.14]} rotation={[0, 0, i ? -0.16 : 0.14]}>
+          <boxGeometry args={[0.13, 0.34, 0.12]} />
+          <meshStandardMaterial color={color} roughness={0.7} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+// ── the shop's own items ───────────────────────────────────────────────────
+// A conical straw hat. The wandering-swordsman look.
+function Kasa({ ink, accent }) {
+  return (
+    <group position={[FACE_X, 0.72, 0]}>
+      <mesh position={[0, 0.06, 0]}>
+        <coneGeometry args={[1.15, 0.5, 18]} />
+        <meshStandardMaterial color="#c9a86a" roughness={0.9} flatShading />
+      </mesh>
+      <mesh position={[0, -0.14, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.32, 0.04, 6, 16]} />
+        <meshStandardMaterial color={accent} roughness={0.6} />
+      </mesh>
+      <mesh position={[0, 0.34, 0]}>
+        <sphereGeometry args={[0.09, 8, 8]} />
+        <meshStandardMaterial color={ink} roughness={0.6} />
+      </mesh>
+    </group>
+  );
+}
+
+function Crown({ accent }) {
+  const gold = '#e8b04b';
+  return (
+    <group position={[FACE_X, 0.78, 0]}>
+      <mesh>
+        <boxGeometry args={[1.15, 0.18, 0.4]} />
+        <meshStandardMaterial color={gold} metalness={0.75} roughness={0.25} emissive={gold} emissiveIntensity={0.28} />
+      </mesh>
+      {[-0.42, 0, 0.42].map((x, i) => (
+        <mesh key={i} position={[x, 0.22, 0]}>
+          <coneGeometry args={[0.13, 0.34, 4]} />
+          <meshStandardMaterial color={gold} metalness={0.75} roughness={0.25} emissive={gold} emissiveIntensity={0.3} />
+        </mesh>
+      ))}
+      <mesh position={[0, 0.44, 0]}>
+        <sphereGeometry args={[0.08, 10, 10]} />
+        <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.7} />
+      </mesh>
+    </group>
+  );
+}
+
+// Wraparound shades: one bar across both eyes, with a highlight.
+function Shades({ ink }) {
+  return (
+    <group position={[FACE_X, 0.02, 0.3]}>
+      <mesh>
+        <boxGeometry args={[2.5, 0.52, 0.1]} />
+        <meshStandardMaterial color="#14161f" roughness={0.15} metalness={0.4} />
+      </mesh>
+      <mesh position={[-0.5, 0.12, 0.06]} rotation={[0, 0, 0.22]}>
+        <boxGeometry args={[0.7, 0.07, 0.02]} />
+        <meshStandardMaterial color={ink} emissive={ink} emissiveIntensity={0.35} />
+      </mesh>
+      <mesh position={[1.4, 0.1, -0.1]} rotation={[0, 0.9, 0]}>
+        <capsuleGeometry args={[0.03, 0.36, 3, 6]} />
+        <meshStandardMaterial color="#14161f" roughness={0.3} />
+      </mesh>
+    </group>
+  );
+}
+
+// A scarf that trails, and drifts on its own.
+function Scarf({ accent }) {
+  const tail = useRef(null);
+  useFrame((state) => {
+    if (tail.current) tail.current.rotation.z = -0.5 + Math.sin(state.clock.elapsedTime * 1.7) * 0.14;
+  });
+  return (
+    <group position={[NOSE_X, -1.02, 0.08]}>
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.42, 0.09, 8, 20, Math.PI * 1.2]} />
+        <meshStandardMaterial color={accent} roughness={0.8} />
+      </mesh>
+      <mesh ref={tail} position={[-0.5, -0.22, 0]}>
+        <boxGeometry args={[0.72, 0.14, 0.12]} />
+        <meshStandardMaterial color={accent} roughness={0.8} />
+      </mesh>
+    </group>
+  );
+}
+
+// ── auras ──────────────────────────────────────────────────────────────────
+// One particle system, three moods. Embers rise, petals fall, flame licks —
+// same buffer, different velocity field, so a third aura costs no more than
+// the first.
+const AURA_N = 26;
+function Aura({ kind, accent }) {
+  const points = useRef(null);
+  const material = useRef(null);
+  const seeds = useMemo(
+    () =>
+      Array.from({ length: AURA_N }, () => ({
+        x: (Math.random() - 0.5) * 4.2,
+        phase: Math.random() * 10,
+        speed: 0.35 + Math.random() * 0.5,
+        drift: (Math.random() - 0.5) * 0.6,
+      })),
+    []
+  );
+  const positions = useMemo(() => new Float32Array(AURA_N * 3), []);
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    const geom = points.current?.geometry;
+    if (!geom) return;
+    for (let i = 0; i < AURA_N; i++) {
+      const s = seeds[i];
+      // 0..1 through the particle's own loop
+      const life = ((t * s.speed + s.phase) % 3) / 3;
+      const rise = kind === 'petals' ? 1 - life : life; // petals come down
+      positions[i * 3] = s.x + Math.sin((t + s.phase) * 1.4) * s.drift;
+      positions[i * 3 + 1] = -1.6 + rise * 3.4;
+      positions[i * 3 + 2] = -0.4;
+    }
+    geom.attributes.position.needsUpdate = true;
+    if (material.current) {
+      material.current.opacity = kind === 'flame' ? 0.75 : 0.6;
+    }
+  });
+
+  const color = kind === 'flame' ? '#5bc8ff' : kind === 'petals' ? '#f7b8d0' : accent;
+  return (
+    <points ref={points}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" count={AURA_N} array={positions} itemSize={3} />
+      </bufferGeometry>
+      <pointsMaterial
+        ref={material}
+        color={color}
+        size={kind === 'petals' ? 0.13 : 0.1}
+        transparent
+        opacity={0.6}
+        sizeAttenuation
+        depthWrite={false}
+      />
+    </points>
+  );
+}
+
 const OUTFITS = {
   cap: Cap,
   headband: Headband,
@@ -288,21 +463,30 @@ const OUTFITS = {
   glasses: Glasses,
   monocle: Monocle,
   topknot: Topknot,
+  kasa: Kasa,
+  crown: Crown,
+  shades: Shades,
+  scarf: Scarf,
+  sparks: (p) => <Aura kind="sparks" {...p} />,
+  petals: (p) => <Aura kind="petals" {...p} />,
+  flame: (p) => <Aura kind="flame" {...p} />,
 };
 
-// The costume drops in from above and settles with an overshoot, so changing
-// rooms is a small event rather than a swap you never see.
-function Costume({ kind, accent, ink }) {
+// One worn item. It drops in from above and settles with an overshoot, so
+// putting something on is a small event rather than a swap you never see.
+// Auras don't drop — they're already ambient — so they skip the entrance.
+function Worn({ kind, accent, ink }) {
   const group = useRef(null);
   const age = useRef(0);
   const Outfit = OUTFITS[kind];
+  const drops = kind !== 'sparks' && kind !== 'petals' && kind !== 'flame';
 
   useEffect(() => {
     age.current = 0;
   }, [kind]);
 
   useFrame((_, dt) => {
-    if (!group.current) return;
+    if (!group.current || !drops) return;
     age.current = Math.min(1, age.current + dt * 2.6);
     const t = age.current;
     // A decaying bounce: overshoots once, then settles at rest.
@@ -316,6 +500,20 @@ function Costume({ kind, accent, ink }) {
     <group ref={group} key={kind}>
       <Outfit accent={accent} ink={ink} />
     </group>
+  );
+}
+
+// The whole kit: one item per slot, in a fixed draw order so an aura never
+// lands in front of a face.
+function Outfit({ outfit, accent, ink }) {
+  return (
+    <>
+      {['aura', 'neck', 'hat', 'face'].map((slot) =>
+        outfit?.[slot] ? (
+          <Worn key={`${slot}-${outfit[slot]}`} kind={outfit[slot]} accent={accent} ink={ink} />
+        ) : null
+      )}
+    </>
   );
 }
 
@@ -373,7 +571,7 @@ function Sparks({ accent, burst }) {
 // The whole mark: idle float, a spring-ish lean toward the pointer, and the
 // blink timer. All the per-frame work happens here so the leaf meshes stay
 // cheap.
-function Mark({ accent, ink, hovered, burst, costume }) {
+function Mark({ accent, ink, hovered, burst, outfit, beltColor, fit }) {
   const group = useRef(null);
   const pointer = useRef({ x: 0, y: 0 });
   const typing = useRef(0);
@@ -382,6 +580,15 @@ function Mark({ accent, ink, hovered, burst, costume }) {
   const lastKey = useRef(0);
   const bob = useRef(0);
   const { viewport, gl } = useThree();
+
+  // Fit both axes. Width leaves headroom for the lean — at full rotation the
+  // `d` swings toward the left edge, and a clipped letter reads as a bug
+  // rather than as depth. Height has to clear the belt, which hangs below the
+  // letters. `fit` divides it: 1 is snug, a stage passes more.
+  //
+  // This is read inside useFrame rather than set as a `scale` prop, because
+  // the hover pulse writes group.scale every frame and would overwrite a prop.
+  const scale = Math.min(1.05, viewport.width / 4.6, viewport.height / 3.15) / fit;
 
   // One shared window listener, ref-counted in the beacon module.
   useEffect(() => watchBeacon(), []);
@@ -415,7 +622,9 @@ function Mark({ accent, ink, hovered, burst, costume }) {
 
     if (group.current) {
       // Idle: a slow figure-of-eight so it is never quite still.
-      const floatY = Math.sin(t * 0.9) * 0.045 - bob.current * 0.05;
+      // REST_Y lifts the whole mark, because the belt hangs below the letters
+      // and the face still has to look optically centred in its box.
+      const floatY = REST_Y + Math.sin(t * 0.9) * 0.045 - bob.current * 0.05;
       const idleRotY = Math.sin(t * 0.55) * 0.14;
       const idleRotX = Math.cos(t * 0.75) * 0.06;
       // Lean toward the cursor, harder while hovered — and dip toward the
@@ -428,7 +637,8 @@ function Mark({ accent, ink, hovered, burst, costume }) {
       group.current.rotation.y += (targetY - group.current.rotation.y) * k;
       group.current.rotation.x += (targetX - group.current.rotation.x) * k;
       group.current.position.y += (floatY - group.current.position.y) * Math.min(1, dt * 8);
-      const s = hovered ? 1.07 : 1;
+      // The pulse multiplies the fitted scale rather than replacing it.
+      const s = scale * (hovered ? 1.07 : 1);
       group.current.scale.x += (s - group.current.scale.x) * Math.min(1, dt * 9);
       group.current.scale.y = group.current.scale.x;
       group.current.scale.z = group.current.scale.x;
@@ -446,10 +656,6 @@ function Mark({ accent, ink, hovered, burst, costume }) {
   });
 
   // Fit the mark to whatever width the canvas got.
-  // Leave headroom for the lean: at full rotation the `d` swings toward the
-  // left edge, and a clipped letter reads as a bug, not as depth.
-  const scale = Math.min(1.05, viewport.width / 4.9);
-
   return (
     <group ref={group} scale={scale}>
       <LetterD ink={ink} />
@@ -457,7 +663,8 @@ function Mark({ accent, ink, hovered, burst, costume }) {
       <LetterJ ink={ink} accent={accent} />
       <Eye x={EYE_R} accent={accent} pointer={pointer} hovered={hovered} blink={blink} typing={typing} />
       <Smile accent={accent} hovered={hovered} typing={typing} />
-      <Costume kind={costume} accent={accent} ink={ink} />
+      <Belt color={beltColor} />
+      <Outfit outfit={outfit} accent={accent} ink={ink} />
       <Sparks accent={accent} burst={burst} />
     </group>
   );
@@ -472,21 +679,33 @@ export default function DojoFace({
   ink = '#e9e7de',
   hovered = false,
   burst,
-  costume = 'none',
+  outfit = null,
+  beltColor = '#e9e7de',
+  // Divides the fitted scale. 1 is snug (the header bar); a stage passes more
+  // to leave the whole character comfortably inside its frame.
+  fit = 1,
 }) {
   const localBurst = useRef(0);
   return (
     <Canvas
       className="dojo-face-canvas"
       dpr={[1, 2]}
-      camera={{ position: [0, 0, 3.9], fov: 36 }}
+      camera={{ position: [0, 0, 4.35], fov: 36 }}
       gl={{ antialias: true, alpha: true, powerPreference: 'low-power' }}
       onCreated={({ gl }) => gl.setClearAlpha(0)}
     >
       <ambientLight intensity={1.5} />
       <directionalLight position={[2, 3, 4]} intensity={1.4} />
       <pointLight position={[-2, -1, 2]} intensity={18} color={accent} distance={7} decay={2} />
-      <Mark accent={accent} ink={ink} hovered={hovered} burst={burst ?? localBurst} costume={costume} />
+      <Mark
+        accent={accent}
+        ink={ink}
+        hovered={hovered}
+        burst={burst ?? localBurst}
+        outfit={outfit}
+        beltColor={beltColor}
+        fit={fit}
+      />
     </Canvas>
   );
 }

@@ -103,7 +103,7 @@ try {
 
   // ---- the top bar ------------------------------------------------------
   check(
-    (await page.locator('.header-logo').getAttribute('aria-label')) === 'dojo — home',
+    /^dojo — home/.test(await page.locator('.header-logo').getAttribute('aria-label')),
     'the brand is "dojo"'
   );
   // The 3D mark is lazy so three.js never blocks first paint; until it lands
@@ -123,7 +123,7 @@ try {
     'the bar is sticky frosted glass'
   );
   const chipText = (await page.locator('.hdr-chip').allInnerTexts()).join(' ').replace(/\s+/g, ' ');
-  check((await page.locator('.hdr-chip').count()) === 2, 'streak and belt are chips');
+  check((await page.locator('.hdr-chip').count()) === 3, 'streak, belt and coins are chips');
   check(/day/.test(chipText) && /belt|White|Yellow/i.test(chipText), `the chips carry the streak and the belt (${chipText.slice(0, 40)})`);
   // tooltips are labels inside the chip, revealed on hover — no JS positioning
   const tipHidden = await page.evaluate(
@@ -138,6 +138,11 @@ try {
   check(
     (await page.locator('.hdr-btn-icon').count()) >= 4,
     'the nav actions carry icons'
+  );
+  check((await page.locator('.coin-chip').count()) === 1, 'the bar carries your coin balance');
+  check(
+    /belt/.test(await page.locator('.header-logo').getAttribute('aria-label')),
+    'and the mascot announces the belt it is wearing'
   );
 
   // ---- the mascot ------------------------------------------------------
@@ -1023,7 +1028,10 @@ try {
 
   // ---- Sensei guide + attendance calendar ----
   await page.locator('.hdr-menu-btn').click();
-  check((await page.locator('.hdr-menu-pop button').count()) === 4, 'Library menu holds Learn / Stats / Patterns / Sensei');
+  check(
+    (await page.locator('.hdr-menu-pop button').count()) === 5,
+    'Library holds Learn / Stats / Patterns / Sensei / Dojo shop'
+  );
   await page.keyboard.press('Escape');
   await page.locator('.hdr-menu-pop').waitFor({ state: 'detached', timeout: 3000 }).catch(() => {});
   check((await page.locator('.hdr-menu-pop').count()) === 0, 'Esc closes the Library menu');
@@ -1052,8 +1060,74 @@ try {
   check(/glasses/.test(worn.stats), 'your record gets reading glasses');
   check(/monocle/.test(worn.patterns), 'the reference gets a monocle');
   check(/topknot/.test(worn.guide), 'Sensei gets the topknot');
-  check(worn.home === 'dojo — home', 'the home map is a lobby — no costume');
+  check(/^dojo — home/.test(worn.home), 'the home map is a lobby — no costume');
   check(new Set(Object.values(worn)).size === 5, 'every room dresses it differently');
+
+  // ---- the dojo shop -----------------------------------------------------
+  await openLibrary(page, 'Dojo shop');
+  await page.locator('.shop-grid').first().waitFor({ timeout: 10000 });
+  // The balance races up from zero on arrival, so let it land before reading.
+  const coins = async () => {
+    await page.waitForTimeout(1300);
+    return Number((await page.locator('.shop-balance-n').innerText()).trim());
+  };
+  const startCoins = await coins();
+  check(startCoins > 0, `training has earned you coins (${startCoins})`);
+  check(
+    (await page.locator('.shop-item').count()) >= 12,
+    'the shop has a real wardrobe to spend them on'
+  );
+  // the shop shows its working, so a balance is never an arbitrary number
+  await page.locator('.shop-earn summary').click();
+  await page.waitForTimeout(200);
+  const earnTotal = Number((await page.locator('.shop-earn-total .shop-earn-sum').innerText()).trim());
+  check(earnTotal >= startCoins, `it shows where every coin came from (${earnTotal} earned)`);
+
+  // an item you cannot afford says exactly how short you are, and refuses
+  const glasses = page.locator('.shop-item', { hasText: 'Reading glasses' });
+  if (await glasses.locator('button').isDisabled()) {
+    check(
+      /short/.test(await glasses.locator('button').innerText()),
+      'an item you cannot afford says how many coins short you are'
+    );
+    const before = await coins();
+    await glasses.locator('button').click({ force: true });
+    await page.waitForTimeout(250);
+    check((await coins()) === before, 'and forcing the click charges nothing');
+  } else {
+    check(true, 'glasses already affordable — the short path is covered by unit tests');
+  }
+
+  // a belt you have not earned locks the item at any price
+  const crown = page.locator('.shop-item', { hasText: 'Crown' });
+  check(
+    await crown.evaluate((el) => el.classList.contains('is-locked')),
+    'a rank you have not reached locks its item'
+  );
+  check(
+    /belt/.test(await crown.locator('button').innerText()),
+    'and the button names the belt that unlocks it, not the price'
+  );
+
+  // the free starter item proves the whole buy -> own -> wear path
+  const band = page.locator('.shop-item', { hasText: 'Dojo headband' });
+  const beforeBuy = await coins();
+  await band.locator('button').click();
+  await page.waitForTimeout(350);
+  check((await band.locator('.shop-item-tag.owned').count()) === 1, 'buying makes the item yours');
+  check(
+    await band.evaluate((el) => el.classList.contains('is-worn')),
+    'and it goes straight on — nobody buys a hat for the box'
+  );
+  check((await coins()) === beforeBuy, 'the free item is free');
+  await band.locator('button').click();
+  await page.waitForTimeout(300);
+  check(
+    !(await band.evaluate((el) => el.classList.contains('is-worn'))),
+    'taking an item off is one click, and reversible'
+  );
+  await page.locator('.header-logo').click();
+  await page.waitForTimeout(300);
   await openLibrary(page, 'Stats');
   check(await page.locator('.calendar-block').isVisible(), 'Stats page shows the attendance calendar');
 

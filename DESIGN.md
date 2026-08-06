@@ -211,3 +211,23 @@ Two rules keep a filter bar honest:
 
 And rows earn their ink: a tick for done, a tag only when it says something the row does
 not already. "Learning" on every solved row is not information, it is noise with a border.
+
+## The economy
+
+The dojo has a currency, and it is only worth something because it cannot be faked.
+
+**Coins are derived, not awarded.** The balance is recomputed from your training record
+every time it is shown — solves, review intervals climbed, lessons finished, mocks
+passed, warm-up runs, days on the streak, belts earned — minus what you have spent.
+There is no counter to drift, no event to miss, and a restored backup restores your
+wallet because the wallet was never separate from the record.
+
+**Belts gate, coins cost.** A belt is proof you did the work; coins are only time served.
+So the good items need both. You cannot buy past a rank, and a rank does not hand you
+anything free either.
+
+**The shop shows its working.** A number nobody can predict reads as arbitrary, and an
+arbitrary number is not a reward. Every coin is traceable to a row you can see.
+
+And the mascot wears your belt at all times, in every room, at every size — including in
+the flat fallback. Rank is the one thing a costume can never take off you.

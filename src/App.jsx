@@ -7,6 +7,7 @@ import WarmupView from './components/WarmupView.jsx';
 import MockInterview from './components/MockInterview.jsx';
 import Stats from './components/Stats.jsx';
 import Guide from './components/Guide.jsx';
+import ShopView from './components/ShopView.jsx';
 import Patterns from './components/Patterns.jsx';
 import PatternQuiz from './components/PatternQuiz.jsx';
 import RoadmapGraph from './components/RoadmapGraph.jsx';
@@ -44,6 +45,7 @@ import {
   recordBigO,
 } from './state/progress.js';
 import { nextOnPath, neighborOnPath } from './data/roadmap.js';
+import { coinBalance } from './state/shop.js';
 import { markVisit, recordDaySolve, recordDayFail } from './state/activity.js';
 import { getInitialTheme, applyTheme } from './state/theme.js';
 import { nextCelebration } from './state/celebrate.js';
@@ -127,6 +129,7 @@ export default function App() {
     [allQuestions, progress]
   );
   const streakVal = currentStreak(progress.streak);
+  const coins = useMemo(() => coinBalance(progress, allQuestions), [progress, allQuestions]);
   // Nudge for a fresh export when progress is only in this browser's storage.
   const [lastBackup, setLastBackup] = useState(loadLastBackup);
   const backupInfo = useMemo(() => backupStatus(lastBackup, solvedCount), [lastBackup, solvedCount]);
@@ -250,12 +253,14 @@ export default function App() {
     <div className="app">
       <Header
         progress={progress}
+        coins={coins}
         onHome={() => setView({ name: 'home' })}
         onSearch={() => setSearchOpen(true)}
         onBrowse={() => setView({ name: 'browse' })}
         onPatterns={() => setView({ name: 'patterns' })}
         onStats={() => setView({ name: 'stats' })}
         onGuide={() => setView({ name: 'guide' })}
+        onShop={() => setView({ name: 'shop' })}
         onLearn={() => setView({ name: 'learn' })}
         onSettings={() => setSettingsOpen(true)}
         theme={theme}
@@ -422,6 +427,14 @@ export default function App() {
           />
         )}
         {view.name === 'guide' && <Guide />}
+        {view.name === 'shop' && (
+          <ShopView
+            questions={allQuestions}
+            progress={progress}
+            onChange={setProgress}
+            onExit={() => setView({ name: 'home' })}
+          />
+        )}
       </main>
       {settingsOpen && (
         <Settings

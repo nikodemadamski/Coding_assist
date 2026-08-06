@@ -12,27 +12,31 @@ import {
   Shapes,
   ScrollText,
   ChevronDown,
+  Shirt,
 } from 'lucide-react';
 import { beltFor, currentStreak, isSolved } from '../state/progress.js';
 import DojoLogo from './header/DojoLogo.jsx';
 import NavButton from './header/NavButton.jsx';
-import { StreakChip, BeltChip, useTactile } from './header/HeaderChips.jsx';
+import { StreakChip, BeltChip, CoinChip, useTactile } from './header/HeaderChips.jsx';
 
 const LIBRARY = [
   { key: 'learn', label: 'Learn', note: 'python from zero', icon: GraduationCap },
   { key: 'stats', label: 'Stats', note: 'readiness & record', icon: BarChart3 },
   { key: 'patterns', label: 'Patterns', note: 'the templates', icon: Shapes },
   { key: 'guide', label: 'Sensei', note: 'how to train', icon: ScrollText },
+  { key: 'shop', label: 'Dojo shop', note: 'dress the mascot', icon: Shirt },
 ];
 
 export default function Header({
   progress,
+  coins = 0,
   onHome,
   onSearch,
   onBrowse,
   onPatterns,
   onStats,
   onGuide,
+  onShop,
   onLearn,
   onSettings,
   theme,
@@ -63,7 +67,13 @@ export default function Header({
     };
   }, [menuOpen]);
 
-  const handlers = { learn: onLearn, stats: onStats, patterns: onPatterns, guide: onGuide };
+  const handlers = {
+    learn: onLearn,
+    stats: onStats,
+    patterns: onPatterns,
+    guide: onGuide,
+    shop: onShop,
+  };
   const go = (fn) => () => {
     setMenuOpen(false);
     fn();
@@ -71,12 +81,13 @@ export default function Header({
 
   return (
     <header className="header">
-      <DojoLogo onClick={onHome} theme={theme} view={view} />
+      <DojoLogo onClick={onHome} theme={theme} view={view} progress={progress} belt={belt} />
 
       <div className="header-spacer" />
 
       <StreakChip streak={streak} />
       <BeltChip belt={belt} solvedCount={solvedCount} />
+      <CoinChip coins={coins} onClick={onShop} />
 
       <NavButton
         icon={Search}

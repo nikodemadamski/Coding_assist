@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from 'framer-motion';
-import { Flame, Award } from 'lucide-react';
+import { Flame, Award, Coins } from 'lucide-react';
 
 // The two status chips in the bar. They carry the same numbers as before — a
 // streak and a belt — but as objects you can read at a glance and interrogate
@@ -90,5 +90,25 @@ export function BeltChip({ belt, solvedCount }) {
           : 'Black belt — the whole path'}
       </Tip>
     </motion.span>
+  );
+}
+
+// The wallet. It's a button, not a label — the whole point of a balance is the
+// thing you can spend it on, and that should be one click away.
+export function CoinChip({ coins, onClick }) {
+  const t = useTactile();
+  return (
+    <motion.button
+      className="hdr-chip coin-chip"
+      onClick={onClick}
+      transition={t.transition}
+      whileHover={t.whileHover}
+      whileTap={t.whileTap}
+      aria-label={`${coins} coins — open the dojo shop`}
+    >
+      <Coins className="hdr-chip-icon" size={15} strokeWidth={2.2} aria-hidden="true" />
+      <span className="hdr-chip-n">{coins}</span>
+      <Tip>{coins} coins — spend them in the dojo shop</Tip>
+    </motion.button>
   );
 }

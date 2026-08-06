@@ -1,6 +1,7 @@
 import { Component, Suspense, lazy, useMemo, useRef, useState } from 'react';
 import { prefersReducedMotion } from '../../anim/useAnime.js';
 import { costumeForView, mascotLabel } from '../../state/mascot.js';
+import { outfitFor } from '../../state/shop.js';
 
 // The brand: a 3D `dojo` where o-j-o is a face.
 //
@@ -83,9 +84,14 @@ function FlatCostume({ kind, accent, ink }) {
   }
 }
 
-function FlatMark({ accent, ink, costume = 'none' }) {
+function FlatMark({ accent, ink, costume = 'none', beltColor = '#e9e7de' }) {
   return (
-    <svg className="dojo-flat" viewBox="0 0 92 40" aria-hidden="true" focusable="false">
+    <svg className="dojo-flat" viewBox="0 0 92 44" aria-hidden="true" focusable="false">
+      {/* the belt — rank, so it is on in every fallback too */}
+      <rect x="18" y="35" width="66" height="3.6" rx="1.4" fill={beltColor} />
+      <rect x="44" y="33.6" width="7" height="6.4" rx="1.4" fill={beltColor} />
+      <rect x="43" y="39" width="2.6" height="4.4" rx="1.2" fill={beltColor} />
+      <rect x="48" y="39" width="2.6" height="4" rx="1.2" fill={beltColor} />
       {/* d */}
       <circle cx="11" cy="21" r="6.5" fill="none" stroke={ink} strokeWidth="3" />
       <line x1="18.5" y1="5" x2="18.5" y2="27.5" stroke={ink} strokeWidth="3" strokeLinecap="round" />
@@ -137,7 +143,7 @@ function useThemeColors(theme) {
   }, [theme]);
 }
 
-export default function DojoLogo({ onClick, theme, view = 'home' }) {
+export default function DojoLogo({ onClick, theme, view = 'home', progress = {}, belt = null }) {
   const { accent, ink } = useThemeColors(theme);
   const [hovered, setHovered] = useState(false);
   const burst = useRef(0);
@@ -145,8 +151,11 @@ export default function DojoLogo({ onClick, theme, view = 'home' }) {
   // and re-reading it per render would be a matchMedia call per paint.
   const [flat] = useState(() => prefersReducedMotion() || !hasWebGL());
   const costume = costumeForView(view);
+  // The room's costume takes its slot; whatever you bought fills the rest.
+  const outfit = useMemo(() => outfitFor(progress, costume), [progress, costume]);
+  const beltColor = belt?.color ?? ink;
 
-  const fallback = <FlatMark accent={accent} ink={ink} costume={costume} />;
+  const fallback = <FlatMark accent={accent} ink={ink} costume={costume} beltColor={beltColor} />;
 
   return (
     <button
@@ -159,7 +168,7 @@ export default function DojoLogo({ onClick, theme, view = 'home' }) {
       onPointerLeave={() => setHovered(false)}
       onFocus={() => setHovered(true)}
       onBlur={() => setHovered(false)}
-      aria-label={mascotLabel(view)}
+      aria-label={belt ? `${mascotLabel(view)} · ${belt.name} belt` : mascotLabel(view)}
     >
       <span className="dojo-mark">
         {flat ? (
@@ -167,7 +176,14 @@ export default function DojoLogo({ onClick, theme, view = 'home' }) {
         ) : (
           <MarkBoundary fallback={fallback}>
             <Suspense fallback={fallback}>
-              <DojoFace accent={accent} ink={ink} hovered={hovered} burst={burst} costume={costume} />
+              <DojoFace
+                accent={accent}
+                ink={ink}
+                hovered={hovered}
+                burst={burst}
+                outfit={outfit}
+                beltColor={beltColor}
+              />
             </Suspense>
           </MarkBoundary>
         )}

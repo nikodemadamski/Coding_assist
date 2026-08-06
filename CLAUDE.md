@@ -127,6 +127,14 @@ move). Smoke's `checkRevealSettled` asserts nothing is left transparent.
   recordLessonComplete (skill check due +1d), recordLessonReview (pass climbs / fail
   resets — never touches question srs), buildReviewItems (4 quick predict/type,
   missed-first).
+- `shop.js` — the dojo economy. **The balance is derived, never accumulated**: coins are
+  recomputed from the training record each time (solves/review stages/lessons/mocks/warm-up
+  runs/streak days/belts × `RATES`) minus `progress.shop.spent`, so there is no counter to
+  double-count, no migration when a rate changes, and export/import carries the wallet for
+  free. **Belts gate, coins cost** — `ITEMS` name a `belt` index into BELTS and a price, and
+  `itemState()` is the single source for owned/locked/affordable/buyable so the button, the
+  tag and the lock note can't disagree. `outfitFor(progress, roomCostume)` resolves what the
+  mascot wears: the room's costume takes its slot, your equipped kit fills the rest.
 - others: activity (daily goal + todayPulse), mockSession (formats incl. data round via
   format.tracks, optimalComplexity = last approach's complexity else question.complexity), practiceSession (skills→review→new queue; skill checks = due lesson reviews, never requeue),
   patternQuiz, celebrate, theme, uiPrefs, vizPointers (▲ markers from subscript scan).
@@ -235,7 +243,13 @@ idles, leans toward the cursor, and scatters sparks on click. **It is behind `Re
 blocks first paint; reduced motion, no WebGL, and a failed chunk (an error boundary) all fall
 back to the same inline `FlatMark` SVG, so the brand is never missing. three.js can't parse
 `var(--…)`, so `useThemeColors` resolves the tokens to real values, keyed on `theme`.
-`HeaderChips.jsx` holds the streak/belt chips (CSS-only tooltips, glowing `--belt` fill) and
+The mascot **wears your belt** — a sash in `beltFor().color`, always on, drawn below the
+smile; it is rank, not costume, so no room can take it off. Shop items add four slots
+(hat/face/neck/aura, `Worn` drops each in with a bounce, auras are one particle system with
+three velocity fields). `ShopView.jsx` reuses the same canvas at `fit={1.9}` as a live
+preview. **`fit` divides the fitted scale** — note the hover pulse writes `group.scale`
+every frame, so a `scale` prop would be overwritten; the fit is read inside `useFrame`.
+`HeaderChips.jsx` holds the streak/belt/coin chips (CSS-only tooltips, glowing `--belt` fill) and
 exports `useTactile` — the one framer-motion spring every header control presses with.
 `NavButton.jsx` wraps its children in `.hdr-btn-label`, which phones hide (visually, never
 `display:none` — it's the accessible name); a button whose icon IS its content passes it as

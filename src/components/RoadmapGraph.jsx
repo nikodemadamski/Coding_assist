@@ -227,7 +227,7 @@ export default function RoadmapGraph({
             {brandNew ? (
               <>
                 {questions.length} problems between here and interview-ready. The order is
-                already decided — you just have to start.
+                already decided; you just have to start.
               </>
             ) : (
               <>
@@ -371,7 +371,7 @@ export default function RoadmapGraph({
           </span>
         </h2>
         <p className="map-hint">
-          Top to bottom — an arrow means &ldquo;learn this pattern first.&rdquo; Click a topic to
+          Top to bottom. An arrow means &ldquo;learn this pattern first&rdquo;; click a topic to
           open its questions.
         </p>
       </div>
@@ -454,7 +454,7 @@ export default function RoadmapGraph({
 
       {/* Data tracks — separate entities, not woven into the algorithm map */}
       <div className="data-tracks">
-        <span className="data-tracks-label">Data tracks — their own map, off the algorithm path</span>
+        <span className="data-tracks-label">Data tracks: their own map, off the algorithm path</span>
         <div className="data-tracks-row">
           {[
             { key: 'pandas', name: 'pandas' },
