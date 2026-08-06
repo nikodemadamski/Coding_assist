@@ -2,8 +2,10 @@ import CodeMirror from '@uiw/react-codemirror';
 import { python } from '@codemirror/lang-python';
 import { sql, SQLite } from '@codemirror/lang-sql';
 import { EditorView } from '@codemirror/view';
+import { autocompletion } from '@codemirror/autocomplete';
 import { useMemo } from 'react';
 import { useTheme } from '../state/theme.js';
+import { pythonCompletionSource } from '../engine/pyCompletions.js';
 
 const darkTheme = (fontSize) =>
   EditorView.theme(
@@ -62,13 +64,21 @@ const lightTheme = (fontSize) =>
 export default function Editor({ track, value, onChange, fontSize = 14, cmRef = null }) {
   const theme = useTheme();
   const isLight = theme === 'light';
-  const extensions = useMemo(
-    () => [
+  const extensions = useMemo(() => {
+    const base = [
       track === 'sql' ? sql({ dialect: SQLite }) : python(),
       isLight ? lightTheme(fontSize) : darkTheme(fontSize),
-    ],
-    [track, isLight, fontSize]
-  );
+    ];
+    // SQL keeps CodeMirror's own dialect-aware completion (it knows SQLite's
+    // keywords). Python gets ours instead — see engine/pyCompletions.js for
+    // why the stock one had to go.
+    if (track !== 'sql') {
+      base.push(
+        autocompletion({ override: [pythonCompletionSource], icons: false, activateOnTyping: true })
+      );
+    }
+    return base;
+  }, [track, isLight, fontSize]);
 
   return (
     <CodeMirror
@@ -83,9 +93,11 @@ export default function Editor({ track, value, onChange, fontSize = 14, cmRef = 
         lineNumbers: true,
         foldGutter: false,
         highlightActiveLine: true,
-        // CM6's built-in python "completions" are keyword noise (AttributeError,
-        // ConnectionRefusedError, ...) and the popup hangs over the result pane.
-        autocompletion: false,
+        // basicSetup's own completion is replaced above: CM6's built-in python
+        // source is the whole global namespace, so `co` offered
+        // ConnectionRefusedError before `collections`. SQL keeps its dialect
+        // completion, which is genuinely good.
+        autocompletion: track === 'sql',
         bracketMatching: true,
         closeBrackets: true,
         indentOnInput: true,

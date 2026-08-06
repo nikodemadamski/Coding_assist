@@ -729,8 +729,9 @@ button {
   }
 }
 
-/* the divider only exists on the desktop split layout */
-.pv-divider {
+/* the dividers only exist on the desktop split layout */
+.pv-divider,
+.pv-vdivider {
   display: none;
 }
 
@@ -805,18 +806,18 @@ button {
      The problem column width is the draggable --pv-split (persisted). */
   .pv-body {
     grid-template-columns: minmax(300px, var(--pv-split, 42%)) 6px 1fr;
-    grid-template-rows: minmax(0, 58fr) minmax(0, 42fr);
+    grid-template-rows: minmax(0, var(--pv-vsplit, 62%)) 6px minmax(0, 1fr);
   }
 
   .pane-problem {
     grid-column: 1;
-    grid-row: 1 / 3;
+    grid-row: 1 / 4;
   }
 
   .pv-divider {
     display: block;
     grid-column: 2;
-    grid-row: 1 / 3;
+    grid-row: 1 / 4;
     cursor: col-resize;
     touch-action: none;
     user-select: none;
@@ -837,10 +838,30 @@ button {
     min-height: 0;
   }
 
-  .pane-result {
+  /* The editor/console divider: same contract as the vertical one, on Y. How
+     much room the console gets is a personal, per-session thing — some people
+     want a wall of cases, some want a wall of code. */
+  .pv-vdivider {
+    display: block;
     grid-column: 3;
     grid-row: 2;
-    border-top: 1px solid var(--line);
+    cursor: row-resize;
+    touch-action: none;
+    user-select: none;
+    background: var(--line);
+    background-clip: content-box;
+    padding: 2px 0;
+    transition: background-color 0.15s ease;
+  }
+  .pv-vdivider:hover,
+  .pv-vdivider:focus-visible {
+    background-color: var(--crimson);
+    outline: none;
+  }
+
+  .pane-result {
+    grid-column: 3;
+    grid-row: 3;
     overflow-y: auto;
     overscroll-behavior: contain;
   }
@@ -856,7 +877,8 @@ button {
   .problem-view.focus-code .pane-code {
     grid-column: 1;
   }
-  .problem-view.focus-code .pane-result {
+  .problem-view.focus-code .pane-result,
+  .problem-view.focus-code .pv-vdivider {
     grid-column: 1;
   }
 }
@@ -6435,4 +6457,372 @@ p,
 .today-ready .cue-orb {
   color: var(--gold);
   flex: none;
+}
+
+/* ── the test console ───────────────────────────────────────────────────────
+   The bottom half of the code column. Two tabs: the cases you're being graded
+   on (with a scratch case of your own), and the graded result. It replaced a
+   pane that was blank until you pressed Run — which meant the inputs your
+   function would actually receive were never on screen while you wrote it. */
+.console {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+.console-bar {
+  display: flex;
+  align-items: stretch;
+  gap: var(--s-1);
+  padding: 0 var(--s-3);
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  flex: none;
+}
+.console-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: var(--t-sm);
+  font-weight: 600;
+  padding: var(--s-3) var(--s-2);
+  cursor: pointer;
+}
+.console-tab:hover {
+  color: var(--text);
+}
+.console-tab.active {
+  color: var(--text);
+  border-bottom-color: var(--crimson);
+}
+.console-tab-badge {
+  font-family: var(--font-code);
+  font-size: var(--t-micro);
+  font-weight: 500;
+  padding: 1px var(--s-2);
+  border-radius: var(--r-full);
+}
+.console-tab-badge.pass {
+  color: var(--jade);
+  background: color-mix(in srgb, var(--jade) 14%, transparent);
+}
+.console-tab-badge.fail {
+  color: var(--crimson-bright);
+  background: color-mix(in srgb, var(--crimson-bright) 14%, transparent);
+}
+.console-body {
+  padding: var(--s-4);
+  min-height: 0;
+}
+
+/* ── case chips ─────────────────────────────────────────────────────────── */
+.case-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-bottom: var(--s-4);
+}
+.case-chip {
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: var(--t-tiny);
+  font-weight: 600;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition:
+    color var(--dur-1) var(--ease),
+    border-color var(--dur-1) var(--ease);
+}
+.case-chip:hover {
+  color: var(--text);
+}
+.case-chip.active {
+  color: var(--text);
+  border-color: var(--text-dim);
+  background: var(--panel);
+}
+/* After a run each chip carries its own verdict, so you can see which case
+   broke without reading a single line of output. */
+.case-chip.pass {
+  color: var(--jade);
+  border-color: color-mix(in srgb, var(--jade) 40%, var(--line));
+}
+.case-chip.fail {
+  color: var(--crimson-bright);
+  border-color: color-mix(in srgb, var(--crimson-bright) 45%, var(--line));
+}
+.case-chip-custom {
+  border-style: dashed;
+}
+
+/* ── one case, laid out as named arguments ──────────────────────────────── */
+.case-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  font-size: var(--t-sm);
+}
+.case-args {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+.case-arg,
+.case-expect,
+.case-got,
+.case-custom-out {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
+  min-width: 0;
+}
+.case-arg-name {
+  flex: none;
+  min-width: 74px;
+  font-size: var(--t-micro);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  color: var(--text-dim);
+}
+.case-arg-val {
+  font-family: var(--font-code);
+  font-size: var(--t-sm);
+  color: var(--text);
+  overflow-x: auto;
+  white-space: pre;
+  padding-bottom: 2px;
+}
+.case-expect,
+.case-got {
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--line);
+}
+.case-got.pass .case-arg-val {
+  color: var(--jade);
+}
+.case-got.fail .case-arg-val {
+  color: var(--crimson-bright);
+}
+.case-verdict {
+  margin-left: auto;
+  font-weight: 700;
+}
+.case-got.pass .case-verdict {
+  color: var(--jade);
+}
+.case-got.fail .case-verdict {
+  color: var(--crimson-bright);
+}
+.case-stdout {
+  display: flex;
+  gap: var(--s-3);
+  align-items: flex-start;
+}
+.case-stdout pre {
+  margin: 0;
+  font-family: var(--font-code);
+  font-size: var(--t-tiny);
+  color: var(--text-dim);
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+.case-note {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: var(--t-sm);
+}
+
+/* ── the custom case ────────────────────────────────────────────────────── */
+.case-arg-edit {
+  cursor: text;
+}
+.case-arg-input {
+  flex: 1;
+  min-width: 0;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-family: var(--font-code);
+  font-size: var(--t-sm);
+  padding: var(--s-2) var(--s-3);
+}
+.case-arg-input:focus-visible {
+  border-color: var(--sky);
+  outline: none;
+}
+.case-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--line);
+}
+.case-hint {
+  color: var(--text-dim);
+  font-size: var(--t-tiny);
+  max-width: var(--measure);
+}
+.case-hint code {
+  font-family: var(--font-code);
+}
+.case-error {
+  margin: 0;
+  color: var(--crimson-bright);
+  font-size: var(--t-tiny);
+}
+.case-custom-out {
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--line);
+}
+.io-error-text {
+  color: var(--crimson-bright);
+  white-space: pre-wrap;
+}
+
+/* ── the solve clock ────────────────────────────────────────────────────────
+   Pace is one of the five scored readiness dimensions, so it belongs on screen
+   while you solve, not only in the debrief afterwards. */
+.solve-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-1) var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-full);
+  font-size: var(--t-tiny);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.solve-timer-now {
+  font-family: var(--font-code);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text);
+}
+.solve-timer-target {
+  font-family: var(--font-code);
+  font-variant-numeric: tabular-nums;
+}
+.solve-timer-track {
+  width: 34px;
+  height: 4px;
+  border-radius: var(--r-full);
+  background: var(--panel-2);
+  overflow: hidden;
+}
+.solve-timer-fill {
+  display: block;
+  height: 100%;
+  background: var(--sky);
+  transform: scaleX(var(--fill, 0));
+  transform-origin: left center;
+  transition: transform 1s linear;
+}
+.solve-timer.close .solve-timer-fill {
+  background: var(--gold);
+}
+.solve-timer.close .solve-timer-now {
+  color: var(--gold);
+}
+.solve-timer.over {
+  border-color: color-mix(in srgb, var(--crimson-bright) 40%, var(--line));
+}
+.solve-timer.over .solve-timer-now {
+  color: var(--crimson-bright);
+}
+.solve-timer.over .solve-timer-fill {
+  background: var(--crimson-bright);
+}
+.solve-timer.frozen .solve-timer-now {
+  color: var(--jade);
+}
+.solve-timer.frozen .solve-timer-fill {
+  background: var(--jade);
+}
+
+/* ── editor bar: quiet tools, grouped right ─────────────────────────────── */
+.editor-bar .hint-text {
+  font-family: var(--font-code);
+  margin-left: 0;
+}
+.editor-bar-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-left: auto;
+}
+.bar-btn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: var(--t-tiny);
+  padding: var(--s-1) var(--s-2);
+  cursor: pointer;
+  transition:
+    color var(--dur-1) var(--ease),
+    border-color var(--dur-1) var(--ease);
+}
+.bar-btn:hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--line);
+}
+.bar-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.editor-bar .font-ctl {
+  gap: 0;
+}
+
+/* Phones: the clock keeps only the digits. The elapsed number is the part you
+   glance at; the target and its bar are desk-sized detail, and on a 390px
+   toolbar they were eating the problem title. */
+@media (max-width: 620px) {
+  .solve-timer-target,
+  .solve-timer-track {
+    display: none;
+  }
+  .solve-timer {
+    padding: 2px var(--s-2);
+    gap: 0;
+  }
+  .pv-toolbar .pv-title {
+    flex: 1 1 110px;
+  }
+  /* Run and Submit share their own full-width row rather than one of them
+     being orphaned below a half-empty line. Both stay thumb-sized. */
+  .pv-toolbar {
+    row-gap: 6px;
+  }
+  .pv-toolbar > .btn {
+    flex: 1 1 42%;
+    justify-content: center;
+    padding-block: 9px;
+  }
+}
+
+/* Phones: the console is the Result tab, so it owns the pane outright. */
+@media (max-width: 899px) {
+  .console-body {
+    padding: var(--s-3);
+  }
+  .case-arg-name {
+    min-width: 62px;
+  }
 }

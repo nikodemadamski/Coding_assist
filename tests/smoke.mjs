@@ -371,6 +371,29 @@ try {
     'a YouTube escape hatch waits at the bottom of the ladder'
   );
 
+  // ---- the test console: the cases, named, before you have run anything ----
+  check(
+    (await page.locator('.console-tab').allInnerTexts()).some((t) => t.startsWith('Testcase')),
+    'the console opens on the test cases, not on a blank pane'
+  );
+  check((await page.locator('.case-chip').count()) === 6, 'every graded case gets a chip, plus Custom');
+  const caseOne = (await page.locator('.case-detail').innerText()).replace(/\s+/g, ' ');
+  check(
+    caseOne.includes('nums') && caseOne.includes('target'),
+    `a case shows its arguments by their real names (${caseOne.slice(0, 44)})`
+  );
+  check(caseOne.includes('expected'), 'a case shows what the grader expects back');
+  check(
+    await page.locator('.pv-vdivider').isVisible(),
+    'the editor and console are separated by a draggable divider'
+  );
+  // the clock: pace is scored, so it has to be visible while you solve
+  check(/^\d+:\d\d/.test(await page.locator('.solve-timer').innerText()), 'a solve clock runs in the toolbar');
+  check(
+    (await page.locator('.solve-timer').innerText()).includes('15:00'),
+    'the clock names the target pace for this difficulty'
+  );
+
   // ---- failure path: wrong answer, run via the Ctrl+Enter shortcut ----
   await setEditor(page, 'def two_sum(nums, target):\n    return [0, 0]');
   await page.keyboard.press('Control+Enter'); // Run without touching the button
@@ -383,6 +406,47 @@ try {
     'failed test shows Expected vs Your output'
   );
   check(failText.includes('two_sum('), 'failed test shows the exact call as Input');
+  check(
+    (await page.locator('.console-tab-badge').innerText()).includes('/5 passed'),
+    'the Result tab carries the score without being opened'
+  );
+
+  // back on Testcase, each chip now carries its own verdict — which case broke
+  // is answerable without reading a line of output
+  await page.locator('.console-tab', { hasText: 'Testcase' }).click();
+  // this answer is wrong on every case, so every chip must say so
+  check(
+    (await page.locator('.case-chip.fail').count()) === 5 &&
+      (await page.locator('.case-chip.pass').count()) === 0,
+    'each case chip carries that case\'s own verdict'
+  );
+  await page.locator('.case-chip.fail').first().click();
+  const failCase = (await page.locator('.case-detail').innerText()).replace(/\s+/g, ' ');
+  check(failCase.includes('your output'), 'opening a failed case shows what your code returned');
+
+  // ---- the custom case: your own input, run for real, graded not at all ----
+  await page.locator('.case-chip-custom').click();
+  await page.locator('.case-arg-input').nth(0).fill('[5, 1, 9, 4]');
+  await page.locator('.case-arg-input').nth(1).fill('13');
+  await page.locator('.case-actions .btn-primary').click();
+  await page.locator('.case-custom-out').waitFor({ timeout: 60000 });
+  check(
+    (await page.locator('.case-custom-out').innerText()).includes('[0, 0]'),
+    'a custom case runs your code on your input and reports what came back'
+  );
+  check(
+    (await page.evaluate(() => JSON.parse(localStorage.getItem('zoro.progress.v1')).solved['py-two-sum'])) ===
+      undefined,
+    'a custom run records nothing — only Submit does'
+  );
+  // a malformed value is named, not swallowed
+  await page.locator('.case-arg-input').nth(0).fill('[5, 1');
+  await page.locator('.case-actions .btn-primary').click();
+  check(
+    (await page.locator('.case-error').innerText()).includes('nums'),
+    'a malformed custom value names the box it came from'
+  );
+  await page.locator('.console-tab', { hasText: 'Result' }).click();
 
   // ---- failure path: renamed function ----
   await setEditor(page, 'def wrong_name(nums, target):\n    return [0, 1]');
@@ -406,6 +470,13 @@ try {
   await page.locator('.pv-toolbar button', { hasText: /^Run/ }).click();
   await page.locator('.result-summary.pass').waitFor({ timeout: 60000 });
   check((await resultText(page)).includes('5/5 tests passed'), 'correct solution passes all tests');
+  await page.locator('.console-tab', { hasText: 'Testcase' }).click();
+  check(
+    (await page.locator('.case-chip.pass').count()) === 5 &&
+      (await page.locator('.case-chip.fail').count()) === 0,
+    'a correct answer turns every case chip green'
+  );
+  await page.locator('.console-tab', { hasText: 'Result' }).click();
 
   await page.locator('.pv-toolbar button', { hasText: 'Submit' }).click();
   await page.locator('.solved-banner').waitFor({ timeout: 60000 });
@@ -1156,7 +1227,7 @@ try {
     page,
     'def two_sum(nums, target):\n    for i in range(len(nums)):\n        for j in range(i + 1, len(nums)):\n            if nums[i] + nums[j] == target:\n                return [i, j]'
   );
-  await page.locator('button', { hasText: 'Visualize my code' }).click();
+  await page.locator('.editor-bar-tools .bar-btn', { hasText: 'Visualize' }).click();
   await page.locator('.viz-modal').waitFor({ timeout: 60000 });
   check(
     (await page.locator('.viz-label').innerText()).includes('Your code'),

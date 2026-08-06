@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Editor from './Editor.jsx';
-import Results from './Results.jsx';
+import TestConsole from './TestConsole.jsx';
+import SolveTimer from './SolveTimer.jsx';
 import Markdown from './Markdown.jsx';
 import Approaches from './Approaches.jsx';
 import StuckLadder from './StuckLadder.jsx';
@@ -17,6 +18,7 @@ import {
   loadUiPrefs,
   saveUiPrefs,
   clampSplit,
+  clampVSplit,
   FONT_MIN,
   FONT_MAX,
   UI_DEFAULTS,
@@ -103,6 +105,14 @@ export default function ProblemView({
   const [justSolved, setJustSolved] = useState(false);
   const [outcome, setOutcome] = useState(null); // practice: 'pass' | 'fail' | null
   const [viz, setViz] = useState(null); // { code, label } → visualizer open
+  // The console under the editor: 'testcase' (the cases + a custom one) or
+  // 'result' (the graded run). Runs snap it to 'result'; a fresh question
+  // opens on the cases, because that's what you read before you write.
+  const [consoleTab, setConsoleTab] = useState(() =>
+    (question.tests?.length ?? 0) > 0 ? 'testcase' : 'result'
+  );
+  const [customReport, setCustomReport] = useState(null); // ungraded scratch run
+  const [customRunning, setCustomRunning] = useState(false);
   const [lessonDismissed, setLessonDismissed] = useState(false); // "I know it — continue"
   const [uiPrefs, setUiPrefs] = useState(loadUiPrefs); // divider split % + editor font size
   const draftTimer = useRef(null);
@@ -169,6 +179,26 @@ export default function ProblemView({
       document.body.style.removeProperty('cursor');
     };
     document.body.style.cursor = 'col-resize';
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  }, []);
+
+  // The horizontal divider: how much of the code column the editor keeps and
+  // how much the console gets. Same live-resize / persist-on-release contract
+  // as the vertical one.
+  const startVDividerDrag = useCallback((e) => {
+    e.preventDefault();
+    const rect = bodyRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const pctAt = (y) => clampVSplit(((y - rect.top) / rect.height) * 100);
+    const onMove = (ev) => setUiPrefs((p) => ({ ...p, vsplit: pctAt(ev.clientY) }));
+    const onUp = (ev) => {
+      setUiPrefs(saveUiPrefs({ vsplit: pctAt(ev.clientY) }));
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      document.body.style.removeProperty('cursor');
+    };
+    document.body.style.cursor = 'row-resize';
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
   }, []);
@@ -269,6 +299,28 @@ export default function ProblemView({
     setStatusText('');
   }
 
+  // A scratch run: the learner's own arguments, through the same engine, with
+  // no expected value and no consequences. Never records a solve or a miss.
+  async function runCustomCase(tests) {
+    if (customRunning || running) return;
+    setCustomRunning(true);
+    setCustomReport(null);
+    try {
+      const rep = await runQuestion({ ...question, tests }, code, handleStatus);
+      setCustomReport(rep);
+    } catch (err) {
+      setCustomReport({
+        status: 'error',
+        errorType: 'runtime',
+        message: String(err?.message || err),
+        allPassed: false,
+      });
+    } finally {
+      setCustomRunning(false);
+      setStatusText('');
+    }
+  }
+
   async function execute(isSubmit) {
     if (running) return;
     // Flush the pending draft save — the code being run must survive a reload
@@ -280,6 +332,7 @@ export default function ProblemView({
     setOutcome(null);
     setReport(null);
     setTab('result');
+    setConsoleTab('result');
     try {
       const rep = await runQuestion(question, code, handleStatus);
       setReport(rep);
@@ -401,6 +454,16 @@ export default function ProblemView({
         </span>
         <span className={`tag track-${question.track}`}>{question.track}</span>
         <span className={`tag diff-${question.difficulty}`}>{question.difficulty}</span>
+        {/* Pace is a scored dimension of readiness, so the clock belongs where
+            you can see it while solving — not only in the debrief. Mock mode
+            runs its own countdown in headerExtra, so it doesn't get two. */}
+        {!mockMode && (
+          <SolveTimer
+            startedAt={openedAt.current}
+            difficulty={question.difficulty}
+            frozenMs={solveMsRef.current}
+          />
+        )}
         <button
           className="icon-btn pv-focus-toggle"
           onClick={() => setFocusCode((f) => !f)}
@@ -444,7 +507,7 @@ export default function ProblemView({
       <div
         className="pv-body"
         ref={bodyRef}
-        style={{ '--pv-split': `${uiPrefs.split}%` }}
+        style={{ '--pv-split': `${uiPrefs.split}%`, '--pv-vsplit': `${uiPrefs.vsplit}%` }}
         onTouchStart={onSwipeStart}
         onTouchEnd={onSwipeEnd}
       >
@@ -566,6 +629,9 @@ export default function ProblemView({
         />
 
         <section className={`pv-pane pane-code ${tab === 'code' ? 'visible' : ''}`}>
+          {/* One quiet strip: what you're writing on the left, the tools that
+              act on the editor on the right. Everything here used to be a
+              full-weight button competing with Run and Submit. */}
           <div className="editor-bar">
             <span
               className={`lang-badge lang-${question.track}`}
@@ -573,41 +639,43 @@ export default function ProblemView({
             >
               {LANG_LABEL[question.track]}
             </span>
-            <button className="btn" onClick={handleReset}>
-              Reset to starter
-            </button>
-            <span className="font-ctl" title="Editor font size">
-              <button
-                className="btn font-btn"
-                onClick={() => bumpFont(-1)}
-                disabled={uiPrefs.fontSize <= FONT_MIN}
-                aria-label="Smaller editor font"
-              >
-                A−
-              </button>
-              <span className="font-size-val">{uiPrefs.fontSize}px</span>
-              <button
-                className="btn font-btn"
-                onClick={() => bumpFont(1)}
-                disabled={uiPrefs.fontSize >= FONT_MAX}
-                aria-label="Larger editor font"
-              >
-                A+
-              </button>
-            </span>
-            {!mockMode && question.track !== 'sql' && (question.tests?.length ?? 0) > 0 && (
-              <button
-                className="btn btn-viz"
-                onClick={() => openVisualizer(code, 'Your code')}
-                title="Trace YOUR code line by line on a real test case"
-              >
-                Visualize my code
-              </button>
-            )}
             <span className="hint-text">
               {question.track === 'sql'
                 ? 'Write a single SELECT query.'
-                : `Keep the function name ${question.function_name}().`}
+                : `${question.function_name}()`}
+            </span>
+            <span className="editor-bar-tools">
+              {!mockMode && question.track !== 'sql' && (question.tests?.length ?? 0) > 0 && (
+                <button
+                  className="bar-btn"
+                  onClick={() => openVisualizer(code, 'Your code')}
+                  title="Trace YOUR code line by line on a real test case"
+                >
+                  Visualize
+                </button>
+              )}
+              <span className="font-ctl" title="Editor font size">
+                <button
+                  className="bar-btn font-btn"
+                  onClick={() => bumpFont(-1)}
+                  disabled={uiPrefs.fontSize <= FONT_MIN}
+                  aria-label="Smaller editor font"
+                >
+                  A−
+                </button>
+                <span className="font-size-val">{uiPrefs.fontSize}px</span>
+                <button
+                  className="bar-btn font-btn"
+                  onClick={() => bumpFont(1)}
+                  disabled={uiPrefs.fontSize >= FONT_MAX}
+                  aria-label="Larger editor font"
+                >
+                  A+
+                </button>
+              </span>
+              <button className="bar-btn" onClick={handleReset} title="Replace your code with the starter">
+                Reset
+              </button>
             </span>
           </div>
           <div className="mkeys" role="toolbar" aria-label="Coding keys">
@@ -665,106 +733,31 @@ export default function ProblemView({
           </div>
         </section>
 
+        <div
+          className="pv-vdivider"
+          role="separator"
+          aria-orientation="horizontal"
+          aria-label="Resize the editor (arrow keys or drag; double-click resets)"
+          tabIndex={0}
+          title="Drag to resize · double-click to reset"
+          onPointerDown={startVDividerDrag}
+          onDoubleClick={() => setUiPrefs(saveUiPrefs({ vsplit: UI_DEFAULTS.vsplit }))}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              setUiPrefs((p) => saveUiPrefs({ vsplit: p.vsplit - 3 }));
+            } else if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              setUiPrefs((p) => saveUiPrefs({ vsplit: p.vsplit + 3 }));
+            }
+          }}
+        />
+
         <section
           className={`pv-pane pane-result ${tab === 'result' ? 'visible' : ''}`}
           aria-live="polite"
         >
-          {justSolved && (
-            <div className="solved-banner">
-              <span>
-                Solved{solveMsRef.current != null ? ` in ${formatDuration(solveMsRef.current)}` : ''}!
-                Scheduled for review — spaced repetition will bring it back.
-              </span>
-              {onOpenNext && (nextUp || nextInPath) && (
-                <button
-                  className="btn btn-jade next-q-btn"
-                  onClick={() => onOpenNext((nextUp ?? nextInPath).id)}
-                >
-                  {nextUp ? 'Next on your path: ' : 'Next question: '}
-                  {pathStep((nextUp ?? nextInPath).id)
-                    ? `step ${pathStep((nextUp ?? nextInPath).id)} · `
-                    : ''}
-                  {(nextUp ?? nextInPath).title} →
-                </button>
-              )}
-            </div>
-          )}
-          {justSolved && (
-            <BigOCheck question={question} onResult={onBigO} key={`bigo-${question.id}`} />
-          )}
-
-          {/* Practice: correct → reflect + rate to schedule the next review */}
-          {practiceMode && outcome === 'pass' && (
-            <div className="reflect">
-              <div className="solved-banner">
-                ✓ Correct{solveMsRef.current != null ? ` in ${formatDuration(solveMsRef.current)}` : ''} —
-                recorded. Now lock in the understanding, then rate it to continue.
-              </div>
-              {progress.notes?.[question.id] && (
-                <div className="past-note">
-                  <span className="past-note-label">Your note from last time</span>
-                  <p>{progress.notes[question.id]}</p>
-                </div>
-              )}
-              <BigOCheck question={question} onResult={onBigO} key={`bigo-r-${question.id}`} />
-              <p className="reflect-q">
-                Before you move on: in one sentence, what does your solution actually do — and
-                what would break it?
-              </p>
-              {question.approach && (
-                <div className="reflect-block">
-                  <h4>How this solution works</h4>
-                  <Markdown text={question.approach} />
-                </div>
-              )}
-              <div className="reflect-block">
-                <h4>
-                  {question.approaches?.length > 1
-                    ? 'Solutions — from brute force to optimal'
-                    : 'Reference solution — compare with yours'}
-                </h4>
-                <Approaches question={question} onVisualize={openVisualizer} />
-              </div>
-              {onNote && (
-                <Notes
-                  questionId={question.id}
-                  note={progress.notes?.[question.id]}
-                  onSave={onNote}
-                  heading="Note to future you — it'll be here at the next review"
-                />
-              )}
-              <p className="reflect-q">How well did you know it?</p>
-              <div className="rating-row">
-                {RATINGS.map((r) => (
-                  <button key={r.key} className={`btn rating-btn rating-${r.key}`} onClick={() => rate(r.key)}>
-                    <strong>{r.label}</strong>
-                    <span>{r.note}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Practice: wrong → it will come back; fix it or skip */}
-          {practiceMode && outcome === 'fail' && (
-            <div className="reflect">
-              <Results report={report} question={question} />
-              <div className="retry-note">
-                Not quite — this one stays in your queue and will come back until you get it. Fix
-                it and Submit again, or skip for now.
-              </div>
-              <div className="rating-row">
-                <button className="btn" onClick={() => setOutcome(null)}>
-                  Try again
-                </button>
-                <button className="btn btn-gold" onClick={() => onNext?.()}>
-                  Skip for now →
-                </button>
-              </div>
-            </div>
-          )}
-
-          {running ? (
+          {running && (
             <div className="loader" role="status">
               {loadPct != null ? (
                 <div className="loader-bar">
@@ -775,7 +768,6 @@ export default function ProblemView({
                    than a spinner that says nothing about what to expect. */
                 <div className="result-skeleton" aria-hidden="true">
                   <span className="sk-line sk-head" />
-                  <span className="sk-row" />
                   <span className="sk-row" />
                   <span className="sk-row sk-short" />
                 </div>
@@ -790,9 +782,118 @@ export default function ProblemView({
                 </div>
               )}
             </div>
-          ) : (
-            !outcome && <Results report={report} question={question} />
           )}
+
+          {/* The console is always mounted: its tabs are how you read the test
+              cases, so they must not vanish while a run is in flight or behind
+              a banner. Everything below is handed to it as banners above the
+              case list. */}
+          <TestConsole
+            question={question}
+            report={report}
+            running={running}
+            tab={consoleTab}
+            onTabChange={setConsoleTab}
+            onRunCase={runCustomCase}
+            customReport={customReport}
+            customRunning={customRunning}
+          >
+            {justSolved && (
+              <div className="solved-banner">
+                <span>
+                  Solved{solveMsRef.current != null ? ` in ${formatDuration(solveMsRef.current)}` : ''}!
+                  Scheduled for review — spaced repetition will bring it back.
+                </span>
+                {onOpenNext && (nextUp || nextInPath) && (
+                  <button
+                    className="btn btn-jade next-q-btn"
+                    onClick={() => onOpenNext((nextUp ?? nextInPath).id)}
+                  >
+                    {nextUp ? 'Next on your path: ' : 'Next question: '}
+                    {pathStep((nextUp ?? nextInPath).id)
+                      ? `step ${pathStep((nextUp ?? nextInPath).id)} · `
+                      : ''}
+                    {(nextUp ?? nextInPath).title} →
+                  </button>
+                )}
+              </div>
+            )}
+            {justSolved && (
+              <BigOCheck question={question} onResult={onBigO} key={`bigo-${question.id}`} />
+            )}
+
+            {/* Practice: correct → reflect + rate to schedule the next review */}
+            {practiceMode && outcome === 'pass' && (
+              <div className="reflect">
+                <div className="solved-banner">
+                  ✓ Correct{solveMsRef.current != null ? ` in ${formatDuration(solveMsRef.current)}` : ''} —
+                  recorded. Now lock in the understanding, then rate it to continue.
+                </div>
+                {progress.notes?.[question.id] && (
+                  <div className="past-note">
+                    <span className="past-note-label">Your note from last time</span>
+                    <p>{progress.notes[question.id]}</p>
+                  </div>
+                )}
+                <BigOCheck question={question} onResult={onBigO} key={`bigo-r-${question.id}`} />
+                <p className="reflect-q">
+                  Before you move on: in one sentence, what does your solution actually do — and
+                  what would break it?
+                </p>
+                {question.approach && (
+                  <div className="reflect-block">
+                    <h4>How this solution works</h4>
+                    <Markdown text={question.approach} />
+                  </div>
+                )}
+                <div className="reflect-block">
+                  <h4>
+                    {question.approaches?.length > 1
+                      ? 'Solutions — from brute force to optimal'
+                      : 'Reference solution — compare with yours'}
+                  </h4>
+                  <Approaches question={question} onVisualize={openVisualizer} />
+                </div>
+                {onNote && (
+                  <Notes
+                    questionId={question.id}
+                    note={progress.notes?.[question.id]}
+                    onSave={onNote}
+                    heading="Note to future you — it'll be here at the next review"
+                  />
+                )}
+                <p className="reflect-q">How well did you know it?</p>
+                <div className="rating-row">
+                  {RATINGS.map((r) => (
+                    <button key={r.key} className={`btn rating-btn rating-${r.key}`} onClick={() => rate(r.key)}>
+                      <strong>{r.label}</strong>
+                      <span>{r.note}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Practice: wrong → it will come back; fix it or skip. The failing
+                cases themselves are one tab away, so this is just the verdict
+                and the two ways forward. */}
+            {practiceMode && outcome === 'fail' && (
+              <div className="reflect">
+                <div className="retry-note">
+                  Not quite — this one stays in your queue and will come back until you get it. Fix
+                  it and Submit again, or skip for now.
+                </div>
+                <div className="rating-row">
+                  <button className="btn" onClick={() => setOutcome(null)}>
+                    Try again
+                  </button>
+                  <button className="btn btn-gold" onClick={() => onNext?.()}>
+                    Skip for now →
+                  </button>
+                </div>
+              </div>
+            )}
+          </TestConsole>
         </section>
       </div>
 

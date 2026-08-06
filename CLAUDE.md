@@ -9,7 +9,7 @@ copy text from LeetCode/NeetCode.**
 
 ```bash
 npm run dev / build / lint
-npm test                     # 16 unit suites, incl. run-seed-tests (runs EVERY solution
+npm test                     # 18 unit suites, incl. run-seed-tests (runs EVERY solution
                              # and EVERY alternative approach through real engines)
 # Browser smoke (~240 checks). CDN is blocked in the dev container:
 node tests/setup-local-pyodide.mjs         # once per container
@@ -37,6 +37,9 @@ Full gates (lint + test + build + smoke) before every push, no exceptions.
   `warmups.js` + `warmups-pandas.js` + `warmups-sql.js` (typing drills, 3 tracks × 3
   levels × 50; SQL checking folds case, pandas/SQL answers EXECUTE in the warm-up gate),
   `validateQuestion.js` (schema gate, also used by import),
+  `signature.js` (reads a question's parameter names out of its starter code — powers the
+  test console's named arguments; tests/signature-tests.mjs checks all 133 code questions
+  expose a readable signature whose arity matches every test case),
   `lessons.js` + `lessons-chN.js` + `validateLesson.js` (Learn-from-zero curriculum:
   **52 lessons across 9 chapters** — ch1-5 language + arrays/two-pointer/stack, then ch6
   power-tools (recursion, classes, functional, generators, idioms), ch7 search-windows
@@ -179,13 +182,37 @@ the lesson first (python track, uncompleted lessons only). Home shows a learn-st
 (Continue + due skill-check count) that self-collapses at 30/30; Mock/Drill hidden at 0
 solves.
 
-ProblemView anatomy: pv-toolbar (back/title/Focus/Run/Submit) → pv-tabs (BOTTOM on
-<900px, swipe between panes; swipes ignore .cm-editor/.mkeys) → pv-body grid
-(draggable divider --pv-split desktop) → editor-bar (lang, reset, A−/A+, Visualize my
-code) → `.mkeys` mobile key strip (pointerdown+preventDefault keeps the phone keyboard
-open) → Results, solved banner (timed), BigOCheck, StuckLadder, Approaches (tabbed
-brute→optimal, each with Visualize), Notes. VisualizerModal: fixed height, hero
-narration, element-level diff highlights, pointer overlay, runs on ANY code.
+ProblemView anatomy: pv-toolbar (back/stepper/title/tags/SolveTimer/Focus/Run/Submit) →
+pv-tabs (BOTTOM on <900px, swipe between panes; swipes ignore .cm-editor/.mkeys) →
+pv-body grid — desktop is `problem | ‖ | code / ═ / console`, with BOTH dividers
+draggable and persisted (`--pv-split` cols, `--pv-vsplit` rows) → editor-bar (lang chip +
+fn name left, quiet `.bar-btn` tools right: Visualize, A−/A+, Reset) → `.mkeys` mobile key
+strip (pointerdown+preventDefault keeps the phone keyboard open) → **TestConsole**.
+StuckLadder / Approaches (tabbed brute→optimal, each with Visualize) / Notes live in the
+problem column. VisualizerModal: fixed height, hero narration, element-level diff
+highlights, pointer overlay, runs on ANY code.
+
+**TestConsole** (src/components/TestConsole.jsx) owns the bottom pane — two tabs:
+- *Testcase* — one `.case-chip` per `question.tests` entry (+ a dashed **Custom** chip),
+  each carrying its own verdict class (`pass`/`fail`) after a run, so which case broke is
+  readable without opening anything. The selected case shows its args **by name**, read
+  out of the starter signature by `src/data/signature.js` (`paramNames` parses
+  `def fn(...)`, stripping annotations/defaults; `argToText` renders spaced JSON;
+  `parseArgs` validates the Custom boxes and names the offending one).
+  The Custom case runs the real engine via `runQuestion({...question, tests:[{args,
+  expected:null}]})` — ungraded by construction, records nothing, only reports the return
+  value + stdout.
+- *Result* — `<Results/>` unchanged, with a `.console-tab-badge` scoring the last run.
+SQL gets no Testcase tab (`hasCases`) — it grades a result set, not calls. Banners
+(solved / BigOCheck / practice reflect) are passed in as `children` above the tabs, so the
+tabs never disappear behind them.
+
+`SolveTimer.jsx` ticks elapsed vs `PACE_TARGETS_MS[difficulty]` (15/25/40 min — the same
+targets readiness grades), freezes on solve, compacts to digits-only under 620px.
+
+Editor autocomplete is `src/engine/pyCompletions.js`, not CM6's: prelude names (marked
+"no import needed"), interview builtins, keywords, curated `.` members, plus every
+identifier in the buffer. SQL keeps CodeMirror's dialect completion.
 
 PWA: public/manifest.webmanifest + sw.js (nav network-first, assets cache-first),
 registered in prod only; icons in public/icons.

@@ -1,5 +1,8 @@
 // Unit tests for UI preferences (src/state/uiPrefs.js)
 import {
+  clampVSplit,
+  VSPLIT_MIN,
+  VSPLIT_MAX,
   clampSplit,
   clampFont,
   loadUiPrefs,
@@ -70,6 +73,17 @@ console.log('prefs-tests: save');
   check('patch keeps other keys', p2.split === 50 && p2.fontSize === 18);
   const p3 = saveUiPrefs({ split: 200 }, s);
   check('save clamps', p3.split === SPLIT_MAX);
+}
+{
+  // the editor/console divider clamps the same way the problem divider does
+  check('vsplit clamps low', clampVSplit(1) === VSPLIT_MIN);
+  check('vsplit clamps high', clampVSplit(99) === VSPLIT_MAX);
+  check('vsplit rejects garbage', clampVSplit('nope') === UI_DEFAULTS.vsplit);
+  const s = fakeStorage();
+  check('vsplit defaults when unset', loadUiPrefs(s).vsplit === UI_DEFAULTS.vsplit);
+  saveUiPrefs({ vsplit: 75 }, s);
+  check('vsplit persists', loadUiPrefs(s).vsplit === 75);
+  check('saving vsplit keeps the other prefs', loadUiPrefs(s).fontSize === UI_DEFAULTS.fontSize);
 }
 {
   // storage that throws must not crash saving
