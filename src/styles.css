@@ -975,12 +975,16 @@ details.hint[open] summary {
 /* ── results ───────────────────────────────────────────────────────────── */
 
 .result-head {
-  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--s-4);
 }
 .result-summary {
   font-family: var(--font-display);
-  font-size: var(--t-lg);
-  margin-bottom: 8px;
+  font-size: var(--t-xl);
+  font-weight: 600;
 }
 
 .result-summary.pass {
@@ -996,19 +1000,6 @@ details.hint[open] summary {
 }
 
 /* pass-count meter */
-.result-meter {
-  height: 6px;
-  border-radius: var(--r-xs);
-  background: var(--panel-2);
-  overflow: hidden;
-}
-.result-meter-fill {
-  height: 100%;
-  width: 100%;
-  transform: scaleX(var(--fill, 0));
-  transform-origin: left center;
-  transition: transform 0.4s var(--ease);
-}
 .result-meter-fill.pass {
   background: var(--jade);
 }
@@ -1020,13 +1011,12 @@ details.hint[open] summary {
 .test-dots {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
-  margin-bottom: 12px;
+  gap: var(--s-1);
 }
 .test-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: var(--r-xs);
+  width: 9px;
+  height: 9px;
+  border-radius: var(--r-full);
 }
 .test-dot.pass {
   background: var(--jade);
@@ -5852,4 +5842,24 @@ kbd,
   outline: 2px solid var(--gold);
   outline-offset: 2px;
   border-radius: var(--r-xs);
+}
+
+/* Results pane: empty state and small annotations. */
+.result-empty {
+  color: var(--text-dim);
+  max-width: var(--measure);
+}
+.result-empty-line {
+  margin: 0 0 var(--s-1);
+  font-size: var(--t-body);
+}
+.result-empty-hint {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--text-dim);
+}
+.result-note {
+  font-size: var(--t-sm);
+  color: var(--text-dim);
+  margin-left: var(--s-2);
 }

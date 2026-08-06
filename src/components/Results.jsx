@@ -57,9 +57,12 @@ function TestDots({ results }) {
 export default function Results({ report, question }) {
   if (!report) {
     return (
-      <p style={{ color: 'var(--text-dim)', fontSize: '0.88rem' }}>
-        Run your code to see test results here.
-      </p>
+      <div className="result-empty">
+        <p className="result-empty-line">Test results will appear here.</p>
+        <p className="result-empty-hint">
+          Run checks your code against the examples. Submit records the attempt.
+        </p>
+      </div>
     );
   }
 
@@ -89,9 +92,7 @@ export default function Results({ report, question }) {
         <div className={`result-summary ${pass ? 'pass' : 'fail'}`}>
           {pass ? '✓ Correct result' : '✗ Wrong result'}
           {!pass && orderMatters && (
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginLeft: 8 }}>
-              (row order matters for this one)
-            </span>
+            <span className="result-note">(row order matters for this one)</span>
           )}
         </div>
         <div className="sql-diff">
@@ -113,7 +114,6 @@ export default function Results({ report, question }) {
   const passed = results.filter((r) => r.pass).length;
   const total = results.length;
   const allPass = total > 0 && passed === total;
-  const pct = total ? (passed / total) * 100 : 0;
   const stdout = results
     .map((r, i) => (r.stdout ? `— test ${i + 1} —\n${r.stdout}` : ''))
     .filter(Boolean)
@@ -126,16 +126,14 @@ export default function Results({ report, question }) {
 
   return (
     <div className={`results ${allPass ? 'all-pass' : ''}`}>
+      {/* One status line: the verdict, then a dot per test. The old proportion
+          bar said the same thing again and rendered as a bare hairline. */}
       <div className="result-head">
         <div className={`result-summary ${allPass ? 'pass' : 'fail'}`}>
           {allPass ? '✓' : '✗'} {passed}/{total} tests passed
         </div>
-        <div className="result-meter" role="img" aria-label={`${passed} of ${total} tests passing`}>
-          <div className={`result-meter-fill ${allPass ? 'pass' : 'fail'}`} style={{ '--fill': pct / 100 }} />
-        </div>
+        <TestDots results={results} />
       </div>
-
-      <TestDots results={results} />
 
       {allPass && (
         <div className="result-cheer">All tests green — nicely done. Hit Submit to lock it in.</div>
@@ -152,7 +150,7 @@ export default function Results({ report, question }) {
         </div>
       )}
       {question.track === 'pandas' && !results.length && (
-        <p style={{ color: 'var(--text-dim)' }}>No tests ran.</p>
+        <p className="result-note">No tests ran.</p>
       )}
     </div>
   );
