@@ -243,8 +243,12 @@ idles, leans toward the cursor, and scatters sparks on click. **It is behind `Re
 blocks first paint; reduced motion, no WebGL, and a failed chunk (an error boundary) all fall
 back to the same inline `FlatMark` SVG, so the brand is never missing. three.js can't parse
 `var(--…)`, so `useThemeColors` resolves the tokens to real values, keyed on `theme`.
-The mascot **wears your belt** — a sash in `beltFor().color`, always on, drawn below the
-smile; it is rank, not costume, so no room can take it off. Shop items add four slots
+The mascot **wears your belt as a headband** — a band in `beltFor().color` across the brow
+at `BAND_Y`, always on; it is rank, not costume, so no room can take it off. It sits on the
+brow rather than under the chin because the smile's arc reaches down past the letters (a
+sash there crossed the mouth) and because a band is what every hat can stack on: all hats
+sit above `BAND_Y`, and the `headband` item is now the knot-and-tails that *tie* that band.
+Neck items clear the smile at y ≈ -1.5. Shop items add four slots
 (hat/face/neck/aura, `Worn` drops each in with a bounce, auras are one particle system with
 three velocity fields). `ShopView.jsx` reuses the same canvas at `fit={1.9}` as a live
 preview. **`fit` divides the fitted scale** — note the hover pulse writes `group.scale`

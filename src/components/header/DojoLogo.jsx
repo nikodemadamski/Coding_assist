@@ -24,25 +24,25 @@ function FlatCostume({ kind, accent, ink }) {
     case 'cap':
       return (
         <g>
-          <path d="M34 9 L52 3 L70 9 L52 15 Z" fill={ink} />
-          <path d="M42 12 v5 a10 5 0 0 0 20 0 v-5" fill="none" stroke={ink} strokeWidth="2.4" />
-          <line x1="70" y1="9" x2="72" y2="17" stroke={accent} strokeWidth="1.8" strokeLinecap="round" />
-          <circle cx="72" cy="18.5" r="2" fill={accent} />
+          <path d="M34 5 L52 0 L70 5 L52 10 Z" fill={ink} />
+          <path d="M44 8 v2.5 a8 4 0 0 0 16 0 V8" fill="none" stroke={ink} strokeWidth="2" />
+          <line x1="70" y1="5" x2="72" y2="12" stroke={accent} strokeWidth="1.8" strokeLinecap="round" />
+          <circle cx="72" cy="13" r="1.8" fill={accent} />
         </g>
       );
     case 'headband':
       return (
         <g fill={accent}>
-          <rect x="24" y="7" width="56" height="3.6" rx="1.6" />
-          <rect x="20" y="9" width="8" height="2.6" rx="1.2" transform="rotate(28 24 10)" />
-          <rect x="19" y="13" width="7" height="2.4" rx="1.2" transform="rotate(52 22 14)" />
+          <rect x="21.5" y="6.6" width="5" height="6" rx="1.6" />
+          <rect x="14" y="10" width="9" height="2.6" rx="1.2" transform="rotate(26 18 11)" />
+          <rect x="13" y="14" width="7.5" height="2.4" rx="1.2" transform="rotate(50 16 15)" />
         </g>
       );
     case 'sweatband':
       return (
         <g>
-          <rect x="25" y="6" width="54" height="5" rx="2.2" fill={ink} />
-          <rect x="25" y="8" width="54" height="1.6" fill={accent} />
+          <rect x="27" y="1.5" width="50" height="4.6" rx="2" fill={ink} />
+          <rect x="27" y="3.4" width="50" height="1.4" fill={accent} />
           <rect x="12" y="16" width="9" height="1.8" rx="0.9" fill={accent} />
           <rect x="14" y="21" width="6" height="1.8" rx="0.9" fill={accent} />
         </g>
@@ -50,9 +50,9 @@ function FlatCostume({ kind, accent, ink }) {
     case 'bowtie':
       return (
         <g>
-          <path d="M52 33 L45 30 L45 36 Z" fill={accent} />
-          <path d="M52 33 L59 30 L59 36 Z" fill={accent} />
-          <circle cx="52" cy="33" r="1.8" fill={ink} />
+          <path d="M52 38 L45 35 L45 41 Z" fill={accent} />
+          <path d="M52 38 L59 35 L59 41 Z" fill={accent} />
+          <circle cx="52" cy="38" r="1.8" fill={ink} />
         </g>
       );
     case 'glasses':
@@ -74,9 +74,9 @@ function FlatCostume({ kind, accent, ink }) {
     case 'topknot':
       return (
         <g>
-          <rect x="50.8" y="4" width="2.4" height="6" rx="1.2" fill={ink} />
-          <circle cx="52" cy="3.4" r="3.4" fill={ink} />
-          <rect x="49.6" y="6.6" width="4.8" height="1.6" rx="0.8" fill={accent} />
+          <rect x="50.8" y="1.5" width="2.4" height="5" rx="1.2" fill={ink} />
+          <circle cx="52" cy="1" r="3.2" fill={ink} />
+          <rect x="49.6" y="3.6" width="4.8" height="1.6" rx="0.8" fill={accent} />
         </g>
       );
     default:
@@ -87,11 +87,8 @@ function FlatCostume({ kind, accent, ink }) {
 function FlatMark({ accent, ink, costume = 'none', beltColor = '#e9e7de' }) {
   return (
     <svg className="dojo-flat" viewBox="0 0 92 44" aria-hidden="true" focusable="false">
-      {/* the belt — rank, so it is on in every fallback too */}
-      <rect x="18" y="35" width="66" height="3.6" rx="1.4" fill={beltColor} />
-      <rect x="44" y="33.6" width="7" height="6.4" rx="1.4" fill={beltColor} />
-      <rect x="43" y="39" width="2.6" height="4.4" rx="1.2" fill={beltColor} />
-      <rect x="48" y="39" width="2.6" height="4" rx="1.2" fill={beltColor} />
+      {/* the belt, worn on the brow — rank, so it is on in every fallback too */}
+      <rect x="24" y="7.5" width="56" height="4.2" rx="1.6" fill={beltColor} />
       {/* d */}
       <circle cx="11" cy="21" r="6.5" fill="none" stroke={ink} strokeWidth="3" />
       <line x1="18.5" y1="5" x2="18.5" y2="27.5" stroke={ink} strokeWidth="3" strokeLinecap="round" />

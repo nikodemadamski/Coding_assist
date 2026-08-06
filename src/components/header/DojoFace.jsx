@@ -13,7 +13,7 @@ import { beacon, watchBeacon, typingHeat } from '../../anim/mascotBeacon.js';
 // The whole module is behind React.lazy in DojoLogo.jsx, so three.js lands in
 // its own chunk and the app shell never pays for it on first paint.
 
-const REST_Y = 0.42;
+const REST_Y = 0.12;
 const EYE_L = -0.62;
 const NOSE_X = 0.34;
 const EYE_R = 1.28;
@@ -31,7 +31,7 @@ function Eye({ x, accent, pointer, hovered, blink, typing }) {
       // The pupil leans toward the cursor but never leaves the iris. While
       // you're typing it drops instead, as if watching the keys.
       const heat = typing.current;
-      const tx = x + pointer.current.x * 0.11 * (1 - heat);
+      const tx = pointer.current.x * 0.11 * (1 - heat);
       const ty = pointer.current.y * 0.11 * (1 - heat) - heat * 0.11;
       pupil.current.position.x += (tx - pupil.current.position.x) * k;
       pupil.current.position.y += (ty - pupil.current.position.y) * k;
@@ -58,7 +58,9 @@ function Eye({ x, accent, pointer, hovered, blink, typing }) {
           metalness={0.15}
         />
       </mesh>
-      <mesh ref={pupil} position={[x, 0, 0.16]}>
+      {/* Local to the eye group, which is ALREADY at x — offsetting by x again
+          put both pupils outside the face as two stray dots. */}
+      <mesh ref={pupil} position={[0, 0, 0.16]}>
         <sphereGeometry args={[0.105, 16, 16]} />
         <meshStandardMaterial color="#12141d" roughness={0.2} />
       </mesh>
@@ -135,7 +137,7 @@ const FACE_X = (EYE_L + EYE_R) / 2; // between the eyes: where a hat belongs
 
 function Cap({ accent, ink }) {
   return (
-    <group position={[FACE_X, 0.62, 0]}>
+    <group position={[FACE_X, 0.92, 0]}>
       {/* the skull cap, then the board on top, tipped back a little */}
       <mesh position={[0, -0.02, 0]}>
         <sphereGeometry args={[0.3, 14, 10, 0, Math.PI * 2, 0, Math.PI / 2]} />
@@ -158,23 +160,31 @@ function Cap({ accent, ink }) {
   );
 }
 
-// The hachimaki: a band across the brow with two tails streaming behind.
+// The hachimaki. The belt already IS the band, so this ties it: a knot at the
+// side and two tails streaming behind, which is what turns a band into
+// something someone put on this morning.
 function Headband({ accent }) {
-  const mat = <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.45} roughness={0.5} />;
+  const mat = <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.5} roughness={0.5} />;
+  const tails = useRef(null);
+  useFrame((state) => {
+    if (tails.current) tails.current.rotation.z = Math.sin(state.clock.elapsedTime * 1.9) * 0.09;
+  });
   return (
-    <group position={[FACE_X, 0.64, 0.05]}>
+    <group position={[FACE_X - 1.36, BAND_Y, 0.06]}>
       <mesh>
-        <boxGeometry args={[2.5, 0.16, 0.42]} />
+        <boxGeometry args={[0.26, 0.3, 0.5]} />
         {mat}
       </mesh>
-      <mesh position={[-1.28, -0.1, 0]} rotation={[0, 0, 0.5]}>
-        <boxGeometry args={[0.5, 0.08, 0.2]} />
-        {mat}
-      </mesh>
-      <mesh position={[-1.3, -0.3, 0]} rotation={[0, 0, 0.95]}>
-        <boxGeometry args={[0.42, 0.07, 0.2]} />
-        {mat}
-      </mesh>
+      <group ref={tails}>
+        <mesh position={[-0.28, -0.12, 0]} rotation={[0, 0, 0.42]}>
+          <boxGeometry args={[0.56, 0.1, 0.2]} />
+          {mat}
+        </mesh>
+        <mesh position={[-0.3, -0.38, 0]} rotation={[0, 0, 0.88]}>
+          <boxGeometry args={[0.46, 0.09, 0.2]} />
+          {mat}
+        </mesh>
+      </group>
     </group>
   );
 }
@@ -182,7 +192,7 @@ function Headband({ accent }) {
 // Terry cloth and two speed marks, because the warm-up is a sprint.
 function Sweatband({ accent, ink }) {
   return (
-    <group position={[FACE_X, 0.66, 0.05]}>
+    <group position={[FACE_X, 0.82, 0.05]}>
       <mesh>
         <boxGeometry args={[2.4, 0.22, 0.44]} />
         <meshStandardMaterial color={ink} roughness={0.9} />
@@ -204,7 +214,7 @@ function Sweatband({ accent, ink }) {
 // Interview clothes: a bow tie under the chin.
 function BowTie({ accent, ink }) {
   return (
-    <group position={[NOSE_X, -1.02, 0.1]}>
+    <group position={[NOSE_X, -1.56, 0.1]}>
       {[-1, 1].map((side) => (
         <mesh key={side} position={[side * 0.24, 0, 0]} rotation={[0, 0, side * 0.34]}>
           <boxGeometry args={[0.36, 0.3, 0.1]} />
@@ -264,7 +274,7 @@ function Monocle({ accent, ink }) {
 // The sensei's topknot: a small bun, tied.
 function Topknot({ accent, ink }) {
   return (
-    <group position={[FACE_X, 0.58, 0]}>
+    <group position={[FACE_X, 0.78, 0]}>
       <mesh position={[0, 0.1, 0]}>
         <capsuleGeometry args={[0.07, 0.16, 3, 8]} />
         <meshStandardMaterial color={ink} roughness={0.6} />
@@ -281,35 +291,27 @@ function Topknot({ accent, ink }) {
   );
 }
 
-// The belt. Not a costume — a costume is where you are, a belt is what you've
-// earned, so it is always on and it is the one thing the room can never take
-// off you. A sash under the face with a knot and two hanging ends, in the
-// belt's own colour.
+// The belt, worn as a headband.
+//
+// Not a costume — a costume is where you are, a belt is what you've earned, so
+// it is always on and no room can take it off you. It sits on the brow rather
+// than under the chin for two reasons: the smile's arc reaches down past the
+// letters, so a sash there crossed the mouth; and a band across the forehead is
+// the thing every hat in the shop can sit on top of.
+const BAND_Y = 0.56;
 function Belt({ color }) {
   return (
-    <group position={[NOSE_X, -1.62, 0]}>
+    <group position={[FACE_X, BAND_Y, 0.04]}>
       <mesh>
-        <boxGeometry args={[3.2, 0.17, 0.32]} />
+        <boxGeometry args={[2.72, 0.19, 0.44]} />
         <meshStandardMaterial color={color} roughness={0.7} />
       </mesh>
-      {/* A rim, so a Black belt still reads against a dark page — the darkest
-          rank must not be the one you can't see. */}
-      <mesh position={[0, 0, 0.17]}>
-        <boxGeometry args={[3.2, 0.045, 0.02]} />
-        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.85} />
+      {/* A lit rim, so a Black belt still reads against a dark page — the
+          darkest rank must not be the one you can't see. */}
+      <mesh position={[0, -0.04, 0.23]}>
+        <boxGeometry args={[2.72, 0.05, 0.02]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.9} />
       </mesh>
-      {/* the knot */}
-      <mesh position={[-0.15, 0, 0.16]}>
-        <boxGeometry args={[0.3, 0.27, 0.2]} />
-        <meshStandardMaterial color={color} roughness={0.65} />
-      </mesh>
-      {/* the two ends, hanging */}
-      {[-0.3, 0.01].map((x, i) => (
-        <mesh key={i} position={[x, -0.25, 0.14]} rotation={[0, 0, i ? -0.16 : 0.14]}>
-          <boxGeometry args={[0.13, 0.34, 0.12]} />
-          <meshStandardMaterial color={color} roughness={0.7} />
-        </mesh>
-      ))}
     </group>
   );
 }
@@ -318,7 +320,7 @@ function Belt({ color }) {
 // A conical straw hat. The wandering-swordsman look.
 function Kasa({ ink, accent }) {
   return (
-    <group position={[FACE_X, 0.72, 0]}>
+    <group position={[FACE_X, 1.0, 0]}>
       <mesh position={[0, 0.06, 0]}>
         <coneGeometry args={[1.15, 0.5, 18]} />
         <meshStandardMaterial color="#c9a86a" roughness={0.9} flatShading />
@@ -338,7 +340,7 @@ function Kasa({ ink, accent }) {
 function Crown({ accent }) {
   const gold = '#e8b04b';
   return (
-    <group position={[FACE_X, 0.78, 0]}>
+    <group position={[FACE_X, 0.98, 0]}>
       <mesh>
         <boxGeometry args={[1.15, 0.18, 0.4]} />
         <meshStandardMaterial color={gold} metalness={0.75} roughness={0.25} emissive={gold} emissiveIntensity={0.28} />
@@ -362,11 +364,11 @@ function Shades({ ink }) {
   return (
     <group position={[FACE_X, 0.02, 0.3]}>
       <mesh>
-        <boxGeometry args={[2.5, 0.52, 0.1]} />
+        <boxGeometry args={[2.46, 0.34, 0.1]} />
         <meshStandardMaterial color="#14161f" roughness={0.15} metalness={0.4} />
       </mesh>
-      <mesh position={[-0.5, 0.12, 0.06]} rotation={[0, 0, 0.22]}>
-        <boxGeometry args={[0.7, 0.07, 0.02]} />
+      <mesh position={[-0.5, 0.07, 0.06]} rotation={[0, 0, 0.18]}>
+        <boxGeometry args={[0.62, 0.05, 0.02]} />
         <meshStandardMaterial color={ink} emissive={ink} emissiveIntensity={0.35} />
       </mesh>
       <mesh position={[1.4, 0.1, -0.1]} rotation={[0, 0.9, 0]}>
@@ -381,18 +383,22 @@ function Shades({ ink }) {
 function Scarf({ accent }) {
   const tail = useRef(null);
   useFrame((state) => {
-    if (tail.current) tail.current.rotation.z = -0.5 + Math.sin(state.clock.elapsedTime * 1.7) * 0.14;
+    if (tail.current) tail.current.rotation.z = Math.sin(state.clock.elapsedTime * 1.7) * 0.16;
   });
   return (
-    <group position={[NOSE_X, -1.02, 0.08]}>
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.42, 0.09, 8, 20, Math.PI * 1.2]} />
+    <group position={[NOSE_X, -1.52, 0.06]}>
+      {/* the wrap */}
+      <mesh>
+        <boxGeometry args={[1.5, 0.22, 0.4]} />
         <meshStandardMaterial color={accent} roughness={0.8} />
       </mesh>
-      <mesh ref={tail} position={[-0.5, -0.22, 0]}>
-        <boxGeometry args={[0.72, 0.14, 0.12]} />
-        <meshStandardMaterial color={accent} roughness={0.8} />
-      </mesh>
+      {/* the loose end, drifting */}
+      <group ref={tail} position={[-0.72, -0.05, 0.06]}>
+        <mesh position={[-0.3, -0.16, 0]} rotation={[0, 0, 0.5]}>
+          <boxGeometry args={[0.66, 0.17, 0.14]} />
+          <meshStandardMaterial color={accent} roughness={0.8} />
+        </mesh>
+      </group>
     </group>
   );
 }
@@ -588,7 +594,7 @@ function Mark({ accent, ink, hovered, burst, outfit, beltColor, fit }) {
   //
   // This is read inside useFrame rather than set as a `scale` prop, because
   // the hover pulse writes group.scale every frame and would overwrite a prop.
-  const scale = Math.min(1.05, viewport.width / 4.6, viewport.height / 3.15) / fit;
+  const scale = Math.min(1.05, viewport.width / 4.6, viewport.height / 2.95) / fit;
 
   // One shared window listener, ref-counted in the beacon module.
   useEffect(() => watchBeacon(), []);
