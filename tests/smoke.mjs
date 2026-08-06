@@ -202,6 +202,25 @@ try {
     (await page.locator('.go-deeper-body').innerText()).toLowerCase().includes('hash'),
     'go-deeper reveals the transferable insight'
   );
+  // ---- path stepper: move on without solving, and step back ----
+  {
+    const startTitle = await page.locator('.pv-title').innerText();
+    await page.locator('.pv-step-btn[aria-label="Next question on the path"]').click();
+    await page.waitForFunction(
+      (t) => document.querySelector('.pv-title')?.innerText !== t,
+      startTitle,
+      { timeout: 10000 }
+    );
+    check(true, 'the Next stepper moves to another question without solving');
+    await page.locator('.pv-step-btn[aria-label="Previous question on the path"]').click();
+    await page.waitForFunction(
+      (t) => document.querySelector('.pv-title')?.innerText === t,
+      startTitle,
+      { timeout: 10000 }
+    );
+    check(true, 'the Prev stepper returns to the previous question');
+  }
+
   await page.locator('.icon-btn[aria-label="Back to problem list"]').click();
   check((await page.locator('.graph-node').count()) >= 15, 'Back returns to the map it came from');
 
@@ -445,6 +464,26 @@ try {
   check(
     (await resultText(page)).includes('Time limit exceeded'),
     'infinite loop killed with friendly timeout message'
+  );
+  // …and the editor must NOT stay locked: fixing the code and running again
+  // has to work, even though the timeout terminated the Python worker.
+  await page.waitForFunction(
+    () => {
+      const b = [...document.querySelectorAll('.pv-toolbar button')].find((x) => /^Run/.test(x.innerText));
+      return b && !b.disabled;
+    },
+    null,
+    { timeout: 30000 }
+  );
+  await setEditor(
+    page,
+    'def two_sum(nums, target):\n    seen = {}\n    for i, n in enumerate(nums):\n        if target - n in seen:\n            return [seen[target - n], i]\n        seen[n] = i'
+  );
+  await page.locator('.pv-toolbar button', { hasText: /^Run/ }).click();
+  await page.locator('.result-summary').first().waitFor({ timeout: 120000 });
+  check(
+    (await resultText(page)).includes('passed'),
+    'a corrected solution runs again after a timeout (the runtime recovers)'
   );
 
   // ---- SQL: correct, wrong (visual diff), and syntax error ----

@@ -43,7 +43,7 @@ import {
   backupStatus,
   recordBigO,
 } from './state/progress.js';
-import { nextOnPath } from './data/roadmap.js';
+import { nextOnPath, neighborOnPath } from './data/roadmap.js';
 import { markVisit, recordDaySolve, recordDayFail } from './state/activity.js';
 import { getInitialTheme, applyTheme } from './state/theme.js';
 import { nextCelebration } from './state/celebrate.js';
@@ -159,6 +159,10 @@ export default function App() {
 
   const currentQuestion =
     view.name === 'problem' ? allQuestions.find((q) => q.id === view.id) : null;
+  // Walk the path from wherever you are — so you can move on without solving,
+  // and keep going straight after finishing, instead of routing via Home.
+  const prevOnPath = currentQuestion ? neighborOnPath(allQuestions, currentQuestion.id, -1) : null;
+  const nextInPath = currentQuestion ? neighborOnPath(allQuestions, currentQuestion.id, 1) : null;
   // Problems remember which list opened them, so Back returns there.
   const backTo =
     view.from === 'browse'
@@ -378,6 +382,8 @@ export default function App() {
             onNote={handleNote}
             onBigO={handleBigO}
             nextUp={nextUpQuestion}
+            prevInPath={prevOnPath}
+            nextInPath={nextInPath}
             onOpenNext={(id) => setView({ name: 'problem', id, from: view.from || 'home' })}
             onBack={() => setView(backTo)}
             onSeePattern={(key) => setView({ name: 'patterns', focusKey: key })}

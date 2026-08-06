@@ -337,6 +337,16 @@ export function nextOnPath(questions, isSolvedFn) {
   return sorted.find((q) => !isSolvedFn(q.id)) || null;
 }
 
+// The question immediately before (step -1) or after (step +1) `id` in path
+// order — what "Prev / Next" means while you are sitting on a problem, whether
+// you solved it, skipped it, or are just reviewing. Null at either end.
+export function neighborOnPath(questions, id, step) {
+  const sorted = [...questions].sort(byPathOrder);
+  const at = sorted.findIndex((q) => q.id === id);
+  if (at < 0) return null;
+  return sorted[at + step] ?? null;
+}
+
 const PATTERN_TO_CATEGORY = (() => {
   const map = {};
   for (const cat of ROADMAP) for (const p of cat.patterns) map[p] = cat.key;

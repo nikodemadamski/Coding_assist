@@ -8,6 +8,7 @@ import Notes from './Notes.jsx';
 import BigOCheck from './BigOCheck.jsx';
 import VisualizerModal from './VisualizerModal.jsx';
 import { runQuestion } from '../engine/runnerClient.js';
+import { resetPythonRuntime } from '../engine/pyClient.js';
 import { isSolved } from '../state/progress.js';
 import { lessonsForQuestion } from '../data/lessonLinks.js';
 import { lessonById } from '../data/lessons.js';
@@ -42,6 +43,10 @@ const RATINGS = [
 
 const MOD = typeof navigator !== 'undefined' && /Mac/.test(navigator.platform) ? '⌘' : 'Ctrl';
 
+// User code is killed at 5s, but a first run also downloads the runtime. Past
+// this, offer a manual restart rather than leaving the editor locked.
+const STUCK_AFTER_MS = 20000;
+
 // Phone keyboards bury the characters Python lives on. This strip sits above
 // the editor on narrow screens — one tap for the symbols, indent and dedent.
 const MOBILE_KEYS = [':', '(', ')', '[', ']', '{', '}', "'", '"', ',', '.', '_', '=', '<', '>', '#'];
@@ -73,6 +78,10 @@ export default function ProblemView({
   // free-mode continuation (optional): the next unsolved path question
   nextUp = null,
   onOpenNext = null,
+  // free-mode path stepping (optional): the questions either side of this one,
+  // so you can move on without solving and continue straight after finishing
+  prevInPath = null,
+  nextInPath = null,
   // start from a clean slate, ignoring any saved draft (reviews, drills, mocks
   // — re-deriving the answer is the whole point; browsing keeps your draft)
   freshStart = false,
@@ -86,6 +95,9 @@ export default function ProblemView({
   const [focusCode, setFocusCode] = useState(false); // desktop: hide problem, widen editor
   const [report, setReport] = useState(null);
   const [running, setRunning] = useState(false);
+  // Watchdog: a run that has not finished after a while offers a manual restart,
+  // so the editor can never be left permanently locked behind a wedged runtime.
+  const [stuck, setStuck] = useState(false);
   const [statusText, setStatusText] = useState('');
   const [loadPct, setLoadPct] = useState(null); // 0-100 while Pyodide loads
   const [justSolved, setJustSolved] = useState(false);
@@ -236,6 +248,27 @@ export default function ProblemView({
     }
   }, []);
 
+  // A run is capped at 5s of user code, but the first boot downloads the runtime.
+  // If we are still going well past that, surface the escape hatch.
+  useEffect(() => {
+    if (!running) {
+      setStuck(false);
+      return undefined;
+    }
+    const t = setTimeout(() => setStuck(true), STUCK_AFTER_MS);
+    return () => clearTimeout(t);
+  }, [running]);
+
+  // Drop the Python runtime and unlock the editor. resetPythonRuntime settles any
+  // in-flight job (so execute's finally clears `running`); the local reset covers
+  // the case where nothing was actually in flight.
+  function forceReset() {
+    resetPythonRuntime();
+    setRunning(false);
+    setStuck(false);
+    setStatusText('');
+  }
+
   async function execute(isSubmit) {
     if (running) return;
     // Flush the pending draft save — the code being run must survive a reload
@@ -325,6 +358,30 @@ export default function ProblemView({
         >
           {mockMode ? '✕ End interview' : practiceMode ? '✕ End' : '←'}
         </button>
+        {/* Step along the path without going home first. Practice and mock own
+            their own queues, so the stepper is free-mode only. */}
+        {!practiceMode && !mockMode && (prevInPath || nextInPath) && (
+          <span className="pv-stepper">
+            <button
+              className="icon-btn pv-step-btn"
+              onClick={() => prevInPath && onOpenNext?.(prevInPath.id)}
+              disabled={!prevInPath}
+              aria-label="Previous question on the path"
+              title={prevInPath ? `Previous: ${prevInPath.title}` : 'Start of the path'}
+            >
+              ‹
+            </button>
+            <button
+              className="icon-btn pv-step-btn"
+              onClick={() => nextInPath && onOpenNext?.(nextInPath.id)}
+              disabled={!nextInPath}
+              aria-label="Next question on the path"
+              title={nextInPath ? `Next: ${nextInPath.title}` : 'End of the path'}
+            >
+              ›
+            </button>
+          </span>
+        )}
         {practiceMode && phaseLabel && (
           <span className={`phase-pill ${practiceInfo.phase}`}>{phaseLabel}</span>
         )}
@@ -618,10 +675,16 @@ export default function ProblemView({
                 Solved{solveMsRef.current != null ? ` in ${formatDuration(solveMsRef.current)}` : ''}!
                 Scheduled for review — spaced repetition will bring it back.
               </span>
-              {nextUp && onOpenNext && (
-                <button className="btn btn-jade next-q-btn" onClick={() => onOpenNext(nextUp.id)}>
-                  Next on your path: {pathStep(nextUp.id) ? `step ${pathStep(nextUp.id)} · ` : ''}
-                  {nextUp.title} →
+              {onOpenNext && (nextUp || nextInPath) && (
+                <button
+                  className="btn btn-jade next-q-btn"
+                  onClick={() => onOpenNext((nextUp ?? nextInPath).id)}
+                >
+                  {nextUp ? 'Next on your path: ' : 'Next question: '}
+                  {pathStep((nextUp ?? nextInPath).id)
+                    ? `step ${pathStep((nextUp ?? nextInPath).id)} · `
+                    : ''}
+                  {(nextUp ?? nextInPath).title} →
                 </button>
               )}
             </div>
@@ -711,6 +774,14 @@ export default function ProblemView({
                 <div className="spinner" aria-hidden="true" />
               )}
               <span>{statusText || 'Running your code…'}</span>
+              {stuck && (
+                <div className="run-stuck">
+                  <span>Taking longer than expected.</span>
+                  <button className="btn btn-restart" onClick={forceReset}>
+                    Restart Python & unlock the editor
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             !outcome && <Results report={report} question={question} />

@@ -1143,6 +1143,36 @@ details.hint[open] summary {
   color: var(--text-dim);
 }
 
+/* Escape hatch when a run does not come back — never leave the editor locked. */
+.run-stuck {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 0.85rem;
+}
+.btn-restart {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* Prev / next stepper — move along the path without going Home first. */
+.pv-stepper {
+  display: flex;
+  gap: 2px;
+  flex: none;
+}
+.pv-step-btn {
+  font-size: 1.15rem;
+  line-height: 1;
+  padding: 4px 9px;
+}
+.pv-step-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
 .loader-bar {
   width: min(300px, 80%);
   height: 8px;

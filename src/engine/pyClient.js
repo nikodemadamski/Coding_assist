@@ -8,19 +8,57 @@ const LOAD_TIMEOUT_MS = 240000; // generous: first pyodide+pandas download on sl
 
 let worker = null;
 let runSeq = 0;
+// Every in-flight job's "settle with this error" callback. A job that never
+// hears back (worker crash, or the worker being terminated by ANOTHER job's
+// timeout) would otherwise hang forever, leaving the UI stuck on "Running…"
+// with Run/Submit disabled. Killing the worker settles all of them.
+const inFlight = new Set();
 
 function ensureWorker() {
   if (!worker) {
     worker = new Worker(new URL('./py.worker.js', import.meta.url), { type: 'module' });
+    // A worker-level failure (module load error, wasm abort, OOM) arrives as an
+    // `error` event, never as a `message` — without this the promise never settles.
+    worker.addEventListener('error', (e) => {
+      killWorker({
+        errorType: 'runtime',
+        message: `The Python runtime crashed${e?.message ? `: ${e.message}` : ''}. It has been restarted — run again.`,
+      });
+    });
+    worker.addEventListener('messageerror', () => {
+      killWorker({
+        errorType: 'runtime',
+        message: 'The Python runtime sent a message that could not be read. It has been restarted — run again.',
+      });
+    });
   }
   return worker;
 }
 
-function killWorker() {
+// Terminate the worker and settle every job still waiting on it, so no caller
+// is ever left awaiting a promise that can no longer resolve.
+function killWorker(strandedError = null) {
   if (worker) {
     worker.terminate();
     worker = null;
   }
+  if (inFlight.size) {
+    const err = strandedError ?? {
+      errorType: 'runtime',
+      message: 'The Python runtime was restarted. Run again.',
+    };
+    for (const settle of [...inFlight]) settle(err);
+    inFlight.clear();
+  }
+}
+
+// Escape hatch for the UI: drop the current runtime so the next run boots a
+// fresh one, and unblock anything currently waiting on it.
+export function resetPythonRuntime() {
+  killWorker({
+    errorType: 'runtime',
+    message: 'The Python runtime was restarted. Run again.',
+  });
 }
 
 // Shared plumbing for both job kinds: post a message, watch status, enforce
@@ -32,13 +70,21 @@ function dispatchJob(type, payload, needsPandas, onStatus) {
   return new Promise((resolve) => {
     let execTimer = null;
     let loadTimer = null;
+    let settled = false;
 
     const finish = (outcome) => {
+      if (settled) return;
+      settled = true;
       clearTimeout(execTimer);
       clearTimeout(loadTimer);
       w.removeEventListener('message', onMessage);
+      inFlight.delete(strand);
       resolve(outcome);
     };
+
+    // How killWorker() settles this job if the runtime dies under it.
+    const strand = (error) => finish({ error });
+    inFlight.add(strand);
 
     const onMessage = (event) => {
       const msg = event.data;
@@ -49,10 +95,9 @@ function dispatchJob(type, payload, needsPandas, onStatus) {
           clearTimeout(loadTimer);
           // Only user code counts toward the 5s budget, not runtime download.
           execTimer = setTimeout(() => {
-            w.removeEventListener('message', onMessage);
-            killWorker(); // next run boots a fresh worker (browser-cached, fast)
-            clearTimeout(loadTimer);
-            resolve({
+            // Settle THIS job first, then kill — so the timeout message wins
+            // over the generic "runtime was restarted" strand notice.
+            finish({
               error: {
                 errorType: 'timeout',
                 message:
@@ -60,6 +105,7 @@ function dispatchJob(type, payload, needsPandas, onStatus) {
                   'The Python runtime was restarted; the next run may take a moment.',
               },
             });
+            killWorker(); // next run boots a fresh worker (browser-cached, fast)
           }, PY_TIMEOUT_MS);
         }
       } else if (msg.type === 'result') {
@@ -75,14 +121,13 @@ function dispatchJob(type, payload, needsPandas, onStatus) {
     };
 
     loadTimer = setTimeout(() => {
-      w.removeEventListener('message', onMessage);
-      killWorker();
-      resolve({
+      finish({
         error: {
           errorType: 'runtime',
           message: 'Loading the Python runtime timed out. Check your connection and try again.',
         },
       });
+      killWorker(); // discard the wedged runtime so the next run starts clean
     }, LOAD_TIMEOUT_MS);
 
     w.addEventListener('message', onMessage);
