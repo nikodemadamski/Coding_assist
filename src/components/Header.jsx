@@ -38,6 +38,7 @@ export default function Header({
   theme,
   onToggleTheme,
   backupNudge = false,
+  view = 'home',
 }) {
   const solvedCount = Object.values(progress.solved).filter(isSolved).length;
   const belt = beltFor(solvedCount);
@@ -70,7 +71,7 @@ export default function Header({
 
   return (
     <header className="header">
-      <DojoLogo onClick={onHome} theme={theme} />
+      <DojoLogo onClick={onHome} theme={theme} view={view} />
 
       <div className="header-spacer" />
 

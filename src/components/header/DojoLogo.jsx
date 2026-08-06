@@ -1,5 +1,6 @@
 import { Component, Suspense, lazy, useMemo, useRef, useState } from 'react';
 import { prefersReducedMotion } from '../../anim/useAnime.js';
+import { costumeForView, mascotLabel } from '../../state/mascot.js';
 
 // The brand: a 3D `dojo` where o-j-o is a face.
 //
@@ -14,9 +15,77 @@ const DojoFace = lazy(() => import('./DojoFace.jsx'));
 // The flat mark. Same letterforms, same face: the two o's have pupils, the j's
 // tittle is the nose, the stroke underneath is the smile. It has to be able to
 // stand on its own, because sometimes it's all there is.
-function FlatMark({ accent, ink }) {
+// The costume, in two dimensions. Whatever the reason the canvas isn't there —
+// reduced motion, no WebGL, a chunk still in flight — the mascot still dresses
+// for the room. A fallback that drops the character isn't a fallback.
+function FlatCostume({ kind, accent, ink }) {
+  switch (kind) {
+    case 'cap':
+      return (
+        <g>
+          <path d="M34 9 L52 3 L70 9 L52 15 Z" fill={ink} />
+          <path d="M42 12 v5 a10 5 0 0 0 20 0 v-5" fill="none" stroke={ink} strokeWidth="2.4" />
+          <line x1="70" y1="9" x2="72" y2="17" stroke={accent} strokeWidth="1.8" strokeLinecap="round" />
+          <circle cx="72" cy="18.5" r="2" fill={accent} />
+        </g>
+      );
+    case 'headband':
+      return (
+        <g fill={accent}>
+          <rect x="24" y="7" width="56" height="3.6" rx="1.6" />
+          <rect x="20" y="9" width="8" height="2.6" rx="1.2" transform="rotate(28 24 10)" />
+          <rect x="19" y="13" width="7" height="2.4" rx="1.2" transform="rotate(52 22 14)" />
+        </g>
+      );
+    case 'sweatband':
+      return (
+        <g>
+          <rect x="25" y="6" width="54" height="5" rx="2.2" fill={ink} />
+          <rect x="25" y="8" width="54" height="1.6" fill={accent} />
+          <rect x="12" y="16" width="9" height="1.8" rx="0.9" fill={accent} />
+          <rect x="14" y="21" width="6" height="1.8" rx="0.9" fill={accent} />
+        </g>
+      );
+    case 'bowtie':
+      return (
+        <g>
+          <path d="M52 33 L45 30 L45 36 Z" fill={accent} />
+          <path d="M52 33 L59 30 L59 36 Z" fill={accent} />
+          <circle cx="52" cy="33" r="1.8" fill={ink} />
+        </g>
+      );
+    case 'glasses':
+      return (
+        <g fill="none" stroke={ink} strokeWidth="1.6">
+          <circle cx="34" cy="21" r="9" />
+          <circle cx="70" cy="21" r="9" />
+          <line x1="43" y1="20" x2="61" y2="20" />
+          <line x1="79" y1="20" x2="86" y2="17" />
+        </g>
+      );
+    case 'monocle':
+      return (
+        <g fill="none">
+          <circle cx="70" cy="21" r="9.5" stroke={accent} strokeWidth="1.8" />
+          <path d="M77 27 q4 4 5 7" stroke={ink} strokeWidth="1.2" strokeDasharray="1.6 2" />
+        </g>
+      );
+    case 'topknot':
+      return (
+        <g>
+          <rect x="50.8" y="4" width="2.4" height="6" rx="1.2" fill={ink} />
+          <circle cx="52" cy="3.4" r="3.4" fill={ink} />
+          <rect x="49.6" y="6.6" width="4.8" height="1.6" rx="0.8" fill={accent} />
+        </g>
+      );
+    default:
+      return null;
+  }
+}
+
+function FlatMark({ accent, ink, costume = 'none' }) {
   return (
-    <svg className="dojo-flat" viewBox="0 0 92 34" aria-hidden="true" focusable="false">
+    <svg className="dojo-flat" viewBox="0 0 92 40" aria-hidden="true" focusable="false">
       {/* d */}
       <circle cx="11" cy="21" r="6.5" fill="none" stroke={ink} strokeWidth="3" />
       <line x1="18.5" y1="5" x2="18.5" y2="27.5" stroke={ink} strokeWidth="3" strokeLinecap="round" />
@@ -32,6 +101,7 @@ function FlatMark({ accent, ink }) {
       <circle cx="70" cy="21" r="2.2" fill={ink} />
       {/* the smile */}
       <path d="M28 29.5 q24 7 48 0" fill="none" stroke={accent} strokeWidth="2.4" strokeLinecap="round" />
+      <FlatCostume kind={costume} accent={accent} ink={ink} />
     </svg>
   );
 }
@@ -67,19 +137,20 @@ function useThemeColors(theme) {
   }, [theme]);
 }
 
-export default function DojoLogo({ onClick, theme }) {
+export default function DojoLogo({ onClick, theme, view = 'home' }) {
   const { accent, ink } = useThemeColors(theme);
   const [hovered, setHovered] = useState(false);
   const burst = useRef(0);
   // Read once on mount: the preference does not change mid-session in practice,
   // and re-reading it per render would be a matchMedia call per paint.
   const [flat] = useState(() => prefersReducedMotion() || !hasWebGL());
+  const costume = costumeForView(view);
 
-  const fallback = <FlatMark accent={accent} ink={ink} />;
+  const fallback = <FlatMark accent={accent} ink={ink} costume={costume} />;
 
   return (
     <button
-      className={`header-logo dojo-logo ${hovered ? 'is-hot' : ''}`}
+      className={`header-logo dojo-logo ${hovered ? 'is-hot' : ''} ${flat ? 'is-flat' : ''}`}
       onClick={() => {
         burst.current = 1;
         onClick?.();
@@ -88,7 +159,7 @@ export default function DojoLogo({ onClick, theme }) {
       onPointerLeave={() => setHovered(false)}
       onFocus={() => setHovered(true)}
       onBlur={() => setHovered(false)}
-      aria-label="dojo — home"
+      aria-label={mascotLabel(view)}
     >
       <span className="dojo-mark">
         {flat ? (
@@ -96,7 +167,7 @@ export default function DojoLogo({ onClick, theme }) {
         ) : (
           <MarkBoundary fallback={fallback}>
             <Suspense fallback={fallback}>
-              <DojoFace accent={accent} ink={ink} hovered={hovered} burst={burst} />
+              <DojoFace accent={accent} ink={ink} hovered={hovered} burst={burst} costume={costume} />
             </Suspense>
           </MarkBoundary>
         )}

@@ -174,9 +174,17 @@ Frosted glass, sticky, and made of objects rather than runs of text. Three thing
 their place there:
 
 - **The mark is the one playful thing in the app.** `dojo` is a face — the two o's are
-  eyes that follow you and blink, the j's tittle is a nose, and there is a smile. It is
-  the only place the product allows itself a joke, which is exactly why it works: a
-  training log that is stern everywhere else can afford one warm corner.
+  eyes, the j's tittle is a nose, and there is a smile. It is the only place the product
+  allows itself a joke, which is exactly why it works: a training log that is stern
+  everywhere else can afford one warm corner.
+
+  It is a mascot rather than a logo, and it earns that with three behaviours. It **watches
+  your cursor** across the whole page, not just its own corner. It **types with you** —
+  eyes down, a squint, the grin flattening to the straight line of concentration, one small
+  nod per keystroke. And it **dresses for the room**: a graduation cap in the lessons, a
+  headband on the mat, a bow tie for the mock interview. The costume is the cheapest
+  possible "you are here": you register it before you have read a word, and it is announced
+  in the button's label so it is never a signal only sighted users get.
 - **Status is chips, not text.** The streak and the belt are objects you can read at a
   glance and interrogate on hover. A live streak earns colour; a dead one stays grey,
   because a zero that glows is a nag.

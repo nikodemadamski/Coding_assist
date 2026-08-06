@@ -261,6 +261,7 @@ export default function App() {
         theme={theme}
         onToggleTheme={toggleTheme}
         backupNudge={backupInfo.nudge}
+        view={view.name}
       />
       <main className="app-main">
         {view.name === 'home' && (

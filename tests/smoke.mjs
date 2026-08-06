@@ -140,6 +140,28 @@ try {
     'the nav actions carry icons'
   );
 
+  // ---- the mascot ------------------------------------------------------
+  // It watches the cursor anywhere on the page, not just over its own 104px
+  // canvas, so moving the mouse to opposite corners must change what it draws.
+  const markPixels = async () => {
+    const el = await page.locator('.dojo-mark').boundingBox();
+    return (await page.screenshot({ clip: el })).toString('base64');
+  };
+  await page.mouse.move(1200, 700);
+  await page.waitForTimeout(900);
+  const lookRight = await markPixels();
+  await page.mouse.move(30, 700);
+  await page.waitForTimeout(900);
+  const lookLeft = await markPixels();
+  check(lookRight !== lookLeft, 'the mascot follows the cursor across the whole page');
+  // and it reacts to typing, wherever the keystrokes land
+  await page.keyboard.press('Escape');
+  const idleFace = await markPixels();
+  await page.locator('body').press('a');
+  await page.waitForTimeout(260);
+  const busyFace = await markPixels();
+  check(idleFace !== busyFace, 'the mascot reacts when you type');
+
   // ---- light / dark theme toggle (persists across reload) ----
   check(
     (await page.evaluate(() => document.documentElement.dataset.theme)) === 'dark',
@@ -954,6 +976,29 @@ try {
   check(await page.locator('.guide-page h1').isVisible(), 'Sensei guide page renders');
   await page.locator('.hdr-menu-pop').waitFor({ state: 'detached', timeout: 3000 }).catch(() => {});
   check((await page.locator('.hdr-menu-pop').count()) === 0, 'picking an item closes the menu');
+
+  // ---- the wardrobe: a costume per room, announced as well as drawn ------
+  const dressedAs = () => page.locator('.header-logo').getAttribute('aria-label');
+  const worn = {};
+  for (const [item, key] of [
+    ['Learn', 'learn'],
+    ['Stats', 'stats'],
+    ['Patterns', 'patterns'],
+    ['Sensei', 'guide'],
+  ]) {
+    await openLibrary(page, item);
+    await page.waitForTimeout(300);
+    worn[key] = await dressedAs();
+  }
+  await page.locator('.header-logo').click();
+  await page.waitForTimeout(300);
+  worn.home = await dressedAs();
+  check(/graduation cap/.test(worn.learn), `the lessons put a cap on it (${worn.learn})`);
+  check(/glasses/.test(worn.stats), 'your record gets reading glasses');
+  check(/monocle/.test(worn.patterns), 'the reference gets a monocle');
+  check(/topknot/.test(worn.guide), 'Sensei gets the topknot');
+  check(worn.home === 'dojo — home', 'the home map is a lobby — no costume');
+  check(new Set(Object.values(worn)).size === 5, 'every room dresses it differently');
   await openLibrary(page, 'Stats');
   check(await page.locator('.calendar-block').isVisible(), 'Stats page shows the attendance calendar');
 

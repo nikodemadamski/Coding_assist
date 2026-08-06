@@ -220,8 +220,18 @@ easing, layout-animating transitions, sub-11px text, contrast failures, long lin
 content). The brand is **dojo**: `DojoLogo.jsx` renders `DojoFace.jsx`, an @react-three/fiber
 scene where the two `o`s are eye rings whose pupils track the pointer and blink on a random
 timer, the `j`'s tittle is the nose, and a half-torus is the smile — every letter built from
-primitives, never loaded 3D type. It idles, leans toward the cursor, and scatters sparks on
-click. **It is behind `React.lazy`** so three.js (222KB gz) lands in its own chunk and never
+primitives, never loaded 3D type. It is a **mascot**, not a logo: it watches your cursor
+anywhere on the page (`anim/mascotBeacon.js` — one ref-counted window listener writing to a
+module ref, rAF-coalesced, zero renders; the mark measures the direction from its own
+`getBoundingClientRect()` centre, so the gaze works across a whole monitor), squints and
+flattens its smile and nods once per keystroke while you type (any keystroke, anywhere —
+CodeMirror included), and **dresses for the room**: `state/mascot.js` maps view → costume
+(cap in the lessons, headband while solving, sweatband at the warm-up, bow tie for the mock,
+glasses on Stats, monocle on Patterns, topknot for Sensei; lobbies dress down), each one a
+few primitives that drop in with a bounce on arrival. `mascotLabel(view)` puts the costume
+in the button's aria-label so it isn't information only sighted users get, and the flat SVG
+fallback carries the same wardrobe. App passes `view.name` → Header → DojoLogo. It also
+idles, leans toward the cursor, and scatters sparks on click. **It is behind `React.lazy`** so three.js (222KB gz) lands in its own chunk and never
 blocks first paint; reduced motion, no WebGL, and a failed chunk (an error boundary) all fall
 back to the same inline `FlatMark` SVG, so the brand is never missing. three.js can't parse
 `var(--…)`, so `useThemeColors` resolves the tokens to real values, keyed on `theme`.

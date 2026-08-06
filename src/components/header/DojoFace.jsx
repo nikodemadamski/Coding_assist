@@ -1,5 +1,6 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { beacon, watchBeacon, typingHeat } from '../../anim/mascotBeacon.js';
 
 // The wordmark, in three dimensions: d · o · j · o — where the two o's are eyes,
 // the j's tittle is the nose, and a stroke under them is the smile.
@@ -19,23 +20,26 @@ const EYE_R = 1.28;
 // One eye: a ring with a pupil that tracks the pointer and blinks on its own.
 // The lids are two flat discs that close over it, which reads far better at
 // 34px than squashing the whole eye.
-function Eye({ x, accent, pointer, hovered, blink }) {
+function Eye({ x, accent, pointer, hovered, blink, typing }) {
   const pupil = useRef(null);
   const lid = useRef(null);
 
   useFrame((_, dt) => {
     const k = Math.min(1, dt * 9);
     if (pupil.current) {
-      // The pupil leans toward the cursor but never leaves the iris.
-      const tx = x + pointer.current.x * 0.11;
-      const ty = pointer.current.y * 0.11;
+      // The pupil leans toward the cursor but never leaves the iris. While
+      // you're typing it drops instead, as if watching the keys.
+      const heat = typing.current;
+      const tx = x + pointer.current.x * 0.11 * (1 - heat);
+      const ty = pointer.current.y * 0.11 * (1 - heat) - heat * 0.11;
       pupil.current.position.x += (tx - pupil.current.position.x) * k;
       pupil.current.position.y += (ty - pupil.current.position.y) * k;
       pupil.current.position.z = 0.16;
     }
     if (lid.current) {
-      // blink.current is 1 while a blink is playing, 0 the rest of the time.
-      const target = blink.current;
+      // The lid does double duty: a full close for a blink, and a half-close
+      // for the squint of concentration while you're mid-sentence.
+      const target = Math.max(blink.current, typing.current * 0.34);
       lid.current.scale.y += (target - lid.current.scale.y) * Math.min(1, dt * 26);
       lid.current.visible = lid.current.scale.y > 0.02;
     }
@@ -102,19 +106,216 @@ function LetterJ({ ink, accent }) {
 }
 
 // The smile: a half-torus under o-j-o. It deepens when you hover.
-function Smile({ accent, hovered }) {
+function Smile({ accent, hovered, typing }) {
   const ref = useRef(null);
   useFrame((_, dt) => {
     if (!ref.current) return;
+    const k = Math.min(1, dt * 8);
     const target = hovered ? 1.16 : 1;
-    ref.current.scale.x += (target - ref.current.scale.x) * Math.min(1, dt * 8);
-    ref.current.scale.y += (target - ref.current.scale.y) * Math.min(1, dt * 8);
+    ref.current.scale.x += (target - ref.current.scale.x) * k;
+    // Flattening the arc turns the grin into the small straight line of
+    // someone concentrating. It springs back the moment you stop.
+    const flat = 1 - typing.current * 0.78;
+    ref.current.scale.y += (target * flat - ref.current.scale.y) * k;
   });
   return (
     <mesh ref={ref} position={[NOSE_X, -0.66, 0]} rotation={[0, 0, Math.PI]}>
       <torusGeometry args={[0.62, 0.05, 8, 26, Math.PI]} />
       <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.5} roughness={0.4} />
     </mesh>
+  );
+}
+
+// ── the wardrobe ───────────────────────────────────────────────────────────
+// One costume per room (src/state/mascot.js decides which). Each is a few
+// primitives sitting over the face, and each drops in with a bounce when you
+// change rooms — the whole point is that you notice you have arrived somewhere.
+const FACE_X = (EYE_L + EYE_R) / 2; // between the eyes: where a hat belongs
+
+function Cap({ accent, ink }) {
+  return (
+    <group position={[FACE_X, 0.62, 0]}>
+      {/* the skull cap, then the board on top, tipped back a little */}
+      <mesh position={[0, -0.02, 0]}>
+        <sphereGeometry args={[0.3, 14, 10, 0, Math.PI * 2, 0, Math.PI / 2]} />
+        <meshStandardMaterial color={ink} roughness={0.6} />
+      </mesh>
+      <mesh position={[0, 0.16, 0]} rotation={[0.16, 0.28, 0]}>
+        <boxGeometry args={[0.95, 0.05, 0.95]} />
+        <meshStandardMaterial color={ink} roughness={0.55} />
+      </mesh>
+      {/* the tassel — a cord and its knot, hanging off the right corner */}
+      <mesh position={[0.4, 0.02, 0.28]}>
+        <capsuleGeometry args={[0.018, 0.24, 3, 6]} />
+        <meshStandardMaterial color={accent} roughness={0.5} />
+      </mesh>
+      <mesh position={[0.4, -0.14, 0.28]}>
+        <sphereGeometry args={[0.07, 10, 10]} />
+        <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.5} />
+      </mesh>
+    </group>
+  );
+}
+
+// The hachimaki: a band across the brow with two tails streaming behind.
+function Headband({ accent }) {
+  const mat = <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.45} roughness={0.5} />;
+  return (
+    <group position={[FACE_X, 0.64, 0.05]}>
+      <mesh>
+        <boxGeometry args={[2.5, 0.16, 0.42]} />
+        {mat}
+      </mesh>
+      <mesh position={[-1.28, -0.1, 0]} rotation={[0, 0, 0.5]}>
+        <boxGeometry args={[0.5, 0.08, 0.2]} />
+        {mat}
+      </mesh>
+      <mesh position={[-1.3, -0.3, 0]} rotation={[0, 0, 0.95]}>
+        <boxGeometry args={[0.42, 0.07, 0.2]} />
+        {mat}
+      </mesh>
+    </group>
+  );
+}
+
+// Terry cloth and two speed marks, because the warm-up is a sprint.
+function Sweatband({ accent, ink }) {
+  return (
+    <group position={[FACE_X, 0.66, 0.05]}>
+      <mesh>
+        <boxGeometry args={[2.4, 0.22, 0.44]} />
+        <meshStandardMaterial color={ink} roughness={0.9} />
+      </mesh>
+      <mesh position={[0, 0, 0.23]}>
+        <boxGeometry args={[2.42, 0.08, 0.02]} />
+        <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.5} />
+      </mesh>
+      {[-1.5, -1.72].map((x, i) => (
+        <mesh key={i} position={[x, -0.34 - i * 0.22, 0]}>
+          <boxGeometry args={[0.4 - i * 0.12, 0.06, 0.06]} />
+          <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.4} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+// Interview clothes: a bow tie under the chin.
+function BowTie({ accent, ink }) {
+  return (
+    <group position={[NOSE_X, -1.02, 0.1]}>
+      {[-1, 1].map((side) => (
+        <mesh key={side} position={[side * 0.24, 0, 0]} rotation={[0, 0, side * 0.34]}>
+          <boxGeometry args={[0.36, 0.3, 0.1]} />
+          <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.4} roughness={0.5} />
+        </mesh>
+      ))}
+      <mesh>
+        <sphereGeometry args={[0.1, 10, 10]} />
+        <meshStandardMaterial color={ink} roughness={0.4} />
+      </mesh>
+    </group>
+  );
+}
+
+// Reading glasses: a rim around each eye and a bridge between them.
+function Glasses({ ink }) {
+  const mat = <meshStandardMaterial color={ink} metalness={0.5} roughness={0.3} />;
+  return (
+    <group position={[0, 0, 0.26]}>
+      {[EYE_L, EYE_R].map((x) => (
+        <mesh key={x} position={[x, 0, 0]}>
+          <torusGeometry args={[0.42, 0.032, 8, 26]} />
+          {mat}
+        </mesh>
+      ))}
+      <mesh position={[FACE_X, 0.06, 0]} rotation={[0, 0, Math.PI / 2]}>
+        <capsuleGeometry args={[0.026, 1.08, 3, 6]} />
+        {mat}
+      </mesh>
+      {/* one temple arm, folding back past the right eye */}
+      <mesh position={[EYE_R + 0.44, 0.1, -0.12]} rotation={[0, 0.9, 0]}>
+        <capsuleGeometry args={[0.024, 0.4, 3, 6]} />
+        {mat}
+      </mesh>
+    </group>
+  );
+}
+
+// A monocle over one eye, with the chain it never quite needs.
+function Monocle({ accent, ink }) {
+  return (
+    <group position={[EYE_R, 0, 0.26]}>
+      <mesh>
+        <torusGeometry args={[0.44, 0.04, 8, 28]} />
+        <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.35} metalness={0.6} roughness={0.25} />
+      </mesh>
+      {[0, 1, 2].map((i) => (
+        <mesh key={i} position={[0.34 + i * 0.13, -0.36 - i * 0.16, 0]}>
+          <sphereGeometry args={[0.035, 8, 8]} />
+          <meshStandardMaterial color={ink} metalness={0.6} roughness={0.3} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+// The sensei's topknot: a small bun, tied.
+function Topknot({ accent, ink }) {
+  return (
+    <group position={[FACE_X, 0.58, 0]}>
+      <mesh position={[0, 0.1, 0]}>
+        <capsuleGeometry args={[0.07, 0.16, 3, 8]} />
+        <meshStandardMaterial color={ink} roughness={0.6} />
+      </mesh>
+      <mesh position={[0, 0.3, 0]}>
+        <sphereGeometry args={[0.17, 12, 12]} />
+        <meshStandardMaterial color={ink} roughness={0.65} />
+      </mesh>
+      <mesh position={[0, 0.15, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.09, 0.028, 6, 14]} />
+        <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.5} />
+      </mesh>
+    </group>
+  );
+}
+
+const OUTFITS = {
+  cap: Cap,
+  headband: Headband,
+  sweatband: Sweatband,
+  bowtie: BowTie,
+  glasses: Glasses,
+  monocle: Monocle,
+  topknot: Topknot,
+};
+
+// The costume drops in from above and settles with an overshoot, so changing
+// rooms is a small event rather than a swap you never see.
+function Costume({ kind, accent, ink }) {
+  const group = useRef(null);
+  const age = useRef(0);
+  const Outfit = OUTFITS[kind];
+
+  useEffect(() => {
+    age.current = 0;
+  }, [kind]);
+
+  useFrame((_, dt) => {
+    if (!group.current) return;
+    age.current = Math.min(1, age.current + dt * 2.6);
+    const t = age.current;
+    // A decaying bounce: overshoots once, then settles at rest.
+    const settle = 1 - Math.cos(t * Math.PI * 1.4) * Math.exp(-t * 3.4);
+    group.current.position.y = (1 - Math.min(1, settle)) * 0.9;
+    group.current.scale.setScalar(0.55 + 0.45 * Math.min(1, settle * 1.05));
+  });
+
+  if (!Outfit) return null;
+  return (
+    <group ref={group} key={kind}>
+      <Outfit accent={accent} ink={ink} />
+    </group>
   );
 }
 
@@ -172,32 +373,61 @@ function Sparks({ accent, burst }) {
 // The whole mark: idle float, a spring-ish lean toward the pointer, and the
 // blink timer. All the per-frame work happens here so the leaf meshes stay
 // cheap.
-function Mark({ accent, ink, hovered, burst }) {
+function Mark({ accent, ink, hovered, burst, costume }) {
   const group = useRef(null);
   const pointer = useRef({ x: 0, y: 0 });
+  const typing = useRef(0);
   const blink = useRef(0);
   const nextBlink = useRef(2 + Math.random() * 3);
-  const { viewport } = useThree();
+  const lastKey = useRef(0);
+  const bob = useRef(0);
+  const { viewport, gl } = useThree();
+
+  // One shared window listener, ref-counted in the beacon module.
+  useEffect(() => watchBeacon(), []);
 
   useFrame((state, dt) => {
     const t = state.clock.elapsedTime;
-    // Pointer in -1..1, held in a ref so tracking never re-renders React.
-    pointer.current.x = state.pointer.x;
-    pointer.current.y = state.pointer.y;
+
+    // ── where to look ────────────────────────────────────────────────────
+    // Not R3F's canvas-local pointer: the mascot watches the cursor anywhere
+    // on screen. It measures the direction from its own centre to the cursor
+    // in client pixels and normalises by a comfortable arm's length, so the
+    // gaze saturates well before the far corner of a wide monitor.
+    const rect = gl.domElement.getBoundingClientRect();
+    if (beacon.seen && rect.width) {
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const REACH = 520;
+      pointer.current.x = Math.max(-1, Math.min(1, (beacon.x - cx) / REACH));
+      pointer.current.y = Math.max(-1, Math.min(1, -(beacon.y - cy) / REACH));
+    }
+
+    // ── whether you're mid-sentence ──────────────────────────────────────
+    const heat = typingHeat();
+    typing.current += (heat - typing.current) * Math.min(1, dt * 12);
+    // One small nod per keystroke, so it taps along with you.
+    if (beacon.keyCount !== lastKey.current) {
+      lastKey.current = beacon.keyCount;
+      bob.current = 1;
+    }
+    bob.current = Math.max(0, bob.current - dt * 7);
 
     if (group.current) {
       // Idle: a slow figure-of-eight so it is never quite still.
-      const floatY = Math.sin(t * 0.9) * 0.045;
+      const floatY = Math.sin(t * 0.9) * 0.045 - bob.current * 0.05;
       const idleRotY = Math.sin(t * 0.55) * 0.14;
       const idleRotX = Math.cos(t * 0.75) * 0.06;
-      // Lean toward the cursor, harder while hovered.
-      const reach = hovered ? 0.42 : 0.16;
-      const targetY = idleRotY + state.pointer.x * reach;
-      const targetX = idleRotX - state.pointer.y * reach * 0.6;
+      // Lean toward the cursor, harder while hovered — and dip toward the
+      // keyboard while typing, which is where its attention actually is.
+      const reach = hovered ? 0.42 : 0.2;
+      const targetY = idleRotY + pointer.current.x * reach;
+      const targetX =
+        idleRotX - pointer.current.y * reach * 0.6 + typing.current * 0.2 + bob.current * 0.05;
       const k = Math.min(1, dt * (hovered ? 7 : 3.5));
       group.current.rotation.y += (targetY - group.current.rotation.y) * k;
       group.current.rotation.x += (targetX - group.current.rotation.x) * k;
-      group.current.position.y += (floatY - group.current.position.y) * Math.min(1, dt * 4);
+      group.current.position.y += (floatY - group.current.position.y) * Math.min(1, dt * 8);
       const s = hovered ? 1.07 : 1;
       group.current.scale.x += (s - group.current.scale.x) * Math.min(1, dt * 9);
       group.current.scale.y = group.current.scale.x;
@@ -223,10 +453,11 @@ function Mark({ accent, ink, hovered, burst }) {
   return (
     <group ref={group} scale={scale}>
       <LetterD ink={ink} />
-      <Eye x={EYE_L} accent={accent} pointer={pointer} hovered={hovered} blink={blink} />
+      <Eye x={EYE_L} accent={accent} pointer={pointer} hovered={hovered} blink={blink} typing={typing} />
       <LetterJ ink={ink} accent={accent} />
-      <Eye x={EYE_R} accent={accent} pointer={pointer} hovered={hovered} blink={blink} />
-      <Smile accent={accent} hovered={hovered} />
+      <Eye x={EYE_R} accent={accent} pointer={pointer} hovered={hovered} blink={blink} typing={typing} />
+      <Smile accent={accent} hovered={hovered} typing={typing} />
+      <Costume kind={costume} accent={accent} ink={ink} />
       <Sparks accent={accent} burst={burst} />
     </group>
   );
@@ -236,7 +467,13 @@ function Mark({ accent, ink, hovered, burst }) {
 // <button> around this canvas — that's what owns the label, the focus ring and
 // the click. The canvas sits inside it, so pointer events still bubble up and
 // nothing has to be re-implemented here.
-export default function DojoFace({ accent = '#e5484d', ink = '#e9e7de', hovered = false, burst }) {
+export default function DojoFace({
+  accent = '#e5484d',
+  ink = '#e9e7de',
+  hovered = false,
+  burst,
+  costume = 'none',
+}) {
   const localBurst = useRef(0);
   return (
     <Canvas
@@ -249,7 +486,7 @@ export default function DojoFace({ accent = '#e5484d', ink = '#e9e7de', hovered 
       <ambientLight intensity={1.5} />
       <directionalLight position={[2, 3, 4]} intensity={1.4} />
       <pointLight position={[-2, -1, 2]} intensity={18} color={accent} distance={7} decay={2} />
-      <Mark accent={accent} ink={ink} hovered={hovered} burst={burst ?? localBurst} />
+      <Mark accent={accent} ink={ink} hovered={hovered} burst={burst ?? localBurst} costume={costume} />
     </Canvas>
   );
 }
