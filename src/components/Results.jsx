@@ -131,7 +131,7 @@ export default function Results({ report, question }) {
           {allPass ? '✓' : '✗'} {passed}/{total} tests passed
         </div>
         <div className="result-meter" role="img" aria-label={`${passed} of ${total} tests passing`}>
-          <div className={`result-meter-fill ${allPass ? 'pass' : 'fail'}`} style={{ width: `${pct}%` }} />
+          <div className={`result-meter-fill ${allPass ? 'pass' : 'fail'}`} style={{ '--fill': pct / 100 }} />
         </div>
       </div>
 

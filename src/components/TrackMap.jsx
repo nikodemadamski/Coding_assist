@@ -125,7 +125,7 @@ export default function TrackMap({ trackKey, questions, progress, onOpenQuestion
               >
                 <span className="graph-node-label">{labelOf(n.key)}</span>
                 <span className="graph-node-bar">
-                  <span className="graph-node-fill" style={{ width: `${pct}%` }} />
+                  <span className="graph-node-fill" style={{ '--fill': pct / 100 }} />
                 </span>
               </button>
             );

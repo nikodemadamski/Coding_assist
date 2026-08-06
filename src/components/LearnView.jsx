@@ -57,7 +57,11 @@ export default function LearnView({ progress, onOpenLesson, onStartReview, onBac
         return (
           <section className="learn-chapter" key={ch.key}>
             <h2 className="learn-chapter-head">
-              {chIdx + 1} · {ch.label}
+              <span className="learn-chapter-n">{chIdx + 1}</span>
+              {ch.label}
+              <span className="learn-chapter-count">
+                {lessons.filter((l) => isLessonComplete(progress, l.id)).length}/{lessons.length}
+              </span>
             </h2>
             <p className="learn-chapter-blurb">{ch.blurb}</p>
             <div className="learn-lessons">
@@ -77,9 +81,9 @@ export default function LearnView({ progress, onOpenLesson, onStartReview, onBac
                   >
                     <span className="learn-lesson-mark">{complete ? '✓' : isNext ? '→' : ''}</span>
                     <span className="learn-lesson-title">{l.title}</span>
-                    <span className="learn-lesson-min">
-                      {missing ? `builds on ${missing}` : `${l.minutes} min`}
-                    </span>
+                    {/* Prereqs live in the tooltip and in the dimmed state — repeating
+                        "builds on …" down every row shouted louder than the titles. */}
+                    <span className="learn-lesson-min">{l.minutes} min</span>
                   </button>
                 );
               })}

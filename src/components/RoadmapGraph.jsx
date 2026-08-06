@@ -172,6 +172,22 @@ export default function RoadmapGraph({
         </section>
       )}
 
+      <div className="home-top">
+      {/* Guided next step: what to do next, and why it's worth doing */}
+      {nextUp && (
+        <button className="next-step-card" onClick={() => onOpenQuestion(nextUp.id)}>
+          <span className="next-step-head">
+            <span className="next-step-kicker">Your next step</span>
+            <span className="next-step-title">
+              {pathStep(nextUp.id) && <span className="step-num">{pathStep(nextUp.id)}</span>}
+              {nextUp.title}
+            </span>
+          </span>
+          {nextUp.why && <span className="next-step-why">{nextUp.why}</span>}
+          <span className="next-step-cue">Open →</span>
+        </button>
+      )}
+        <div className="home-rail">
       {/* Learn Python entry — above the daily strip for beginners. Self-hides
           once the whole curriculum is done. */}
       {onLearn && lessonInfo && lessonInfo.done < lessonInfo.total && brandNew && (
@@ -187,7 +203,9 @@ export default function RoadmapGraph({
               {counts.due === 1 ? '' : 's'} to clear today
             </>
           ) : counts.fresh > 0 ? (
-            <>No reviews due — the path is open{nextUp ? <>: step {pathStep(nextUp.id)} · {nextUp.title}</> : ''}</>
+            /* The next-step card below names the actual question — saying it
+               here too made the page repeat itself three times over. */
+            <>No reviews due — the path is open</>
           ) : (
             <>All caught up for today</>
           )}
@@ -253,20 +271,8 @@ export default function RoadmapGraph({
         </div>
       )}
 
-      {/* Guided next step: what to do next, and why it's worth doing */}
-      {nextUp && (
-        <button className="next-step-card" onClick={() => onOpenQuestion(nextUp.id)}>
-          <span className="next-step-head">
-            <span className="next-step-kicker">Your next step</span>
-            <span className="next-step-title">
-              {pathStep(nextUp.id) && <span className="step-num">{pathStep(nextUp.id)}</span>}
-              {nextUp.title}
-            </span>
-          </span>
-          {nextUp.why && <span className="next-step-why">{nextUp.why}</span>}
-          <span className="next-step-cue">Open →</span>
-        </button>
-      )}
+        </div>
+      </div>
 
       {/* The questions that keep biting — one tap from the front door */}
       {weak.length > 0 && (
@@ -340,17 +346,21 @@ export default function RoadmapGraph({
             if (st.total === 0) return null; // e.g. 'other' before any imports
             const pct = st.total ? (st.solved / st.total) * 100 : 0;
             const done = st.total > 0 && st.solved === st.total;
+            // "You are here": the topic your next step belongs to, so the map
+            // answers "where am I?" at a glance instead of only "how much left".
+            const current = !done && nextUp && categoryKeyOf(nextUp.pattern) === n.key;
+            const started = !done && !current && st.solved > 0;
             return (
               <button
                 key={n.key}
-                className={`graph-node ${done ? 'done' : ''}`}
+                className={`graph-node ${done ? 'done' : ''} ${current ? 'current' : ''} ${started ? 'started' : ''}`}
                 style={{ left: n.x, top: n.y, width: NODE_W, height: NODE_H }}
                 onClick={() => setOpenCat(n.key)}
                 title={`${label(n.key)} — ${st.solved}/${st.total} solved`}
               >
                 <span className="graph-node-label">{label(n.key)}</span>
                 <span className="graph-node-bar">
-                  <span className="graph-node-fill" style={{ width: `${pct}%` }} />
+                  <span className="graph-node-fill" style={{ '--fill': pct / 100 }} />
                 </span>
               </button>
             );

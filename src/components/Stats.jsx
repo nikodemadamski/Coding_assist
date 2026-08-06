@@ -24,7 +24,7 @@ function JourneyBar({ mastery, total }) {
           <span
             key={k}
             className={`journey-seg seg-${k}`}
-            style={{ width: `${(mastery[k] / total) * 100}%` }}
+            style={{ '--fill': mastery[k] / total }}
             title={`${mastery[k]} ${MASTERY_LABEL[k]}`}
           />
         ) : null
@@ -43,7 +43,7 @@ function ProgressRows({ rows }) {
           <div className="prog-row" key={r.label}>
             <span className="prog-label">{r.label}</span>
             <span className="prog-track" style={{ maxWidth: `${(r.total / max) * 100}%` }}>
-              <span className={`prog-fill ${done ? 'done' : ''}`} style={{ width: `${(r.solved / r.total) * 100}%` }} />
+              <span className={`prog-fill ${done ? 'done' : ''}`} style={{ '--fill': r.solved / r.total }} />
             </span>
             <span className="prog-n">
               {r.solved}/{r.total}
@@ -92,7 +92,7 @@ function ReadinessCard({ ready }) {
                 {READY_PART_LABEL[k]}
               </span>
               <span className="ready-part-track">
-                <span className="ready-part-fill" style={{ width: `${Math.round(v * 100)}%` }} />
+                <span className="ready-part-fill" style={{ '--fill': v }} />
               </span>
               <span className="ready-part-pct">
                 {gated ? `${ready.bigo.answered}/${ready.bigo.needed}` : `${Math.round(v * 100)}%`}
@@ -131,7 +131,7 @@ function TrackFitnessCard({ fit }) {
           <div className={`ready-part ${fit.weakest === t.track ? 'weakest' : ''}`} key={t.track}>
             <span className="ready-part-label">{TRACK_LABEL[t.track]}</span>
             <span className="ready-part-track">
-              <span className="ready-part-fill" style={{ width: `${t.score}%` }} />
+              <span className="ready-part-fill" style={{ '--fill': t.score / 100 }} />
             </span>
             <span className="ready-part-pct">
               {t.score} · {t.solved}/{t.total}
@@ -159,7 +159,7 @@ function Forecast({ forecast }) {
             <span className="fc-n">{f.count > 0 ? f.count : ''}</span>
             <span
               className={`fc-bar ${i === 0 && f.count > 0 ? 'due-now' : ''}`}
-              style={{ height: `${4 + (f.count / max) * 44}px` }}
+              style={{ '--fill': (4 + (f.count / max) * 44) / 48 }}
             />
             <span className="fc-l">{dayLabel(f.date, i)}</span>
           </div>
@@ -265,7 +265,7 @@ export default function Stats({ questions, progress, backupInfo = null, onBackup
               {belt.name} belt
             </span>
             <span className="belt-strip" role="img" aria-label="Belt progress">
-              <span className="belt-strip-fill" style={{ width: `${belt.progress * 100}%`, background: belt.color }} />
+              <span className="belt-strip-fill" style={{ '--fill': belt.progress, background: belt.color }} />
             </span>
             <span className="journey-belt-next">
               {belt.next ? `${belt.next.threshold - solvedCount} to ${belt.next.name}` : 'max rank'}

@@ -768,7 +768,7 @@ export default function ProblemView({
             <div className="loader" role="status">
               {loadPct != null ? (
                 <div className="loader-bar">
-                  <div className="loader-bar-fill" style={{ width: `${loadPct}%` }} />
+                  <div className="loader-bar-fill" style={{ '--fill': loadPct / 100 }} />
                 </div>
               ) : (
                 <div className="spinner" aria-hidden="true" />

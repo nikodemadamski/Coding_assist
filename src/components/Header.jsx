@@ -70,7 +70,7 @@ export default function Header({
         <span className="belt-strip" role="img" aria-label={`Belt progress toward next rank`}>
           <span
             className="belt-strip-fill"
-            style={{ width: `${belt.progress * 100}%`, background: belt.color }}
+            style={{ '--fill': belt.progress, background: belt.color }}
           />
         </span>
       </span>

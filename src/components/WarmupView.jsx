@@ -295,7 +295,7 @@ export default function WarmupView({ progress, onResult, onExit }) {
         role="timer"
         aria-label={`${Math.ceil(timeLeft / 1000)} seconds left`}
       >
-        <div className="wu-timer-fill" style={{ width: `${pct}%` }} />
+        <div className="wu-timer-fill" style={{ '--fill': pct / 100 }} />
       </div>
       <div className="wu-card" key={idx}>
         <div className="wu-prompt">{item?.prompt}</div>
