@@ -126,6 +126,30 @@ reconciliation never fights the animation.
    nav goes through `openLibrary(page, label)`).
 5. `validateQuestion` gates imports AND seeds; new question fields need a rule there.
 
+## Design system (DESIGN.md + the token block at the top of styles.css)
+
+`DESIGN.md` is the source of truth and is read by `impeccable` as project context.
+Principles: **one loud thing per screen** · colour carries state, never decoration ·
+**edge OR elevation, never both** (cards get a hairline; only modals/popovers get
+`--shadow-modal`) · prose capped at `--measure` · motion moves opacity/transform on
+`--ease`, never width/height.
+
+Tokens (never hard-code a value): type `--t-micro…--t-3xl` (11px floor for functional
+text — no exceptions), spacing `--s-1…--s-8` (4px base), radius `--r-xs/sm/md/lg/full`,
+`--shadow-pop/-modal`, `--ease` + `--dur-1/2`. Colour is semantic: `--ink/--panel/
+--panel-2/--line/--text/--text-dim`, state accents `--jade` (progress/done), `--gold`
+(current/attention), `--crimson` (the one CTA — AA-tuned; `--crimson-bright` is for
+marks only, never behind text), `--sky` + `--track-python/pandas/sql` (theme-aware —
+both themes must pass AA). Display serif is **h1/h2 only**; h3/h4 are sans.
+
+Bars/meters animate `transform: scaleX/scaleY(var(--fill))` with the JSX passing
+`style={{ '--fill': 0..1 }}` — never an animated width.
+
+**Gate:** `CI=1 npx impeccable@3.5.0 detect src/` and `… detect http://localhost:4200
+[--viewport 390x844]` must both come back empty (it prints nothing when clean). It
+catches the generated-UI tells — coloured side-tabs, thin-border+wide-shadow, bounce
+easing, layout-animating transitions, sub-11px text, contrast failures, long lines.
+
 ## UI shell (src/components/)
 
 App.jsx owns views: home (RoadmapGraph = the map), browse (Picker), track (TrackMap),

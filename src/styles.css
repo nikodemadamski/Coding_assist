@@ -16,6 +16,9 @@
   --gold: #e8b04b;
   --sky: #4b9de8;
   --edge: #565b73; /* roadmap graph arrows */
+  --track-python: #6fb5e8;
+  --track-pandas: #b78ee8;
+  --track-sql: #e8b04b;
   --font-display: 'Zilla Slab', serif;
   --font-body: 'IBM Plex Sans', system-ui, sans-serif;
   --font-code: 'IBM Plex Mono', ui-monospace, monospace;
@@ -79,6 +82,9 @@
   --gold: #9c6b12;
   --sky: #2f7fc4;
   --edge: #b3b0a6;
+  --track-python: #1a6296;
+  --track-pandas: #6a2f9e;
+  --track-sql: #7d5210;
   color-scheme: light;
 }
 
@@ -481,33 +487,33 @@ button {
 }
 
 .tag.track-python {
-  color: #6fb5e8;
-  border-color: #2c4a63;
+  color: var(--track-python);
+  border-color: color-mix(in srgb, var(--track-python) 34%, var(--line));
 }
 
 .tag.track-pandas {
-  color: #b78ee8;
-  border-color: #4a3963;
+  color: var(--track-pandas);
+  border-color: color-mix(in srgb, var(--track-pandas) 34%, var(--line));
 }
 
 .tag.track-sql {
-  color: #e8b04b;
-  border-color: #63512c;
+  color: var(--track-sql);
+  border-color: color-mix(in srgb, var(--track-sql) 34%, var(--line));
 }
 
 .tag.diff-easy {
   color: var(--jade);
-  border-color: #2c5a44;
+  border-color: color-mix(in srgb, var(--jade) 34%, var(--line));
 }
 
 .tag.diff-medium {
   color: var(--gold);
-  border-color: #63512c;
+  border-color: color-mix(in srgb, var(--gold) 34%, var(--line));
 }
 
 .tag.diff-hard {
   color: var(--crimson);
-  border-color: #5a2c2e;
+  border-color: color-mix(in srgb, var(--crimson) 34%, var(--line));
 }
 
 
@@ -954,11 +960,11 @@ details.hint[open] summary {
   cursor: default;
 }
 .lang-badge.lang-python {
-  color: #6fb5e8;
+  color: var(--track-python);
   border-color: #2c4a63;
 }
 .lang-badge.lang-pandas {
-  color: #b78ee8;
+  color: var(--track-pandas);
   border-color: #4a3963;
 }
 .lang-badge.lang-sql {
@@ -1857,12 +1863,14 @@ details.hint[open] summary {
 
 /* ── Today's practice card ─────────────────────────────────────────────── */
 
+/* A plain surface like every other card. The crimson wash made this one panel
+   look like it came from a different app. */
 .today-card {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--crimson) 10%, var(--panel)), var(--panel));
+  background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  padding: 20px;
-  margin-top: 8px;
+  border-radius: var(--r-lg);
+  padding: var(--s-5);
+  margin-top: var(--s-2);
 }
 
 .today-head {
@@ -1924,7 +1932,7 @@ details.hint[open] summary {
   border-color: #63512c;
 }
 .pill-reviewing {
-  color: #6fb5e8;
+  color: var(--track-python);
   border-color: #2c4a63;
 }
 .pill-mastered {
@@ -1946,7 +1954,7 @@ details.hint[open] summary {
   background: var(--gold);
 }
 .dot-reviewing {
-  background: #6fb5e8;
+  background: var(--track-python);
 }
 .dot-mastered {
   background: var(--jade);
@@ -2016,7 +2024,7 @@ details.hint[open] summary {
   border-color: #63512c;
 }
 .phase-pill.new {
-  color: #6fb5e8;
+  color: var(--track-python);
   border-color: #2c4a63;
 }
 
@@ -3125,7 +3133,7 @@ details.hint[open] summary {
   font-size: var(--t-tiny);
   padding: 3px 8px;
   border: 1px solid #2c4a63;
-  color: #6fb5e8;
+  color: var(--track-python);
   border-radius: var(--r-xs);
 }
 
