@@ -120,28 +120,66 @@ try {
 
   // ---- the home page IS the roadmap now ----
   check((await page.locator('.graph-node').count()) >= 15, 'home page shows the roadmap graph');
-  check(await page.locator('.welcome-card').isVisible(), 'first visit shows the welcome/purpose card');
-  check(
-    await page.locator('.map-strip button', { hasText: 'Begin the path' }).isVisible(),
-    'daily practice strip lives on the map home'
+  // The hero: it greets you by name and names the next problem, loudly.
+  const heroTitle = await page.locator('.hero-title').innerText();
+  check(/Nick/.test(heroTitle), `the home greets you by name (${heroTitle})`);
+  const heroSize = await page.evaluate(() =>
+    parseFloat(getComputedStyle(document.querySelector('.hero-title')).fontSize)
   );
-  // Learn Python entry for a brand-new user; Mock is hidden at zero solves.
+  check(heroSize >= 36, `the greeting is set at hero scale (${Math.round(heroSize)}px)`);
   check(
-    (await page.locator('.learn-strip').innerText()).includes('Learn Python from zero'),
-    'the home offers a Learn Python entry'
+    (await page.locator('.hero-next-title').innerText()).length > 3,
+    'the hero names the next problem'
   );
   check(
-    (await page.locator('.map-strip button', { hasText: 'Mock interview' }).count()) === 0,
+    (await page.locator('.hero-next-cue .cue-orb').count()) === 1,
+    'the hero has exactly one call to action, with its arrow in a disc'
+  );
+  // solving is the point; Python study is a lane, not a headline
+  const heroNextSize = await page.evaluate(() =>
+    parseFloat(getComputedStyle(document.querySelector('.hero-next-title')).fontSize)
+  );
+  const laneSize = await page.evaluate(() =>
+    parseFloat(getComputedStyle(document.querySelector('.learn-lane-label')).fontSize)
+  );
+  check(
+    heroNextSize > laneSize * 1.8,
+    `the next problem outweighs the Python lane (${Math.round(heroNextSize)}px vs ${Math.round(laneSize)}px)`
+  );
+  check(
+    (await page.locator('.learn-lane').innerText()).includes('Python'),
+    'the home still offers the Python curriculum, quietly'
+  );
+  check(
+    (await page.locator('.hero-act', { hasText: 'mock interview' }).count()) === 0,
     'Mock interview is hidden until the first solve'
-  );
-  check(
-    (await page.locator('.welcome-card').innerText()).includes('Start from zero'),
-    'the welcome card invites total beginners to start from zero'
   );
   const fitsViewport = await page.evaluate(
     () => document.querySelector('.graph-canvas').getBoundingClientRect().width <= window.innerWidth
   );
   check(fitsViewport, 'the whole map fits the viewport width (scaled, no scroll box)');
+
+  // The map draws itself in: every edge animates its stroke-dashoffset to zero
+  // and the nodes fade up behind them. The failure mode is a map left
+  // half-drawn or invisible, so assert it settles rather than that it moved.
+  await page.waitForTimeout(1400);
+  const edgeState = await page.evaluate(() => {
+    const paths = [...document.querySelectorAll('.graph-edges path[data-edge]')];
+    return {
+      n: paths.length,
+      unfinished: paths.filter((p) => Math.abs(parseFloat(p.style.strokeDashoffset || '0')) > 0.5).length,
+    };
+  });
+  check(edgeState.n >= 15, `the map draws its ${edgeState.n} dependency arrows`);
+  check(edgeState.unfinished === 0, `every arrow finishes drawing (${edgeState.unfinished} stuck)`);
+  const dimNodes = await page.evaluate(
+    () => [...document.querySelectorAll('.graph-node')].filter((n) => Number(getComputedStyle(n).opacity) < 0.99).length
+  );
+  check(dimNodes === 0, `every topic node settles fully visible (${dimNodes} stuck)`);
+  check(
+    (await page.locator('.graph-node.current').count()) === 1,
+    'exactly one topic is marked as where you are'
+  );
 
   // pandas & SQL are OFF the algorithm map — separate data tracks below it
   check(
@@ -171,14 +209,10 @@ try {
   await checkRevealSettled(page, 'Home');
 
   // guided next step: what's next AND why it's worth doing
-  check(await page.locator('.next-step-card').isVisible(), 'a guided "your next step" card is shown');
+  check(await page.locator('.hero-next').isVisible(), 'the hero card names what to do next');
   check(
-    (await page.locator('.next-step-cue .cue-orb').count()) === 1,
-    'the hero call-to-action nests its arrow in its own disc'
-  );
-  check(
-    (await page.locator('.next-step-why').innerText()).length > 20,
-    'the next-step card explains why the question matters'
+    (await page.locator('.hero-next-why').innerText()).length > 20,
+    'the hero explains why the question matters'
   );
 
   // clicking a topic opens its question list as a popup
@@ -676,8 +710,8 @@ try {
   });
   await page.reload();
   check(
-    (await page.locator('.map-strip').innerText()).includes('2 review'),
-    'map home strip shows 2 reviews due'
+    (await page.locator('.hero-act-loud').innerText()).includes('2'),
+    'the hero action row shows 2 reviews waiting'
   );
   await page.locator('.icon-btn', { hasText: 'Browse' }).click();
   check((await page.locator('.today-line').innerText()).includes('2 review'), 'today card shows 2 reviews due');
@@ -737,10 +771,10 @@ try {
   });
   await page.reload();
   check(
-    (await page.locator('.btn-drill').first().innerText()).includes('1'),
-    "drill button shows today's miss count"
+    (await page.locator('.hero-act-bad').first().innerText()).includes('1'),
+    "the drill action shows today's miss count"
   );
-  await page.locator('.btn-drill').click();
+  await page.locator('.hero-act-bad').click();
   check((await page.locator('.phase-pill').innerText()).includes('Drill'), 'drill session shows the drill phase');
   await setEditor(page, 'def contains_duplicate(nums):\n    return len(set(nums)) != len(nums)');
   await page.locator('.pv-toolbar button', { hasText: 'Submit' }).click();
@@ -1033,8 +1067,8 @@ try {
     localStorage.setItem('zoro.progress.v1', JSON.stringify(p));
   });
   await page.reload();
-  await page.locator('.map-strip button').first().waitFor({ timeout: 10000 });
-  await page.locator('.map-strip button').first().click(); // start the daily session
+  await page.locator('.hero-act-loud').waitFor({ timeout: 10000 });
+  await page.locator('.hero-act-loud').click(); // start the daily session
   await page.locator('.ln-item').waitFor({ timeout: 10000 });
   check(
     (await page.locator('.ln-page h1').innerText()).includes('Values & print'),
@@ -1164,16 +1198,31 @@ try {
     localStorage.setItem('zoro.progress.v1', JSON.stringify(p));
   });
   await page.reload();
-  // today pulse: real solves happened earlier in this run, so it shows live counts
-  check(await page.locator('.today-strip').isVisible(), 'home shows a Today pulse strip');
-  const pulseText = await page.locator('.today-strip').innerText();
-  check(/[1-9]\d* solved/.test(pulseText), `pulse counts today's solves (${pulseText.match(/\d+ solved/)?.[0]})`);
-  const readyDial = (await page.locator('.today-ready').innerText()).replace(/\s+/g, ' ');
+  // real solves happened earlier in this run, so the greeting reflects them
+  const greet = await page.locator('.hero-title').innerText();
+  check(/\d+ down today/.test(greet), `the greeting leads with what you did today (${greet})`);
+  const heroLine = (await page.locator('.hero-line').innerText()).replace(/\s+/g, ' ');
   check(
-    /^\d+ Interview readiness/.test(readyDial),
-    `home carries the readiness dial with its score (${readyDial.slice(0, 40)})`
+    /\d+ solved · \d+ to go · \d+\/100 ready/.test(heroLine),
+    `the hero states solved, remaining and readiness (${heroLine})`
   );
-  await page.locator('.today-ready').click();
+  // The solved count animates up from zero. Whatever it does on the way, it
+  // must land on the truth — a number that races and then lies is worse than
+  // no animation at all.
+  const realSolved = await page.evaluate(
+    () => Object.values(JSON.parse(localStorage.getItem('zoro.progress.v1')).solved).filter((e) => e.solves > 0).length
+  );
+  let heroSolved = null;
+  for (let i = 0; i < 30; i++) {
+    heroSolved = Number((await page.locator('.hero-line strong').first().innerText()).trim());
+    if (heroSolved === realSolved) break;
+    await page.waitForTimeout(100);
+  }
+  check(
+    heroSolved === realSolved,
+    `the counting number settles on the real total (${heroSolved} vs ${realSolved})`
+  );
+  await page.locator('.hero-act-ring').click();
   check(await page.locator('.ready-card').isVisible(), 'the readiness chip jumps to the Stats breakdown');
   await page.locator('.header-logo').click();
   check((await page.locator('.weak-chip').count()) === 2, 'repeat-miss questions surface as chips on home');
@@ -1288,7 +1337,7 @@ try {
   await page.locator('.icon-btn[aria-label="Back to problem list"]').click();
 
   // ---- warm-up mode: rapid-fire typing drills ----
-  await page.locator('.btn-warmup').click();
+  await page.locator('.hero-act', { hasText: 'warm-up' }).click();
   check((await page.locator('.wu-level-card').count()) === 3, 'warm-up offers 3 difficulty levels');
   await page.locator('.wu-level-card', { hasText: 'Beginner' }).click();
   await page.locator('.wu-prompt').waitFor({ timeout: 10000 });
@@ -1392,7 +1441,7 @@ try {
   await page.locator('button', { hasText: '← Back to the dojo' }).click();
 
   // ---- mock interview: timed, hints locked, debrief ----
-  await page.locator('.btn-mock').click();
+  await page.locator('.hero-act', { hasText: 'mock interview' }).click();
   check((await page.locator('.mock-format-card').count()) >= 3, 'mock offers multiple interview rounds');
   await page.locator('.mock-format-card', { hasText: 'Warm-up round' }).click();
   await page.locator('.mock-timer').waitFor({ timeout: 10000 });
@@ -1426,7 +1475,7 @@ try {
   await page.locator('.header-logo').click();
 
   // ---- mock data round: a timed pandas/SQL screen ----
-  await page.locator('.btn-mock').click();
+  await page.locator('.hero-act', { hasText: 'mock interview' }).click();
   const dataCard = page.locator('.mock-format-card', { hasText: 'Data round' });
   check(
     (await dataCard.innerText()).includes('pandas · sql'),

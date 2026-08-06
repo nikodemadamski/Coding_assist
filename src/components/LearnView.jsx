@@ -22,7 +22,6 @@ export default function LearnView({ progress, onOpenLesson, onStartReview, onBac
   return (
     <div className="stats learn" ref={revealRef}>
       <header className="page-head" data-reveal>
-        <span className="page-kicker">Course</span>
         <h1>Learn Python — from zero</h1>
         <p className="page-lede learn-intro">
           Read a little, do a lot. Each lesson is a few minutes: one idea, then real exercises

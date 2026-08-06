@@ -76,7 +76,7 @@ function ReadinessCard({ ready }) {
   return (
     <section className="ready-card bento-cell b-ready" data-reveal>
       <div className="ready-left" role="img" aria-label={`Interview readiness ${ready.score} out of 100`}>
-        <span className="bento-kicker">Interview readiness</span>
+        <h3 className="bento-title">Interview readiness</h3>
         <ReadinessRing score={ready.score} size={168} label="/100" />
         <div className="ready-level">{ready.level}</div>
       </div>
@@ -229,7 +229,6 @@ export default function Stats({ questions, progress, backupInfo = null, onBackup
   return (
     <div className="stats stats-page" ref={revealRef}>
       <header className="page-head" data-reveal>
-        <span className="page-kicker">Your record</span>
         <h1>Training record</h1>
         <p className="page-lede">
           Everything the dojo knows about how ready you are — and the one thing worth fixing next.
@@ -260,7 +259,7 @@ export default function Stats({ questions, progress, backupInfo = null, onBackup
 
         {/* Journey — the whole path at a glance, belt and mastery mix */}
         <section className="journey-card bento-cell b-journey" data-reveal>
-          <span className="bento-kicker">The path</span>
+          <h3 className="bento-title">The path</h3>
           <div className="journey-headline">
             <span className="journey-count">
               {solvedCount}
@@ -294,7 +293,7 @@ export default function Stats({ questions, progress, backupInfo = null, onBackup
         {/* Five numbers worth glancing at, in a tight block rather than a row
             of look-alike cards spanning the page. */}
         <section className="bento-cell b-metrics" data-reveal>
-          <span className="bento-kicker">At a glance</span>
+          <h3 className="bento-title">At a glance</h3>
           <div className="stat-grid">
             <div className="stat-tile">
               <div className="v">{streak}</div>
@@ -327,8 +326,8 @@ export default function Stats({ questions, progress, backupInfo = null, onBackup
         </section>
 
         <section className="bento-cell b-forecast" data-reveal>
-          <span className="bento-kicker">Review forecast</span>
-          <h3 className="bento-title">What&apos;s landing this week</h3>
+          <h3 className="bento-title">Review forecast</h3>
+          <p className="bento-sub">What&apos;s landing this week.</p>
           <Forecast forecast={forecast} />
         </section>
 
@@ -336,19 +335,18 @@ export default function Stats({ questions, progress, backupInfo = null, onBackup
         <TrackFitnessCard fit={trackFit} />
 
         <section className="bento-cell b-topics" data-reveal>
-          <span className="bento-kicker">Coverage</span>
           <h3 className="bento-title">Progress by topic</h3>
           <ProgressRows rows={byTopic} />
         </section>
 
         <section className="bento-cell b-calendar" data-reveal>
-          <span className="bento-kicker">Attendance</span>
+          <h3 className="bento-title">Attendance</h3>
           <Calendar progress={progress} />
         </section>
 
         <section className="bento-cell b-mocks" data-reveal>
-          <span className="bento-kicker">Mock interviews</span>
-          <h3 className="bento-title">Timed, no hints — the real test</h3>
+          <h3 className="bento-title">Mock interviews</h3>
+          <p className="bento-sub">Timed, no hints — the real test.</p>
           {mockStats.count === 0 ? (
             <p className="bento-empty">
               None yet. Run one from the home screen — it&apos;s the closest this app gets to the
@@ -393,8 +391,8 @@ export default function Stats({ questions, progress, backupInfo = null, onBackup
         </section>
 
         <section className="bento-cell b-slips" data-reveal>
-          <span className="bento-kicker">Where you slip</span>
-          <h3 className="bento-title">{totalMistakes} wrong submits total</h3>
+          <h3 className="bento-title">Where you slip</h3>
+          <p className="bento-sub">{totalMistakes} wrong submits total.</p>
           {troublesome.length === 0 ? (
             <p className="bento-empty">No mistakes logged yet — they&apos;ll show here.</p>
           ) : (

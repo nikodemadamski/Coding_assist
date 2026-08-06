@@ -68,9 +68,14 @@ mild letterspacing, sentence case — never long runs of uppercase.
 
 ## Layout
 
-Full-page views open with a **page head**: a micro kicker, one title at hero scale,
-and a single line of lede. Same shape everywhere — that repetition is what makes
-separate screens read as one product.
+Full-page views open with a **page head**: one title at hero scale and a single line
+of lede. Same shape everywhere — that repetition is what makes separate screens read
+as one product.
+
+**No eyebrow kickers.** A tiny tracked-caps label sitting as its own block above a
+heading is the most recognisable generated-UI tell there is, and the heading always
+carried the meaning on its own. If the label says something real, work it into the
+heading ("The path — 17 topics, in order") or put it below as a plain sentence.
 
 Grids are **deliberately asymmetric**. An equal-width row of three or four cards is
 the default every generator reaches for, and it flattens hierarchy: everything looks
@@ -116,3 +121,27 @@ Three rules make it work:
 
 Progress is a bar of segments, one per step, not a row of dots. Dots have to be counted
 before they say anything.
+
+## The home screen
+
+The front door has one job: get Nick into the next problem. So it is built around a
+single hero — a greeting by name, one live status line, and the next unsolved question
+set at display scale with the only red button on the page under it. Everything else is
+smaller than that on purpose: the quick-action row is chips, and the Python curriculum
+is a lane, not a headline. If you have forgotten some Python you can go study it; the
+point is to go solve.
+
+Motion here is load-bearing, not decoration:
+
+- The solved count **counts up**, so progress reads as something that moved.
+- The dependency map **draws itself**: arrows animate their stroke from source to
+  target and the topics cascade in behind them, so the path is laid out for you rather
+  than presented as a finished diagram.
+- The topic you are standing in keeps a slow halo, so "you are here" is findable
+  without reading a label.
+- A live dot pulses next to waiting reviews — and only when something is actually
+  waiting.
+
+Every one of those collapses to its finished state under `prefers-reduced-motion`, and
+the smoke test asserts the finished state rather than the movement: a map left
+half-drawn or a number that lands on a lie is the only failure that matters.

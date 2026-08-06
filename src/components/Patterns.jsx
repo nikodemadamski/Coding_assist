@@ -36,7 +36,6 @@ export default function Patterns({ questions, progress, onOpenQuestion, onQuiz, 
   return (
     <div className="stats patterns" ref={revealRef}>
       <header className="page-head patterns-head" data-reveal>
-        <span className="page-kicker">Reference</span>
         <h1>The templates you must know</h1>
         <p className="page-lede patterns-intro">
           Interviews are pattern recognition under pressure. Learn to spot which of these a

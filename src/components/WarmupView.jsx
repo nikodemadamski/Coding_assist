@@ -103,7 +103,6 @@ export default function WarmupView({ progress, onResult, onExit }) {
     return (
       <div className="stats warmup" ref={pickRef}>
         <header className="page-head" data-reveal>
-          <span className="page-kicker">Before the workout</span>
           <h1>Warm-up</h1>
           <p className="page-lede wu-intro">
             Quick one-line drills to get the brain moving. Pick a track, type the answer, hit
@@ -189,14 +188,14 @@ export default function WarmupView({ progress, onResult, onExit }) {
     return (
       <div className="stats warmup">
         <header className="page-head">
-          <span className="page-kicker">
-            Warm-up · {levelDef.track === 'sql' ? 'SQL ' : levelDef.track === 'pandas' ? 'pandas ' : ''}
-            {levelDef.label}
-          </span>
           <h1>
             {got}
             <span className="wu-score-of"> / {total}</span>
           </h1>
+          <p className="page-lede">
+            {levelDef.track === 'sql' ? 'SQL' : levelDef.track === 'pandas' ? 'pandas' : 'Python'} warm-up
+            · {levelDef.label} · {levelDef.seconds}s per answer
+          </p>
         </header>
         {result.reason === 'finished' && (
           <div className="solved-banner">Perfect run — all {total} answered. Fully warm.</div>

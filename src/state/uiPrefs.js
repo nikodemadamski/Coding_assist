@@ -14,7 +14,15 @@ export const VSPLIT_MAX = 85;
 export const FONT_MIN = 12;
 export const FONT_MAX = 20;
 
-export const UI_DEFAULTS = { split: 42, vsplit: 62, fontSize: 14 };
+// Whose dojo this is. The home screen greets you by name — it's a training
+// log for one person, and it should sound like it.
+export const NAME_MAX = 24;
+export const UI_DEFAULTS = { split: 42, vsplit: 62, fontSize: 14, name: 'Nick' };
+
+export function clampName(v) {
+  const s = typeof v === 'string' ? v.trim().slice(0, NAME_MAX) : '';
+  return s || UI_DEFAULTS.name;
+}
 
 export function clampSplit(v) {
   const n = Number(v);
@@ -42,6 +50,7 @@ export function loadUiPrefs(storage = globalThis.localStorage) {
       split: clampSplit(parsed.split ?? UI_DEFAULTS.split),
       vsplit: clampVSplit(parsed.vsplit ?? UI_DEFAULTS.vsplit),
       fontSize: clampFont(parsed.fontSize ?? UI_DEFAULTS.fontSize),
+      name: clampName(parsed.name ?? UI_DEFAULTS.name),
     };
   } catch {
     return { ...UI_DEFAULTS };
@@ -55,6 +64,7 @@ export function saveUiPrefs(patch, storage = globalThis.localStorage) {
     split: clampSplit(next.split),
     vsplit: clampVSplit(next.vsplit),
     fontSize: clampFont(next.fontSize),
+    name: clampName(next.name),
   };
   try {
     storage?.setItem(KEY, JSON.stringify(clamped));

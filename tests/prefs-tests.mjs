@@ -1,6 +1,8 @@
 // Unit tests for UI preferences (src/state/uiPrefs.js)
 import {
   clampVSplit,
+  clampName,
+  NAME_MAX,
   VSPLIT_MIN,
   VSPLIT_MAX,
   clampSplit,
@@ -84,6 +86,18 @@ console.log('prefs-tests: save');
   saveUiPrefs({ vsplit: 75 }, s);
   check('vsplit persists', loadUiPrefs(s).vsplit === 75);
   check('saving vsplit keeps the other prefs', loadUiPrefs(s).fontSize === UI_DEFAULTS.fontSize);
+}
+{
+  // the home screen greets you by name
+  check('name defaults when unset', loadUiPrefs(fakeStorage()).name === UI_DEFAULTS.name);
+  check('name trims whitespace', clampName('  Nick  ') === 'Nick');
+  check('an empty name falls back to the default', clampName('   ') === UI_DEFAULTS.name);
+  check('a non-string name falls back', clampName(42) === UI_DEFAULTS.name);
+  check('a very long name is capped', clampName('x'.repeat(200)).length === NAME_MAX);
+  const s2 = fakeStorage();
+  saveUiPrefs({ name: 'Zoro' }, s2);
+  check('name persists', loadUiPrefs(s2).name === 'Zoro');
+  check('saving a name keeps the layout prefs', loadUiPrefs(s2).split === UI_DEFAULTS.split);
 }
 {
   // storage that throws must not crash saving

@@ -156,10 +156,22 @@ both themes must pass AA). Display serif is **h1/h2 only**; h3/h4 are sans.
 Bars/meters animate `transform: scaleX/scaleY(var(--fill))` with the JSX passing
 `style={{ '--fill': 0..1 }}` — never an animated width.
 
-Shared page furniture: `.page-head` (kicker + one loud title + one-line lede) opens every
-full-page view; `.cue-orb` nests a primary action's arrow in its own disc (the one thing
-that moves on hover); `ReadinessRing.jsx` draws the readiness score as a dial (arc sweeps
-on mount, final offset also inline so it's right without JS).
+Shared page furniture: `.page-head` (one loud title + a one-line lede — **never** a
+tracked-caps eyebrow above a heading; impeccable bans that shape outright, so a label that
+matters goes INTO the heading or down into a plain `.bento-sub` sentence); `.cue-orb` nests
+a primary action's arrow in its own disc (the one thing that moves on hover);
+`ReadinessRing.jsx` draws the readiness score as a dial (arc sweeps on mount, final offset
+also inline so it's right without JS); `CountUp.jsx` races a number to its value by
+animating a plain object (no per-frame React render) and always lands on the truth.
+
+**Home** (`RoadmapGraph.jsx`) opens on `.hero`: `state/greeting.js` greets you by name
+(`uiPrefs.name`, default Nick, editable in Settings — solves-today > streak ≥3 > clock),
+a live status line, the mission bar, then `.hero-next` — the next unsolved question at
+display scale with the page's one red CTA — and `.hero-actions` (reviews / warm-up / mock
+/ drill / readiness ring). `.learn-lane` is the Python curriculum, deliberately quieter
+than `.hero-next` (smoke asserts the size ratio). The map draws itself in on mount: every
+`path[data-edge]` animates `stroke-dashoffset` to 0 on a stagger and the nodes cascade
+behind them; the current topic keeps a slow halo. Smoke asserts both settle.
 
 **The stage** is the shared full-height shell for one-thing-at-a-time surfaces (lesson
 player, warm-up run): `.stage` (h100%, flex col) → `.stage-top` (exit · `.stage-kicker` +

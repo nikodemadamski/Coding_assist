@@ -1,9 +1,11 @@
 import { useRef, useState } from 'react';
 import { useFocusTrap } from './useFocusTrap.js';
 import { parseImport, downloadExport, loadLastBackup } from '../state/storage.js';
+import { loadUiPrefs, saveUiPrefs, NAME_MAX } from '../state/uiPrefs.js';
 
 export default function Settings({ progress, customQuestions, onImport, onBackedUp, onClose }) {
   const [message, setMessage] = useState('');
+  const [name, setName] = useState(() => loadUiPrefs().name);
   const [lastBackup, setLastBackup] = useState(loadLastBackup);
   const fileRef = useRef(null);
   const trapRef = useRef(null);
@@ -34,6 +36,20 @@ export default function Settings({ progress, customQuestions, onImport, onBacked
     <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal" role="dialog" aria-modal="true" aria-label="Settings" ref={trapRef}>
         <h2>Settings</h2>
+
+        {/* The home screen greets you by name — this is whose dojo it is. */}
+        <label className="set-name">
+          <span className="set-name-label">Your name</span>
+          <input
+            className="set-name-input"
+            value={name}
+            maxLength={NAME_MAX}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={() => setName(saveUiPrefs({ name }).name)}
+            placeholder="Nick"
+            aria-label="Your name, used on the home screen"
+          />
+        </label>
 
         <p className="note">
           This app never connects to any AI service. New questions come in through

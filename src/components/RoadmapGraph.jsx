@@ -1,9 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFocusTrap } from './useFocusTrap.js';
 import { useReveal } from '../anim/useReveal.js';
+import { useAnime, stagger } from '../anim/useAnime.js';
+import { presets } from '../anim/presets.js';
 import ReadinessRing from './ReadinessRing.jsx';
+import CountUp from './CountUp.jsx';
+import { loadUiPrefs } from '../state/uiPrefs.js';
+import { greeting } from '../state/greeting.js';
 import { ROADMAP, categoryKeyOf, byPathOrder, pathStep, nextOnPath } from '../data/roadmap.js';
 import {
+  currentStreak,
   isSolved,
   isDue,
   masteryLevel,
@@ -23,29 +29,6 @@ import {
 } from '../data/roadmapGraph.js';
 
 const MASTERY_LABEL = { new: 'new', learning: 'learning', reviewing: 'reviewing', mastered: 'mastered' };
-
-// The Learn Python entry on the home page — progress, a continue link, and the
-// due skill-check count. Structural sibling of the data-track row.
-function LearnStrip({ info, onLearn }) {
-  return (
-    <div className="learn-strip">
-      <span className="learn-strip-line">
-        <strong>Learn Python from zero</strong>
-        <span className="learn-strip-count">
-          {info.done}/{info.total}
-        </span>
-      </span>
-      <button className="btn btn-jade" onClick={onLearn}>
-        {info.done === 0 ? 'Start from zero' : `Continue: ${info.nextTitle}`} →
-      </button>
-      {info.due > 0 && (
-        <button className="btn btn-warmup" onClick={onLearn}>
-          {info.due} skill check{info.due === 1 ? '' : 's'} due
-        </button>
-      )}
-    </div>
-  );
-}
 
 // The home page: a NeetCode-style visual roadmap. The whole map scales to fit
 // the viewport width (no scroll box), each node shows its progress, and
@@ -81,6 +64,31 @@ export default function RoadmapGraph({
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  // The map builds itself on arrival: every edge draws from its source to its
+  // target (stroke-dashoffset, the classic SVG line-draw), and the topic nodes
+  // pop in behind them on a stagger. It reads as the path being laid out for
+  // you rather than a diagram that was always there. useAnime collapses both
+  // to their finished state under prefers-reduced-motion.
+  const play = useAnime();
+  const canvasRef = useRef(null);
+  useEffect(() => {
+    const root = canvasRef.current;
+    if (!root) return;
+    const paths = [...root.querySelectorAll('.graph-edges path[data-edge]')];
+    for (const el of paths) {
+      const len = el.getTotalLength?.() ?? 0;
+      el.style.strokeDasharray = String(len);
+      el.style.strokeDashoffset = String(len);
+    }
+    play(paths, {
+      strokeDashoffset: 0,
+      duration: 700,
+      ease: 'outQuad',
+      delay: stagger(24, { start: 160 }),
+    });
+    play(root.querySelectorAll('.graph-node'), presets.enter());
+  }, [play]);
 
   const byCat = useMemo(() => {
     const m = new Map();
@@ -152,160 +160,162 @@ export default function RoadmapGraph({
   const openStats = openCat ? (stats[openCat] ?? { total: 0, solved: 0 }) : null;
 
   const revealRef = useReveal('home');
+  const name = useMemo(() => loadUiPrefs().name, []);
+  const streak = currentStreak(progress.streak);
+  const hello = greeting(new Date().getHours(), name, { streak, solvedToday: pulse.solves });
+  const pctDone = Math.round((solvedCount / questions.length) * 100);
+  // A node with no questions (e.g. 'other' before any import) is never drawn,
+  // so it must not be counted in the header either.
+  const shownNodes = useMemo(
+    () => GRAPH_NODES.filter((n) => (stats[n.key]?.total ?? 0) > 0),
+    [stats]
+  );
 
   return (
     <div className="stats roadmap-home" ref={revealRef}>
-      {brandNew && (
-        <section className="welcome-card" data-reveal>
-          <h2>Welcome to the dojo</h2>
-          <p>
-            This map is your whole journey — <strong>{questions.length} questions</strong> from
-            &ldquo;I barely know Python&rdquo; to interview-ready. Learn top to bottom: each
-            arrow means &ldquo;this pattern builds on that one.&rdquo; Click any topic to see
-            its questions, or just press <strong>Begin the path</strong> and let the dojo pick
-            for you.
+      {/* ── the hero ────────────────────────────────────────────────────────
+          One screenful that answers "what am I doing right now?" before you
+          scroll. It greets you, names the next problem in display type, and
+          puts one red button under it. Everything else on this page is
+          smaller than this on purpose. */}
+      <section className="hero" data-reveal>
+        <div className="hero-lead">
+          <h1 className="hero-title">{hello}</h1>
+          {/* One live status line under the greeting: what's waiting, then where
+              you are. It reads as a sentence rather than a label. */}
+          <p className="hero-line">
+            {counts.due > 0 && (
+              <span className="hero-due">
+                <span className="hero-dot" aria-hidden="true" />
+                {counts.due} review{counts.due === 1 ? '' : 's'} waiting
+              </span>
+            )}
+            {brandNew ? (
+              <>
+                {questions.length} problems between here and interview-ready. The order is
+                already decided — you just have to start.
+              </>
+            ) : (
+              <>
+                <strong>
+                  <CountUp value={solvedCount} />
+                </strong>{' '}
+                solved · <strong>{questions.length - solvedCount}</strong> to go ·{' '}
+                <strong>{ready.score}</strong>/100 ready
+              </>
+            )}
           </p>
-          {onLearn && (
-            <p className="welcome-learn">
-              New to Python itself?{' '}
-              <button className="link-inline" onClick={onLearn}>
-                Start from zero →
-              </button>
-            </p>
-          )}
-        </section>
-      )}
 
-      <div className="home-top">
-      {/* Guided next step: what to do next, and why it's worth doing */}
-      {nextUp && (
-        <button className="next-step-card" onClick={() => onOpenQuestion(nextUp.id)} data-reveal>
-          <span className="next-step-head">
-            <span className="next-step-kicker">Your next step</span>
-            <span className="next-step-title">
+          {/* The mission bar: the whole path in one line, filling as you go. */}
+          <div className="hero-bar" role="img" aria-label={`${pctDone}% of the path solved`}>
+            <span className="hero-bar-fill" style={{ '--fill': solvedCount / questions.length }} />
+          </div>
+        </div>
+
+        {/* The one loud thing. */}
+        {nextUp ? (
+          <button className="hero-next" onClick={() => onOpenQuestion(nextUp.id)}>
+            <span className="hero-next-kicker">
+              {solvedCount === 0 ? 'Start here' : 'Next problem'}
               {pathStep(nextUp.id) && <span className="step-num">{pathStep(nextUp.id)}</span>}
-              {nextUp.title}
             </span>
-          </span>
-          {nextUp.why && <span className="next-step-why">{nextUp.why}</span>}
-          <span className="next-step-foot">
-            <span className={`tag diff-${nextUp.difficulty}`}>{nextUp.difficulty}</span>
-            <span className="next-step-pattern">{nextUp.pattern}</span>
-            {/* The arrow lives in its own disc rather than sitting naked beside
-                the word — it's the one thing that moves on hover, which is what
-                makes the whole card read as pressable. */}
-            <span className="next-step-cue">
-              Open
-              <span className="cue-orb" aria-hidden="true">
-                →
+            <span className="hero-next-title">{nextUp.title}</span>
+            {nextUp.why && <span className="hero-next-why">{nextUp.why}</span>}
+            <span className="hero-next-foot">
+              <span className={`tag diff-${nextUp.difficulty}`}>{nextUp.difficulty}</span>
+              <span className="hero-next-pattern">{nextUp.pattern}</span>
+              <span className="hero-next-cue">
+                Solve it
+                <span className="cue-orb" aria-hidden="true">
+                  →
+                </span>
               </span>
             </span>
-          </span>
-        </button>
-      )}
-        <div className="home-rail" data-reveal>
-      {/* Learn Python entry — above the daily strip for beginners. Self-hides
-          once the whole curriculum is done. */}
-      {onLearn && lessonInfo && lessonInfo.done < lessonInfo.total && brandNew && (
-        <LearnStrip info={lessonInfo} onLearn={onLearn} />
-      )}
+          </button>
+        ) : (
+          <div className="hero-next hero-next-done">
+            <span className="hero-next-kicker">The whole path</span>
+            <span className="hero-next-title">All {questions.length} solved.</span>
+            <span className="hero-next-why">Keep the reviews clear and run mocks.</span>
+          </div>
+        )}
 
-      {/* Daily loop, right on the front door */}
-      <div className="map-strip">
-        <span className="map-strip-line">
-          {counts.due > 0 ? (
+        {/* Everything else you might do, one row, deliberately quieter. */}
+        <div className="hero-actions">
+          <button
+            className="hero-act hero-act-loud"
+            onClick={onStartPractice}
+            disabled={counts.due === 0 && counts.fresh === 0}
+          >
+            <span className="hero-act-n">{counts.due > 0 ? counts.due : '▶'}</span>
+            <span className="hero-act-l">{counts.due > 0 ? 'clear reviews' : 'run the queue'}</span>
+          </button>
+          <button className="hero-act" onClick={onWarmup}>
+            <span className="hero-act-n">⚡</span>
+            <span className="hero-act-l">warm-up</span>
+          </button>
+          {!brandNew && (
+            <button className="hero-act" onClick={onMock} title="Timed, no hints — simulate the real interview">
+              <span className="hero-act-n">⏱</span>
+              <span className="hero-act-l">mock interview</span>
+            </button>
+          )}
+          {missCount > 0 && !brandNew && (
+            <button className="hero-act hero-act-bad" onClick={onDrill}>
+              <span className="hero-act-n">{missCount}</span>
+              <span className="hero-act-l">drill misses</span>
+            </button>
+          )}
+          {onStats && !brandNew && (
+            <button className="hero-act hero-act-ring" onClick={onStats}>
+              <ReadinessRing score={ready.score} size={40} />
+              <span className="hero-act-l">readiness</span>
+            </button>
+          )}
+        </div>
+      </section>
+
+      {/* Python is the support act: a quiet lane that shrinks to a chip once
+          the curriculum is done, and never competes with Solve. */}
+      {onLearn && lessonInfo && lessonInfo.total > 0 && (
+        <div className="learn-lane" data-reveal>
+          {lessonInfo.done < lessonInfo.total ? (
             <>
-              <strong className="due-num">{counts.due}</strong> review
-              {counts.due === 1 ? '' : 's'} to clear today
+              <span className="learn-lane-text">
+                <span className="learn-lane-label">Rusty on the Python itself?</span>
+                <span className="learn-lane-sub">
+                  {lessonInfo.done === 0
+                    ? `${lessonInfo.total} short lessons, from zero`
+                    : `${lessonInfo.done}/${lessonInfo.total} lessons · next: ${lessonInfo.nextTitle}`}
+                </span>
+              </span>
+              <span className="learn-lane-bar" aria-hidden="true">
+                <span
+                  className="learn-lane-fill"
+                  style={{ '--fill': lessonInfo.done / lessonInfo.total }}
+                />
+              </span>
+              {lessonInfo.due > 0 && (
+                <button className="btn btn-warmup" onClick={onLearn}>
+                  {lessonInfo.due} skill check{lessonInfo.due === 1 ? '' : 's'} due
+                </button>
+              )}
+              <button className="btn btn-jade" onClick={onLearn}>
+                {lessonInfo.done === 0 ? 'Start from zero' : 'Continue'} →
+              </button>
             </>
-          ) : counts.fresh > 0 ? (
-            /* The next-step card below names the actual question — saying it
-               here too made the page repeat itself three times over. */
-            <>No reviews due — the path is open</>
           ) : (
-            <>All caught up for today</>
+            <button className="learn-done-chip" onClick={onLearn}>
+              Python basics ✓ — {lessonInfo.total}/{lessonInfo.total} lessons
+            </button>
           )}
-        </span>
-        <button
-          className="btn btn-primary"
-          onClick={onStartPractice}
-          disabled={counts.due === 0 && counts.fresh === 0}
-        >
-          {counts.due > 0 ? 'Start review' : brandNew ? 'Begin the path' : 'Continue the path'}
-        </button>
-        {missCount > 0 && !brandNew && (
-          <button className="btn btn-drill" onClick={onDrill}>
-            Drill misses ({missCount})
-          </button>
-        )}
-        <button className="btn btn-warmup" onClick={onWarmup}>
-          Warm-up
-        </button>
-        {/* Mock interview is meaningless at zero solves — surfaces once you start. */}
-        {!brandNew && (
-          <button className="btn btn-mock" onClick={onMock} title="Timed, no hints — simulate the real interview">
-            Mock interview
-          </button>
-        )}
-      </div>
-
-      {/* For returning users the Learn entry sits below the daily strip. */}
-      {onLearn && lessonInfo && lessonInfo.done < lessonInfo.total && !brandNew && (
-        <LearnStrip info={lessonInfo} onLearn={onLearn} />
-      )}
-      {onLearn && lessonInfo && lessonInfo.total > 0 && lessonInfo.done === lessonInfo.total && (
-        <button className="learn-done-chip" onClick={onLearn}>
-          Python basics ✓ — {lessonInfo.total}/{lessonInfo.total} lessons
-        </button>
-      )}
-
-      {/* Today's pulse: what you've done, what's left, and the big number */}
-      {!brandNew && (
-        <div className="today-strip">
-          <span className="today-label">Today</span>
-          <span className={`today-chip ${pulse.solves > 0 ? 'good' : ''}`}>
-            {pulse.solves} solved
-          </span>
-          {pulse.missedLeft > 0 && (
-            <span className="today-chip bad">✗ {pulse.missedLeft} to win back</span>
-          )}
-          <span className={`today-chip ${pulse.dueLeft === 0 ? 'good' : ''}`}>
-            {pulse.dueLeft === 0 ? 'reviews clear' : `${pulse.dueLeft} review${pulse.dueLeft === 1 ? '' : 's'} left`}
-          </span>
-          <span className={`today-chip ${pulse.goalMet ? 'good' : ''}`}>
-            {pulse.goalMet ? '✓ daily goal met' : 'goal: solve 1 + clear reviews'}
-          </span>
         </div>
       )}
-
-      {/* Readiness gets its own object rather than a chip lost in the row above:
-          it's the one number the whole app exists to move, and the dial reads
-          from across the room. */}
-      {!brandNew && onStats && (
-        <button
-          className="today-ready"
-          onClick={onStats}
-          title="Interview readiness — coverage, retention, mocks, pace. Click for the breakdown."
-          aria-label={`Interview readiness ${ready.score} out of 100 — see the breakdown`}
-        >
-          <ReadinessRing score={ready.score} size={64} />
-          <span className="today-ready-text">
-            <span className="today-ready-label">Interview readiness</span>
-            <span className="today-ready-cue">{ready.level} · see the breakdown</span>
-          </span>
-          <span className="cue-orb" aria-hidden="true">
-            →
-          </span>
-        </button>
-      )}
-
-        </div>
-      </div>
 
       {/* The questions that keep biting — one tap from the front door */}
       {weak.length > 0 && (
         <div className="weak-row" data-reveal>
-          <span className="weak-label">Sharpen:</span>
+          <span className="weak-label">Keeps biting</span>
           {weak.map(({ q, mistakes }) => (
             <button
               className="weak-chip"
@@ -319,14 +329,23 @@ export default function RoadmapGraph({
         </div>
       )}
 
-      <p className="map-hint" data-reveal>
-        Learn top to bottom — arrows mean &ldquo;learn this pattern first.&rdquo; Click a topic
-        to open its questions.
-      </p>
+      <div className="map-head" data-reveal>
+        <h2>
+          The path — {shownNodes.length} topics, in order
+          <span className="map-head-count">
+            {solvedCount}/{questions.length} solved
+          </span>
+        </h2>
+        <p className="map-hint">
+          Top to bottom — an arrow means &ldquo;learn this pattern first.&rdquo; Click a topic to
+          open its questions.
+        </p>
+      </div>
 
       <div className="graph-fit" data-reveal ref={fitRef} style={{ height: GRAPH_H * scale }}>
         <div
           className="graph-canvas"
+          ref={canvasRef}
           style={{
             width: GRAPH_W,
             height: GRAPH_H,
@@ -359,6 +378,7 @@ export default function RoadmapGraph({
               return d ? (
                 <path
                   key={i}
+                  data-edge
                   d={d}
                   fill="none"
                   stroke="#e9e7de"
