@@ -771,7 +771,14 @@ export default function ProblemView({
                   <div className="loader-bar-fill" style={{ '--fill': loadPct / 100 }} />
                 </div>
               ) : (
-                <div className="spinner" aria-hidden="true" />
+                /* A skeleton in the shape of the results that are coming, rather
+                   than a spinner that says nothing about what to expect. */
+                <div className="result-skeleton" aria-hidden="true">
+                  <span className="sk-line sk-head" />
+                  <span className="sk-row" />
+                  <span className="sk-row" />
+                  <span className="sk-row sk-short" />
+                </div>
               )}
               <span>{statusText || 'Running your code…'}</span>
               {stuck && (

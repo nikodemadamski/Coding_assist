@@ -1,3 +1,30 @@
+/* ── typeface ───────────────────────────────────────────────────────────
+   Self-hosted variable fonts (latin subset, 108KB total). They used to load
+   from Google's CDN, which the service worker passes straight through — so the
+   app fell back to system fonts the moment you went offline, and the PWA never
+   looked like itself. Same-origin means the SW caches them like any asset. */
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  src: url('/fonts/bricolage-grotesque-latin-wght-normal.woff2') format('woff2-variations');
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Schibsted Grotesk';
+  src: url('/fonts/schibsted-grotesk-latin-wght-normal.woff2') format('woff2-variations');
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/jetbrains-mono-latin-wght-normal.woff2') format('woff2-variations');
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ── ZoroClaude Dojo theme ─────────────────────────────────────────────── */
 
 :root {
@@ -19,9 +46,9 @@
   --track-python: #6fb5e8;
   --track-pandas: #b78ee8;
   --track-sql: #e8b04b;
-  --font-display: 'Zilla Slab', serif;
-  --font-body: 'IBM Plex Sans', system-ui, sans-serif;
-  --font-code: 'IBM Plex Mono', ui-monospace, monospace;
+  --font-display: 'Bricolage Grotesque', Georgia, serif;
+  --font-body: 'Schibsted Grotesk', system-ui, sans-serif;
+  --font-code: 'JetBrains Mono', ui-monospace, monospace;
 
   /* ── scales ──────────────────────────────────────────────────────────── */
   /* Type: functional text never goes below 11px (see DESIGN.md). */
@@ -301,8 +328,8 @@ button {
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #f05a5f;
-  border-color: #f05a5f;
+  background: color-mix(in srgb, var(--crimson) 86%, #fff);
+  border-color: color-mix(in srgb, var(--crimson) 86%, #fff);
 }
 
 .btn-jade {
@@ -328,11 +355,11 @@ button {
 .chip {
   cursor: pointer;
   transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease,
-    transform 0.08s ease,
-    box-shadow 0.15s ease;
+    background var(--dur-1) var(--ease),
+    border-color var(--dur-1) var(--ease),
+    color var(--dur-1) var(--ease),
+    transform 80ms var(--ease),
+    box-shadow var(--dur-1) var(--ease);
 }
 .btn:active:not(:disabled),
 .icon-btn:active,
@@ -5862,4 +5889,107 @@ kbd,
   font-size: var(--t-sm);
   color: var(--text-dim);
   margin-left: var(--s-2);
+}
+
+
+/* ── texture & finish ───────────────────────────────────────────────────
+   A fixed, non-interactive grain layer. Flat vector surfaces read as sterile;
+   a trace of noise gives the dark canvas some physicality. Fixed + pointer-
+   events-none so it never repaints with scroll. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Shadows carry the canvas hue instead of flat black, so elevation looks lit
+   rather than dirty. */
+:root {
+  --shadow-pop: 0 6px 20px rgb(6 8 14 / 0.44);
+  --shadow-modal: 0 18px 48px rgb(6 8 14 / 0.58);
+}
+:root[data-theme='light'] {
+  --shadow-pop: 0 6px 20px rgb(90 84 70 / 0.14);
+  --shadow-modal: 0 18px 48px rgb(90 84 70 / 0.2);
+}
+
+/* Typographic finish: no orphans in headings, better ragging in prose. */
+h1,
+h2,
+h3,
+h4,
+.next-step-title,
+.result-summary {
+  text-wrap: balance;
+}
+p,
+.learn-chapter-blurb,
+.next-step-why,
+.map-hint {
+  text-wrap: pretty;
+}
+
+/* Data reads as data. */
+.step-num,
+.learn-lesson-min,
+.learn-chapter-count,
+.today-chip,
+.stat-tile .v {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Skeleton that mirrors the results layout: a summary line then test rows.
+   Shimmer is a transform, and it stops entirely under reduced motion. */
+.result-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  width: 100%;
+  max-width: 520px;
+}
+.sk-line,
+.sk-row {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--r-sm);
+  background: var(--panel-2);
+}
+.sk-head {
+  height: 20px;
+  width: 42%;
+}
+.sk-row {
+  height: 38px;
+}
+.sk-short {
+  width: 70%;
+}
+.sk-line::after,
+.sk-row::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--text-dim) 16%, transparent),
+    transparent
+  );
+  animation: sk-sweep 1.4s var(--ease) infinite;
+}
+@keyframes sk-sweep {
+  to {
+    transform: translateX(100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sk-line::after,
+  .sk-row::after {
+    animation: none;
+  }
 }
