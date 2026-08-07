@@ -176,6 +176,17 @@ if outcome["status"] == "ok":
             # learner sees True/None/'text', not true/null/"text".
             entry["expectedRepr"] = repr(_normalize(t["expected"]))
             entry["gotRepr"] = repr(_normalize(got))
+            # The structured value as well as its repr. state/failureDiagnosis
+            # reads the failing set to say something true about it, and it
+            # cannot do that from a printed string. _normalize is already
+            # JSON-safe; the cap keeps a runaway output off the wire.
+            if not entry["pass"]:
+                _n = _normalize(got)
+                try:
+                    if len(json.dumps(_n, default=str)) <= 4000:
+                        entry["got"] = _n
+                except Exception:
+                    pass
         except Exception:
             entry["error"] = _user_error()
         entry["stdout"] = buf.getvalue()[:4000]

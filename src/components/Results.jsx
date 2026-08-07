@@ -1,4 +1,20 @@
 import SqlResultTable from './SqlResultTable.jsx';
+import { diagnose } from '../state/failureDiagnosis.js';
+
+// The read on a failing run: one sentence about what the failures have in
+// common, and one about where to look. Nothing here is a guess — every line is
+// a fact derived from the results, and when there is no such fact the whole
+// block is absent rather than filled with encouragement.
+function FailureRead({ question, report }) {
+  const d = diagnose(question, report);
+  if (!d) return null;
+  return (
+    <div className={`fail-read read-${d.kind}`} role="status">
+      <p className="fail-read-head">{d.headline}</p>
+      <p className="fail-read-detail">{d.detail}</p>
+    </div>
+  );
+}
 
 function TestDetail({ result, call }) {
   return (
@@ -138,6 +154,12 @@ export default function Results({ report, question }) {
       {allPass && (
         <div className="result-cheer">All tests green — nicely done. Hit Submit to lock it in.</div>
       )}
+
+      {/* What the failing set is actually telling you. `diagnose` returns null
+          whenever nothing is certainly true of the failures, and then this
+          simply does not render — a guess here would be worse than silence.
+          See state/failureDiagnosis.js. */}
+      {!allPass && <FailureRead question={question} report={report} />}
 
       {ordered.map(({ r, i }) => (
         <PyTestRow key={i} result={r} index={i} functionName={question.function_name} />

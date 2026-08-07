@@ -1087,6 +1087,32 @@ details.hint[open] summary {
   margin-bottom: 12px;
 }
 
+/* ── the read on a failing run ───────────────────────────────────────────────
+   Sits above the test list because it is the thing to read first. Gold, not
+   crimson: this is a diagnosis, not a scolding — the ✗ count above already
+   carries the bad news, and colour here means "look at this", which is exactly
+   what gold means everywhere else in the app. */
+.fail-read {
+  margin-bottom: var(--s-4);
+  padding: var(--s-4);
+  border: 1px solid color-mix(in srgb, var(--gold) 40%, var(--line));
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--gold) 7%, transparent);
+}
+.fail-read-head {
+  margin: 0;
+  font-weight: 600;
+  color: var(--gold);
+  max-width: var(--measure);
+}
+.fail-read-detail {
+  margin: var(--s-2) 0 0;
+  color: var(--text-dim);
+  font-size: var(--t-sm);
+  line-height: 1.55;
+  max-width: var(--measure);
+}
+
 .test-row {
   border: 1px solid var(--line);
   border-radius: var(--r-sm);

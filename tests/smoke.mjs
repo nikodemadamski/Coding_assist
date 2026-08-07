@@ -731,6 +731,32 @@ try {
   await page.locator('.result-summary').waitFor({ timeout: 60000 });
   check(/wincing/.test(await feeling()), `a failed run makes the mascot wince (${await feeling()})`);
 
+  // ---- the read on a failing run ----------------------------------------
+  // Expected-vs-got is where the app used to stop. A failing set carries a
+  // mechanical signal, and this is the state you are in most while learning.
+  const readHead = await page.locator('.fail-read-head').innerText();
+  check(
+    readHead.length > 10 && readHead.trim().endsWith('.'),
+    `a failing run is read, not just listed (${readHead})`
+  );
+  check(
+    !/forgot|you should|try to/i.test(await page.locator('.fail-read').innerText()),
+    'and the read states facts rather than guessing at the fix'
+  );
+  const readTop = (await page.locator('.fail-read').boundingBox()).y;
+  const firstRow = (await page.locator('.test-row').first().boundingBox()).y;
+  check(readTop < firstRow, 'it sits above the test list, because it is what to read first');
+
+  // Returning the input unchanged is a different fact, and must be named.
+  await setEditor(page, 'def two_sum(nums, target):\n    return nums');
+  await page.locator('.pv-toolbar button', { hasText: /^Run/ }).click();
+  await page.locator('.result-summary').waitFor({ timeout: 60000 });
+  await page.waitForTimeout(400);
+  check(
+    /returning the input unchanged/i.test(await page.locator('.fail-read-head').innerText()),
+    'a run that hands the input back is diagnosed as exactly that'
+  );
+
   // ---- correct solution: Run then Submit ----
   const solution =
     'def two_sum(nums, target):\n    seen = {}\n    for i, n in enumerate(nums):\n        if target - n in seen:\n            return [seen[target - n], i]\n        seen[n] = i';
@@ -739,6 +765,10 @@ try {
   await page.locator('.result-summary.pass').waitFor({ timeout: 60000 });
   check((await resultText(page)).includes('5/5 tests passed'), 'correct solution passes all tests');
   check(/delighted/.test(await feeling()), `green tests delight it (${await feeling()})`);
+  check(
+    (await page.locator('.fail-read').count()) === 0,
+    'and a passing run carries no failure read at all'
+  );
   await page.locator('.console-tab', { hasText: 'Testcase' }).click();
   check(
     (await page.locator('.case-chip.pass').count()) === 5 &&

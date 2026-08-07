@@ -9,9 +9,9 @@ copy text from LeetCode/NeetCode.**
 
 ```bash
 npm run dev / build / lint
-npm test                     # 25 unit suites, incl. run-seed-tests (runs EVERY solution
+npm test                     # 26 unit suites, incl. run-seed-tests (runs EVERY solution
                              # and EVERY alternative approach through real engines)
-# Browser smoke (~384 checks). CDN is blocked in the dev container:
+# Browser smoke (~389 checks). CDN is blocked in the dev container:
 node tests/setup-local-pyodide.mjs         # once per container
 VITE_PYODIDE_BASE=/pyodide/ npm run build
 CHROMIUM_PATH=/opt/pw-browsers/chromium node tests/smoke.mjs
@@ -409,6 +409,21 @@ two never contradict — a `paceBand` verdict (fast/ontrack/over/slow), the SRS 
 words (`nextReviewPhrase`: "back tomorrow" / "back in 2 weeks"), lifetime clears, and one
 loud Next. Nothing is invented when there is nothing to say: no timer means no band and no
 sentence. Smoke asserts the headline outweighs the result line beneath it.
+
+**The read on a failing run** (`state/failureDiagnosis.js` + `FailureRead` in Results.jsx,
+`diagnosis-tests`) sits above the test list, because a failing set carries a mechanical signal
+and this is the state you are in most while learning. `diagnose(question, report)` runs rules
+most-specific-first — every case raises the same exception · returns None · hands the input
+back · right values wrong order · off by a constant · wrong type · wrong length · only the
+smallest input fails · one lone failure · nothing passes · which cases differ — and returns
+**null** when nothing is certainly true, so the block simply does not render. **THE RULE: only
+state facts derived from the results.** "Every wrong answer is exactly one too high" is a fact;
+"you forgot to shrink the window" is a guess that would sometimes be wrong, which is worse than
+silence. The off-by rule needs ≥2 failing cases — one sample is a coincidence, the same reason
+`patternAccuracy` has a MIN_SEEN. It needs real values, so the harness emits a structured
+`got` (JSON-safe via `_normalize`, capped at 4KB) alongside `gotRepr` on failing entries.
+Coloured gold, not crimson: the ✗ count above already carries the bad news, and gold means
+"look at this" everywhere else in the app.
 
 **TestConsole** (src/components/TestConsole.jsx) owns the bottom pane — two tabs:
 - *Testcase* — one `.case-chip` per `question.tests` entry (+ a dashed **Custom** chip),
