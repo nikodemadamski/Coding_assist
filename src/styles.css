@@ -1200,6 +1200,207 @@ details.hint[open] summary {
   font-weight: 500;
 }
 
+/* ── the cleared panel ───────────────────────────────────────────────────────
+   The most rewarding event in the app, drawn like one. It is the loudest thing
+   on the console pane for as long as it is there — a headline, three facts,
+   and exactly one action. */
+.solved-panel {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--s-2) var(--s-4);
+  align-items: start;
+  padding: var(--s-5);
+  margin-bottom: var(--s-4);
+  border: 1px solid color-mix(in srgb, var(--jade) 45%, var(--line));
+  border-radius: var(--r-lg);
+  background: color-mix(in srgb, var(--jade) 8%, var(--panel));
+}
+.solved-mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-full);
+  background: var(--jade);
+  color: var(--ink);
+}
+.solved-head {
+  min-width: 0;
+}
+.solved-title {
+  font-family: var(--font-display);
+  font-size: var(--t-2xl);
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.1;
+  color: var(--jade);
+}
+.solved-line {
+  margin: var(--s-1) 0 0;
+  color: var(--text-dim);
+  max-width: var(--measure);
+}
+.solved-facts,
+.solved-pace,
+.solved-next {
+  grid-column: 2;
+}
+.solved-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-6);
+  margin: var(--s-4) 0 0;
+  padding-top: var(--s-4);
+  border-top: 1px solid color-mix(in srgb, var(--jade) 22%, var(--line));
+}
+.solved-fact dt {
+  font-size: var(--t-micro);
+  color: var(--text-dim);
+  margin-bottom: 2px;
+}
+.solved-fact dd {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+.solved-fact-n {
+  font-family: var(--font-code);
+  font-size: var(--t-xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.solved-fact-x {
+  font-size: var(--t-sm);
+  color: var(--text-dim);
+}
+.solved-fact-sub {
+  font-size: var(--t-micro);
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+/* Colour carries the pace verdict, and only the verdict — the numbers above
+   stay neutral so the one coloured thing is the judgement. */
+.solved-pace {
+  margin: var(--s-3) 0 0;
+  font-size: var(--t-sm);
+  max-width: var(--measure);
+  color: var(--text-dim);
+}
+.solved-pace.pace-fast,
+.solved-pace.pace-ontrack {
+  color: var(--jade);
+}
+.solved-pace.pace-over,
+.solved-pace.pace-slow {
+  color: var(--gold);
+}
+.solved-next {
+  margin-top: var(--s-4);
+  justify-self: start;
+}
+@media (max-width: 700px) {
+  .solved-panel {
+    grid-template-columns: 1fr;
+  }
+  .solved-facts,
+  .solved-pace,
+  .solved-next {
+    grid-column: 1;
+  }
+  .solved-facts {
+    gap: var(--s-4);
+  }
+}
+
+/* Solved: the hint ladder folds away behind a disclosure, because after the
+   fact it is the wrong thing to have open. */
+.stuck-after {
+  margin-top: var(--s-4);
+}
+.stuck-after > summary {
+  cursor: pointer;
+  color: var(--text-dim);
+  font-size: var(--t-sm);
+  padding: var(--s-2) 0;
+}
+.stuck-after > summary:hover {
+  color: var(--text);
+}
+
+/* ── the keyboard sheet ──────────────────────────────────────────────────── */
+.pv-keys kbd {
+  font-family: var(--font-code);
+  font-size: var(--t-micro);
+  line-height: 1;
+}
+.shortcut-sheet {
+  max-width: 560px;
+  width: 100%;
+}
+.shortcut-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  margin-bottom: var(--s-5);
+}
+.shortcut-head h2 {
+  margin: 0;
+}
+.shortcut-groups {
+  display: grid;
+  gap: var(--s-5);
+}
+.shortcut-group h3 {
+  font-size: var(--t-sm);
+  color: var(--text-dim);
+  font-weight: 600;
+  margin: 0 0 var(--s-2);
+}
+.shortcut-group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-1);
+}
+.shortcut-group li {
+  display: grid;
+  grid-template-columns: 108px 1fr;
+  gap: var(--s-3);
+  align-items: baseline;
+  padding: var(--s-1) 0;
+}
+.shortcut-keys {
+  display: flex;
+  gap: 3px;
+  justify-content: flex-end;
+}
+.shortcut-sheet kbd {
+  font-family: var(--font-code);
+  font-size: var(--t-micro);
+  padding: 2px 6px;
+  border-radius: var(--r-xs);
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--text);
+  white-space: nowrap;
+}
+.shortcut-label {
+  color: var(--text-dim);
+  font-size: var(--t-sm);
+  line-height: 1.45;
+}
+.shortcut-foot {
+  margin: var(--s-5) 0 0;
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--line);
+  font-size: var(--t-sm);
+  color: var(--text-dim);
+  max-width: var(--measure);
+}
+
 /* SQL result diff tables */
 .sql-diff {
   display: flex;

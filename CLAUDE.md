@@ -9,9 +9,9 @@ copy text from LeetCode/NeetCode.**
 
 ```bash
 npm run dev / build / lint
-npm test                     # 24 unit suites, incl. run-seed-tests (runs EVERY solution
+npm test                     # 25 unit suites, incl. run-seed-tests (runs EVERY solution
                              # and EVERY alternative approach through real engines)
-# Browser smoke (~360 checks). CDN is blocked in the dev container:
+# Browser smoke (~375 checks). CDN is blocked in the dev container:
 node tests/setup-local-pyodide.mjs         # once per container
 VITE_PYODIDE_BASE=/pyodide/ npm run build
 CHROMIUM_PATH=/opt/pw-browsers/chromium node tests/smoke.mjs
@@ -346,8 +346,30 @@ draggable and persisted (`--pv-split` cols, `--pv-vsplit` rows) → editor-bar (
 fn name left, quiet `.bar-btn` tools right: Visualize, A−/A+, Reset) → `.mkeys` mobile key
 strip (pointerdown+preventDefault keeps the phone keyboard open) → **TestConsole**.
 StuckLadder / Approaches (tabbed brute→optimal, each with Visualize) / Notes live in the
-problem column. VisualizerModal: fixed height, hero narration, element-level diff
-highlights, pointer overlay, runs on ANY code.
+problem column — and the column is **state-aware**: once a question is solved the hint
+ladder folds into a `.stuck-after` disclosure and Approaches takes its place, because a
+ladder of hints is the wrong thing to have open after the fact. VisualizerModal: fixed
+height, hero narration, element-level diff highlights, pointer overlay, runs on ANY code.
+
+**The keyboard layer** is two tiers with different rules, and `ShortcutSheet.jsx` is the
+single place that documents them (`?` from anywhere in the view, plus a `.pv-keys` chip in
+the toolbar — a shortcut nobody knows about is a shortcut nobody has). Tier 1, the modified
+pair (`Ctrl/⌘+↵` run, `+⇧` submit), binds in the **capture** phase so it fires with the
+editor focused, before CodeMirror sees it. Tier 2, the single letters (`f` focus · `v`
+visualize · `t` swap console tab · `[`/`]` walk the path · `?` the sheet), binds in the
+bubble phase and bails on any editable target or `.cm-editor` ancestor — otherwise `f` in a
+variable name would move the furniture. Escape is load-bearing for tier 2 and CodeMirror
+swallows it, so the capture handler blurs the editor itself — but only when no
+`.cm-tooltip-autocomplete` is open, since that Escape belongs to the popup. Smoke pins all
+of it, including that typing `f v t` into the buffer changes nothing.
+
+**The cleared panel** (`SolvedPanel.jsx` + pure `state/solveDebrief.js`, `debrief-tests`)
+replaces the one-line solved banner: headline (`Cleared` / `Re-cleared` by solve count),
+your time against `PACE_TARGETS_MS[difficulty]` — the same target readiness grades, so the
+two never contradict — a `paceBand` verdict (fast/ontrack/over/slow), the SRS return date in
+words (`nextReviewPhrase`: "back tomorrow" / "back in 2 weeks"), lifetime clears, and one
+loud Next. Nothing is invented when there is nothing to say: no timer means no band and no
+sentence. Smoke asserts the headline outweighs the result line beneath it.
 
 **TestConsole** (src/components/TestConsole.jsx) owns the bottom pane — two tabs:
 - *Testcase* — one `.case-chip` per `question.tests` entry (+ a dashed **Custom** chip),

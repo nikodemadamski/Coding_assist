@@ -662,13 +662,76 @@ try {
   await page.locator('.console-tab', { hasText: 'Result' }).click();
 
   await page.locator('.pv-toolbar button', { hasText: 'Submit' }).click();
-  await page.locator('.solved-banner').waitFor({ timeout: 60000 });
+  await page.locator('.solved-panel').waitFor({ timeout: 60000 });
   check(true, 'Submit marks the problem solved');
   check(/proud of you/.test(await feeling()), `and a submit makes it proud (${await feeling()})`);
+
+  // ---- the cleared panel: the most rewarding moment, drawn like one ----
+  const cleared = (await page.locator('.solved-panel').innerText()).replace(/\s+/g, ' ');
+  check(/Cleared/.test(await page.locator('.solved-title').innerText()), 'a first solve reads "Cleared"');
   check(
-    /Solved in \d/.test(await page.locator('.solved-banner').innerText()),
-    'the banner reports how long the first solve took'
+    (await page.locator('.solved-fact').count()) === 3,
+    `it reports time, next review and lifetime clears (${cleared.slice(0, 90)})`
   );
+  check(/\d+:\d\d/.test(cleared) && /target/.test(cleared), 'your time is shown against the pace target');
+  check(/back tomorrow/.test(cleared), 'and it says out loud when spaced repetition brings it back');
+  check(
+    await page.locator('.solved-pace').isVisible(),
+    'a pace verdict judges the time rather than just printing it'
+  );
+  // The panel must be the loudest thing on the pane — bigger than the results
+  // heading it sits above, or it is just another banner.
+  const titleSize = await page
+    .locator('.solved-title')
+    .evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+  const resultSize = await page
+    .locator('.result-summary')
+    .evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+  check(titleSize > resultSize, `the headline outweighs the result line (${titleSize} vs ${resultSize})`);
+
+  // ---- the keyboard layer ------------------------------------------------
+  // A trainer you use daily should be drivable without the mouse, and a
+  // shortcut nobody knows about is a shortcut nobody has — so `?` teaches them.
+  await page.locator('.pv-body').click({ position: { x: 4, y: 4 } });
+  await page.keyboard.press('?');
+  await page.locator('.shortcut-sheet').waitFor({ timeout: 5000 });
+  check(
+    (await page.locator('.shortcut-group li').count()) >= 8,
+    'the ? sheet documents the whole solve loop'
+  );
+  await page.keyboard.press('Escape');
+  await page.locator('.shortcut-sheet').waitFor({ state: 'detached', timeout: 5000 });
+  check(true, 'and Escape closes it');
+
+  // The guard that matters: a single letter must never fire while you type.
+  const focused = () => page.locator('.problem-view.focus-code').count();
+  // Click line 1 rather than the content box: a completion popup left open by
+  // the previous edit hangs below the caret and would swallow the click.
+  await page.locator('.cm-line').first().click();
+  await page.keyboard.press('End');
+  await page.keyboard.type('  # f v t');
+  check((await focused()) === 0, 'typing f/v/t in the editor does NOT move the furniture');
+  for (let i = 0; i < 9; i++) await page.keyboard.press('Backspace');
+
+  // Escape must genuinely leave the editor — that is the rule the sheet
+  // teaches, and CodeMirror swallows Escape and keeps focus by default.
+  await page.keyboard.press('Escape'); // dismisses any completion popup
+  await page.keyboard.press('Escape'); // and this one blurs
+  check(
+    await page.evaluate(() => !document.activeElement?.closest?.('.cm-editor')),
+    'Escape actually leaves the editor, as the shortcut sheet promises'
+  );
+  await page.keyboard.press('f');
+  check((await focused()) === 1, 'f outside the editor enters focus mode');
+  await page.keyboard.press('f');
+  check((await focused()) === 0, 'and leaves it again');
+
+  await page.keyboard.press('t');
+  check(
+    (await page.locator('.console-tab.active').innerText()).toLowerCase().includes('testcase'),
+    't switches the console pane'
+  );
+  await page.keyboard.press('t');
 
   // ---- Big-O check-in: the interviewer follow-up, on every solve ----
   check(await page.locator('.bigo').isVisible(), 'solving raises the what-was-your-Big-O check');
@@ -695,10 +758,10 @@ try {
 
   // ---- solve → next: the flow never dead-ends ----
   check(
-    (await page.locator('.next-q-btn').innerText()).includes('Reverse a string'),
-    'the solved banner offers the next unsolved path step'
+    (await page.locator('.solved-next').innerText()).includes('Reverse a string'),
+    'the cleared panel offers the next unsolved path step'
   );
-  await page.locator('.next-q-btn').click();
+  await page.locator('.solved-next').click();
   check(
     (await page.locator('.pv-title').innerText()).includes('Reverse a string'),
     'clicking Next jumps straight into the next question'
@@ -1617,6 +1680,24 @@ try {
   // ---- algorithm visualizer: replays a real traced execution ----
   await page.locator('.graph-node', { hasText: 'Arrays & Hashing' }).click();
   await page.locator('.cat-q', { hasText: 'Two Sum' }).click();
+  // Two Sum is solved by now, so the hint ladder is folded away and the model
+  // approaches take its place — after the fact, a ladder of hints is the wrong
+  // thing to have sitting open. It is still one click from where it was.
+  check(
+    (await page.locator('.stuck-after').count()) === 1,
+    'a solved question folds the hint ladder behind a disclosure'
+  );
+  // Inside a closed <details> the rungs are still in the DOM but not on screen,
+  // which is the point — hidden, not deleted.
+  check(
+    (await page.locator('.stuck-next').first().isVisible().catch(() => false)) === false,
+    'so no hint rung is showing on a question you already cleared'
+  );
+  check(
+    await page.locator('.pv-extras .approaches').isVisible(),
+    'and the model approaches sit where the ladder was'
+  );
+  await page.locator('.stuck-after > summary').click();
   // climb the stuck ladder to the code rung, then Visualize
   for (let i = 0; i < 4; i++) {
     const next = page.locator('.stuck-next');

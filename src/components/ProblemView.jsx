@@ -7,6 +7,8 @@ import Approaches from './Approaches.jsx';
 import StuckLadder from './StuckLadder.jsx';
 import Notes from './Notes.jsx';
 import BigOCheck from './BigOCheck.jsx';
+import SolvedPanel from './SolvedPanel.jsx';
+import ShortcutSheet from './ShortcutSheet.jsx';
 import VisualizerModal from './VisualizerModal.jsx';
 import { runQuestion } from '../engine/runnerClient.js';
 import { resetPythonRuntime } from '../engine/pyClient.js';
@@ -237,9 +239,21 @@ export default function ProblemView({
 
   const solved = isSolved(progress.solved[question.id]);
 
-  // Keyboard solve loop: Ctrl/⌘+Enter runs, Ctrl/⌘+Shift+Enter submits.
-  // Capture phase so it works while the editor has focus (before CodeMirror).
+  // ── the keyboard solve loop ───────────────────────────────────────────────
+  // Two tiers, because they need different rules.
+  //
+  // The modified pair (Ctrl/⌘+Enter to run, +Shift to submit) is bound in the
+  // CAPTURE phase so it fires while the editor has focus, before CodeMirror
+  // sees it — running your code is the one thing you must be able to do
+  // without leaving the buffer.
+  //
+  // The single letters are the opposite: they must NEVER fire while you're
+  // typing, or `f` in a variable name would toggle focus mode. They bind in
+  // the bubble phase and bail on any editable target, so you press Esc to
+  // leave the editor and then the furniture responds. ShortcutSheet says so
+  // out loud, because a rule nobody knows is a bug.
   const executeRef = useRef(null);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   useEffect(() => {
     const onKey = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
@@ -247,11 +261,53 @@ export default function ProblemView({
         e.preventDefault();
         e.stopPropagation();
         executeRef.current?.(e.shiftKey);
+        return;
+      }
+      // Escape has to actually leave the editor, because that is the rule the
+      // shortcut sheet teaches. CodeMirror swallows it and keeps focus, so the
+      // documented escape hatch would otherwise be a lie. Read the completion
+      // popup HERE, in the capture phase — by the time CodeMirror is done it
+      // has already closed one, and we'd blur on the same keypress that was
+      // only meant to dismiss it.
+      if (e.key === 'Escape' && e.target?.closest?.('.cm-editor')) {
+        if (document.querySelector('.cm-tooltip-autocomplete')) return; // that Esc is the popup's
+        document.activeElement?.blur?.();
       }
     };
     window.addEventListener('keydown', onKey, true);
     return () => window.removeEventListener('keydown', onKey, true);
   }, []);
+
+  const codeRef = useRef(code);
+  codeRef.current = code;
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (document.querySelector('.modal-backdrop')) return;
+      const t = e.target;
+      if (
+        t?.tagName === 'INPUT' ||
+        t?.tagName === 'TEXTAREA' ||
+        t?.isContentEditable ||
+        t?.closest?.('.cm-editor')
+      ) {
+        return;
+      }
+      const act = {
+        '?': () => setShortcutsOpen(true),
+        f: () => setFocusCode((v) => !v),
+        v: () => openVisualizer(codeRef.current, 'Your code'),
+        t: () => setConsoleTab((v) => (v === 'result' ? 'testcase' : 'result')),
+        '[': () => prevInPath && onOpenNext?.(prevInPath.id),
+        ']': () => nextInPath && onOpenNext?.(nextInPath.id),
+      }[e.key];
+      if (!act) return;
+      e.preventDefault();
+      act();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [openVisualizer, prevInPath, nextInPath, onOpenNext]);
 
   const handleChange = useCallback(
     (value) => {
@@ -475,9 +531,18 @@ export default function ProblemView({
           className="icon-btn pv-focus-toggle"
           onClick={() => setFocusCode((f) => !f)}
           aria-pressed={focusCode}
-          title={focusCode ? 'Show the problem again' : 'Focus the editor (hide the problem)'}
+          title={focusCode ? 'Show the problem again (f)' : 'Focus the editor, hide the problem (f)'}
         >
           {focusCode ? 'Show problem' : 'Focus'}
+        </button>
+        {/* Shortcuts nobody knows about are shortcuts nobody has. */}
+        <button
+          className="icon-btn pv-keys"
+          onClick={() => setShortcutsOpen(true)}
+          aria-label="Keyboard shortcuts"
+          title="Keyboard shortcuts (?)"
+        >
+          <kbd>?</kbd>
         </button>
         <button
           className="btn"
@@ -589,13 +654,32 @@ export default function ProblemView({
                   <Markdown text={question.why} />
                 </div>
               )}
-              <StuckLadder
-                question={question}
-                progress={progress}
-                onVisualize={openVisualizer}
-                onSeePattern={onSeePattern}
-                onOpenLesson={onOpenLesson}
-              />
+              {/* Once you've solved it, a ladder of hints is the wrong thing
+                  to have sitting open — you want the model approaches instead.
+                  It's still one click away, because a re-clear can still stall. */}
+              {solved ? (
+                <>
+                  <Approaches question={question} onVisualize={openVisualizer} />
+                  <details className="stuck-after">
+                    <summary>Still want the hint ladder?</summary>
+                    <StuckLadder
+                      question={question}
+                      progress={progress}
+                      onVisualize={openVisualizer}
+                      onSeePattern={onSeePattern}
+                      onOpenLesson={onOpenLesson}
+                    />
+                  </details>
+                </>
+              ) : (
+                <StuckLadder
+                  question={question}
+                  progress={progress}
+                  onVisualize={openVisualizer}
+                  onSeePattern={onSeePattern}
+                  onOpenLesson={onOpenLesson}
+                />
+              )}
             </div>
           )}
           {!mockMode && question.insight && (
@@ -806,24 +890,14 @@ export default function ProblemView({
             customRunning={customRunning}
           >
             {justSolved && (
-              <div className="solved-banner">
-                <span>
-                  Solved{solveMsRef.current != null ? ` in ${formatDuration(solveMsRef.current)}` : ''}!
-                  Scheduled for review — spaced repetition will bring it back.
-                </span>
-                {onOpenNext && (nextUp || nextInPath) && (
-                  <button
-                    className="btn btn-jade next-q-btn"
-                    onClick={() => onOpenNext((nextUp ?? nextInPath).id)}
-                  >
-                    {nextUp ? 'Next on your path: ' : 'Next question: '}
-                    {pathStep((nextUp ?? nextInPath).id)
-                      ? `step ${pathStep((nextUp ?? nextInPath).id)} · `
-                      : ''}
-                    {(nextUp ?? nextInPath).title} →
-                  </button>
-                )}
-              </div>
+              <SolvedPanel
+                key={question.id}
+                question={question}
+                progress={progress}
+                solveMs={solveMsRef.current}
+                nextQuestion={nextUp ?? nextInPath ?? null}
+                onOpenNext={onOpenNext}
+              />
             )}
             {justSolved && (
               <BigOCheck question={question} onResult={onBigO} key={`bigo-${question.id}`} />
@@ -913,6 +987,8 @@ export default function ProblemView({
           onClose={() => setViz(null)}
         />
       )}
+
+      {shortcutsOpen && <ShortcutSheet onClose={() => setShortcutsOpen(false)} />}
     </div>
   );
 }
