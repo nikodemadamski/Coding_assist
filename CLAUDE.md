@@ -11,7 +11,7 @@ copy text from LeetCode/NeetCode.**
 npm run dev / build / lint
 npm test                     # 26 unit suites, incl. run-seed-tests (runs EVERY solution
                              # and EVERY alternative approach through real engines)
-# Browser smoke (~389 checks). CDN is blocked in the dev container:
+# Browser smoke (~392 checks). CDN is blocked in the dev container:
 node tests/setup-local-pyodide.mjs         # once per container
 VITE_PYODIDE_BASE=/pyodide/ npm run build
 CHROMIUM_PATH=/opt/pw-browsers/chromium node tests/smoke.mjs
@@ -423,7 +423,11 @@ silence. The off-by rule needs ≥2 failing cases — one sample is a coincidenc
 `patternAccuracy` has a MIN_SEEN. It needs real values, so the harness emits a structured
 `got` (JSON-safe via `_normalize`, capped at 4KB) alongside `gotRepr` on failing entries.
 Coloured gold, not crimson: the ✗ count above already carries the bad news, and gold means
-"look at this" everywhere else in the app.
+"look at this" everywhere else in the app. Around it, the pane is tuned for the same moment:
+`vsplit` defaults to **54** (was 62 — the editor held 450px for a six-line starter while the
+results were read through 294px), a new report scrolls `.pane-result` back to the top so you
+land on the read rather than wherever you last scrolled, and when anything fails the PASSING
+rows fold into a `.passed-fold` one-liner instead of pushing the failure off the bottom.
 
 **TestConsole** (src/components/TestConsole.jsx) owns the bottom pane — two tabs:
 - *Testcase* — one `.case-chip` per `question.tests` entry (+ a dashed **Custom** chip),

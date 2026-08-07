@@ -726,7 +726,9 @@ try {
   );
 
   // ---- a wrong answer: it runs, it is simply not right ----
-  await setEditor(page, 'def two_sum(nums, target):\n    return [9, 9]');
+  // Partially correct on purpose — it passes the cases whose answer happens to
+  // be the first two indices, which is what exercises the passing-case fold.
+  await setEditor(page, 'def two_sum(nums, target):\n    return [0, 1]');
   await page.locator('.pv-toolbar button', { hasText: /^Run/ }).click();
   await page.locator('.result-summary').waitFor({ timeout: 60000 });
   check(/wincing/.test(await feeling()), `a failed run makes the mascot wince (${await feeling()})`);
@@ -746,6 +748,24 @@ try {
   const readTop = (await page.locator('.fail-read').boundingBox()).y;
   const firstRow = (await page.locator('.test-row').first().boundingBox()).y;
   check(readTop < firstRow, 'it sits above the test list, because it is what to read first');
+  // The cases that already work fold away: four blocks of "this worked" between
+  // you and the one that did not is the wrong use of a 300px pane.
+  const shownRows = await page.locator('.results > .test-row').count();
+  const failedDots = await page.locator('.dot.fail, .test-dot.fail').count();
+  check(
+    shownRows > 0 && shownRows < 5,
+    `only the failing cases are listed (${shownRows} of 5 shown)`
+  );
+  check(
+    await page.locator('.passed-fold > summary').isVisible(),
+    'and the passing ones fold behind a one-line summary'
+  );
+  await page.locator('.passed-fold > summary').click();
+  check(
+    (await page.locator('.test-row').count()) === 5,
+    'which opens to show them all when you ask'
+  );
+  void failedDots;
 
   // Returning the input unchanged is a different fact, and must be named.
   await setEditor(page, 'def two_sum(nums, target):\n    return nums');

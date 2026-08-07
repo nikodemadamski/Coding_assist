@@ -17,7 +17,11 @@ export const FONT_MAX = 20;
 // Whose dojo this is. The home screen greets you by name — it's a training
 // log for one person, and it should sound like it.
 export const NAME_MAX = 24;
-export const UI_DEFAULTS = { split: 42, vsplit: 62, fontSize: 14, name: 'Nick' };
+// vsplit 54, not 62: a 62/38 split gave the editor 450px for a six-line
+// starter while the results you had just asked for were read through a 294px
+// window. The moment after a run matters more than headroom you are not using,
+// and the divider is draggable and persisted for anyone who disagrees.
+export const UI_DEFAULTS = { split: 42, vsplit: 54, fontSize: 14, name: 'Nick' };
 
 export function clampName(v) {
   const s = typeof v === 'string' ? v.trim().slice(0, NAME_MAX) : '';

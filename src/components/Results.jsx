@@ -135,10 +135,14 @@ export default function Results({ report, question }) {
     .filter(Boolean)
     .join('\n');
 
-  // Failing tests first (that's where the learning is), then the passing ones.
-  const ordered = [...results.map((r, i) => ({ r, i }))].sort(
-    (a, b) => Number(a.r.pass) - Number(b.r.pass)
-  );
+  // Failing tests first — that's where the learning is. And when anything
+  // failed, the PASSING rows fold into one line: they are four blocks of
+  // "this worked" pushing the thing you actually need to read off the bottom
+  // of a 300px pane. The dots above already say how many passed.
+  const shown = results.map((r, i) => ({ r, i }));
+  const failed = shown.filter(({ r }) => !r.pass);
+  const ok = shown.filter(({ r }) => r.pass);
+  const ordered = allPass ? shown : failed;
 
   return (
     <div className={`results ${allPass ? 'all-pass' : ''}`}>
@@ -164,6 +168,17 @@ export default function Results({ report, question }) {
       {ordered.map(({ r, i }) => (
         <PyTestRow key={i} result={r} index={i} functionName={question.function_name} />
       ))}
+
+      {!allPass && ok.length > 0 && (
+        <details className="passed-fold">
+          <summary>
+            {ok.length} case{ok.length === 1 ? '' : 's'} already passing
+          </summary>
+          {ok.map(({ r, i }) => (
+            <PyTestRow key={i} result={r} index={i} functionName={question.function_name} />
+          ))}
+        </details>
+      )}
 
       {stdout && (
         <div className="stdout-block">

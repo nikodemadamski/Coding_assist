@@ -1105,6 +1105,21 @@ details.hint[open] summary {
   color: var(--gold);
   max-width: var(--measure);
 }
+/* The cases that already work, out of the way. They are four blocks of "this
+   worked" between you and the one that did not. */
+.passed-fold {
+  margin-top: var(--s-3);
+}
+.passed-fold > summary {
+  cursor: pointer;
+  color: var(--jade);
+  font-size: var(--t-sm);
+  padding: var(--s-2) 0;
+}
+.passed-fold > summary:hover {
+  color: var(--text);
+}
+
 .fail-read-detail {
   margin: var(--s-2) 0 0;
   color: var(--text-dim);

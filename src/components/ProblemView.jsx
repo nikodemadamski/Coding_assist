@@ -278,6 +278,14 @@ export default function ProblemView({
     return () => window.removeEventListener('keydown', onKey, true);
   }, []);
 
+  // A new run scrolls the results back to the top. Without this you land
+  // wherever you had scrolled to on the previous run — usually halfway down a
+  // test row — and miss the read at the top, which is the part written for you.
+  const resultPaneRef = useRef(null);
+  useEffect(() => {
+    if (report && resultPaneRef.current) resultPaneRef.current.scrollTop = 0;
+  }, [report]);
+
   const codeRef = useRef(code);
   codeRef.current = code;
   useEffect(() => {
@@ -845,6 +853,7 @@ export default function ProblemView({
         />
 
         <section
+          ref={resultPaneRef}
           className={`pv-pane pane-result ${tab === 'result' ? 'visible' : ''}`}
           aria-live="polite"
         >
