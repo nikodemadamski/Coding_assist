@@ -11,7 +11,7 @@ copy text from LeetCode/NeetCode.**
 npm run dev / build / lint
 npm test                     # 24 unit suites, incl. run-seed-tests (runs EVERY solution
                              # and EVERY alternative approach through real engines)
-# Browser smoke (~358 checks). CDN is blocked in the dev container:
+# Browser smoke (~360 checks). CDN is blocked in the dev container:
 node tests/setup-local-pyodide.mjs         # once per container
 VITE_PYODIDE_BASE=/pyodide/ npm run build
 CHROMIUM_PATH=/opt/pw-browsers/chromium node tests/smoke.mjs
@@ -144,8 +144,16 @@ move). Smoke's `checkRevealSettled` asserts nothing is left transparent.
   needs no threshold, `weakPatterns` is worst-first with ties broken by miss count,
   `roundSummary`/`verdictFor` grade one round (a slow perfect round is told to speed up; a
   round lost to run-outs is diagnosed as the clock, not as ignorance).
+- `practiceSession.js` — the daily session queue: due reviews (shuffled — retrieval
+  practice) → new questions in path order, fail/skip requeues to the back. **It serves
+  coding questions and nothing else.** It used to open with due lesson skill checks, which
+  meant the one button whose promise is "go do questions" could hand you a Python exercise
+  instead. Skill checks are still scheduled by lessonProgress and still surfaced — on the
+  Learn lane and the Learn page, where you go when you mean to. Pinned by
+  lesson-progress-tests (a check due AND a question due must still open on the question, and
+  every id a session can hand you must be a question id) and by smoke end to end.
 - others: activity (daily goal + todayPulse), mockSession (formats incl. data round via
-  format.tracks, optimalComplexity = last approach's complexity else question.complexity), practiceSession (skills→review→new queue; skill checks = due lesson reviews, never requeue),
+  format.tracks, optimalComplexity = last approach's complexity else question.complexity),
   celebrate, theme, uiPrefs, vizPointers (▲ markers from subscript scan).
 
 ## INVARIANTS — edges that must stay in sync

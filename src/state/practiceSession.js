@@ -6,13 +6,19 @@
 //      off on the curriculum, never a random jump.
 //   3. A question you get wrong goes to the back of its queue and comes back
 //      around — you cannot move past it by failing.
+//
+// **A session is coding questions and nothing else.** It used to open with due
+// lesson skill checks, which meant pressing Review could land you in a Python
+// exercise instead of a problem. That is a different activity with a different
+// intent, and mixing it in makes the one button whose promise is "go do
+// questions" unreliable. Skill checks are still scheduled and still surfaced —
+// on the Learn lane and the Learn page, where you go when you mean to.
+//
 // Global progress (SRS, streak, mistakes) is still recorded by the caller on
 // each pass/fail; this module only governs ordering and gating for one sitting.
 import { dueQuestionIds, newQuestionIds, shuffle } from './progress.js';
 import { todaysMisses } from './activity.js';
 import { byPathOrder } from '../data/roadmap.js';
-import { dueLessonIds } from './lessonProgress.js';
-import { LESSONS } from '../data/lessons.js';
 
 export function createSession(progress, questions, { seed = (Math.random() * 2 ** 32) >>> 0 } = {}) {
   const validIds = new Set(questions.map((q) => q.id));
@@ -21,11 +27,8 @@ export function createSession(progress, questions, { seed = (Math.random() * 2 *
     .filter((q) => freshIds.has(q.id))
     .sort(byPathOrder)
     .map((q) => q.id);
-  const lessonIds = new Set(LESSONS.map((l) => l.id));
   return {
-    // Due lesson skill checks open the session — 90 seconds each, they warm
-    // you up and keep learned basics on the forgetting curve.
-    skills: shuffle(dueLessonIds(progress, lessonIds), seed ^ 0x85ebca6b),
+    // Everything you have solved before and is due, then the path onward.
     review: shuffle(dueQuestionIds(progress, validIds), seed),
     fresh,
     cleared: [],
@@ -37,51 +40,41 @@ export function createSession(progress, questions, { seed = (Math.random() * 2 *
 export function createDrillSession(progress, questions, { seed = (Math.random() * 2 ** 32) >>> 0 } = {}) {
   const validIds = new Set(questions.map((q) => q.id));
   const misses = todaysMisses(progress).filter((id) => validIds.has(id));
-  return { skills: [], review: shuffle(misses, seed), fresh: [], cleared: [] };
+  return { review: shuffle(misses, seed), fresh: [], cleared: [] };
 }
 
 const queuesOf = (session) => ({
-  skills: [...(session.skills ?? [])],
   review: [...session.review],
   fresh: [...session.fresh],
   cleared: [...session.cleared],
 });
 
 export function currentId(session) {
-  return session.skills?.[0] ?? session.review[0] ?? session.fresh[0] ?? null;
+  return session.review[0] ?? session.fresh[0] ?? null;
 }
 
 export function currentPhase(session) {
-  if (session.skills?.length) return 'skills';
   if (session.review.length) return 'review';
   if (session.fresh.length) return 'new';
   return 'done';
 }
 
 export function sessionCounts(session) {
-  return {
-    skillsLeft: session.skills?.length ?? 0,
-    reviewLeft: session.review.length,
-    newLeft: session.fresh.length,
-  };
+  return { reviewLeft: session.review.length, newLeft: session.fresh.length };
 }
 
-// Passed the current entry (a finished skill check counts either way — its
-// pass/fail already rescheduled the lesson): drop it from its queue.
+// Passed the current question: drop it from its queue.
 export function onPass(session) {
   const next = queuesOf(session);
-  if (next.skills.length) next.cleared.push(next.skills.shift());
-  else if (next.review.length) next.cleared.push(next.review.shift());
+  if (next.review.length) next.cleared.push(next.review.shift());
   else if (next.fresh.length) next.cleared.push(next.fresh.shift());
   return next;
 }
 
 // Skipped/failed the current question: send it to the back of its queue so it
 // returns later (unless it's the only one left — then it simply repeats).
-// Skill checks never requeue — a finished check advances regardless.
 export function onRequeue(session) {
   const next = queuesOf(session);
-  if (next.skills.length) return onPass(session);
   const q = next.review.length ? next.review : next.fresh.length ? next.fresh : null;
   if (q && q.length > 1) q.push(q.shift());
   return next;

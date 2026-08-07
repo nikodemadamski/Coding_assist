@@ -86,34 +86,47 @@ const first = LESSONS[0];
   check(counts.done === 1 && counts.total === LESSONS.length, 'lesson counts add up');
 }
 
-// ---- the daily session serves skills → reviews → new ----
+// ---- the daily session is coding questions, and ONLY coding questions ----
+// Pressing Review has one promise: it sends you to a problem. Skill checks are
+// a different activity and used to open the session, so a due lesson could
+// hijack the one button whose job is "go do questions". They are still
+// scheduled — they are simply reached from Learn, on purpose.
 {
-  const { createSession, createDrillSession, currentPhase, currentId, onPass, onRequeue, sessionCounts } =
+  const { createSession, createDrillSession, currentPhase, currentId, onPass, sessionCounts } =
     await import('../src/state/practiceSession.js');
   const questions = [{ id: 'q-due' }, { id: 'q-new' }];
   let p = recordLessonComplete(fresh(), first.id, {});
-  p.lessons[first.id].srs.nextDue = today; // skill check due now
+  p.lessons[first.id].srs.nextDue = today; // a skill check IS due
   p.solved['q-due'] = { firstSolvedAt: 'x', attempts: 1, solves: 1 };
-  p.srs['q-due'] = { stage: 0, nextDue: today }; // question review due
+  p.srs['q-due'] = { stage: 0, nextDue: today }; // and a question review is due
   const session = createSession(p, questions, { seed: 5 });
 
-  check(currentPhase(session) === 'skills', 'a due skill check opens the session');
-  check(currentId(session) === first.id, 'the due lesson is served first');
-  check(sessionCounts(session).skillsLeft === 1, 'skill count reported');
+  check(currentPhase(session) === 'review', 'a due skill check does NOT open the session');
+  check(currentId(session) === 'q-due', 'the due question is served first, lesson or no lesson');
+  check(sessionCounts(session).reviewLeft === 1, 'the review count is questions only');
+  check(session.skills === undefined, 'a session has no skills queue at all');
 
-  const afterSkill = onPass(session);
-  check(currentPhase(afterSkill) === 'review', 'the question review follows the skill check');
-  check(currentId(afterSkill) === 'q-due', 'the due question is next');
-  const afterReview = onPass(afterSkill);
-  check(currentPhase(afterReview) === 'new', 'new questions come last');
+  const afterReview = onPass(session);
+  check(currentPhase(afterReview) === 'new', 'new questions come after the reviews');
   check(currentId(afterReview) === 'q-new', 'the unsolved question closes the session');
+  check(currentPhase(onPass(afterReview)) === 'done', 'and then the session is over');
 
+  // Every id a session can ever hand you must be a question id.
+  const qIds = new Set(questions.map((q) => q.id));
+  const everyId = [...session.review, ...session.fresh];
   check(
-    onRequeue(session).skills.length === 0,
-    'a finished skill check advances even on requeue (never loops)'
+    everyId.length > 0 && everyId.every((id) => qIds.has(id)),
+    'every id in the queue is a question — never a lesson, quiz or warm-up'
   );
+
+  // The skill check is still due; it just lives where you go to learn.
+  check(
+    dueLessonIds(p, new Set(LESSONS.map((l) => l.id))).includes(first.id),
+    'the skill check is still scheduled — Learn surfaces it, the review button does not'
+  );
+
   const drill = createDrillSession(p, questions);
-  check((drill.skills ?? []).length === 0, 'drills never include skill checks');
+  check(drill.skills === undefined, 'drills have no skills queue either');
 }
 
 console.log(failures === 0 ? '\nAll lesson-progress tests green.' : `\n${failures} FAILURE(S).`);

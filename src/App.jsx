@@ -375,7 +375,6 @@ export default function App() {
             onSolve={handleSolve}
             onRate={handleRate}
             onFail={handleFail}
-            onLessonReview={handleLessonReview}
             onDraft={handleDraft}
             onNote={handleNote}
             onBigO={handleBigO}

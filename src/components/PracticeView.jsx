@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import ProblemView from './ProblemView.jsx';
-import LessonView from './LessonView.jsx';
 import {
   createSession,
   createDrillSession,
@@ -10,20 +9,20 @@ import {
   onPass,
   onRequeue,
 } from '../state/practiceSession.js';
-import { lessonById } from '../data/lessons.js';
-import { buildReviewItems } from '../state/lessonProgress.js';
 
 // Session driver. Hands you one question at a time — all due reviews (random)
-// before any new question (random). A question you fail or skip goes to the back
-// of its queue and returns; you can't move past it by getting it wrong.
+// before any new question (path order). A question you fail or skip goes to the
+// back of its queue and returns; you can't move past it by getting it wrong.
 // mode='drill' instead serves only the questions you missed today.
+//
+// It serves coding questions and nothing else: no lessons, no drills, no
+// quizzes. See practiceSession.js for why.
 export default function PracticeView({
   questions,
   progress,
   onSolve,
   onFail,
   onRate,
-  onLessonReview,
   onDraft,
   onNote,
   onBigO,
@@ -39,26 +38,6 @@ export default function PracticeView({
   const id = currentId(session);
   const phase = mode === 'drill' ? 'drill' : currentPhase(session);
   const { reviewLeft, newLeft } = sessionCounts(session);
-
-  // Skill checks open the session: a 90-second lesson review, then the
-  // question queues. The check's pass/fail already rescheduled the lesson,
-  // so finishing it always advances.
-  if (phase === 'skills') {
-    // createSession filters the skills queue to real lesson ids, so this
-    // lookup cannot miss.
-    const lesson = lessonById(id);
-    return (
-      <LessonView
-        key={id}
-        lesson={lesson}
-        mode="review"
-        reviewItems={buildReviewItems(lesson, progress.lessons?.[lesson.id])}
-        onReviewResult={onLessonReview}
-        onDone={() => setSession((s) => onPass(s))}
-        onExit={onExit}
-      />
-    );
-  }
 
   const question = id ? questions.find((q) => q.id === id) : null;
 

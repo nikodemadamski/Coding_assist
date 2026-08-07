@@ -276,13 +276,23 @@ export default function RoadmapGraph({
 
         {/* Everything else you might do, one row, deliberately quieter. */}
         <div className="hero-actions">
+          {/* The one promise this button makes is "you are about to do coding
+              questions". It counts questions, and it only ever serves
+              questions — no lessons, no drills, no quizzes. */}
           <button
             className="hero-act hero-act-loud"
             onClick={onStartPractice}
             disabled={counts.due === 0 && counts.fresh === 0}
+            title={
+              counts.due > 0
+                ? `${counts.due} question${counts.due === 1 ? '' : 's'} due for review, then the next one on the path`
+                : 'Nothing due — straight on to the next question on the path'
+            }
           >
             <span className="hero-act-n">{counts.due > 0 ? counts.due : '▶'}</span>
-            <span className="hero-act-l">{counts.due > 0 ? 'clear reviews' : 'run the queue'}</span>
+            <span className="hero-act-l">
+              {counts.due > 0 ? 'questions due' : 'next question'}
+            </span>
           </button>
           <button className="hero-act" onClick={onWarmup}>
             <span className="hero-act-n">⚡</span>
