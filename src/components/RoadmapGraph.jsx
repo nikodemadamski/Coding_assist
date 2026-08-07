@@ -141,6 +141,9 @@ export default function RoadmapGraph({
   // toward it. Both are pure CSS-variable writes — see usePointerField.
   const heroFieldRef = usePointerField();
   const nextFieldRef = usePointerField(4);
+  // The map leans further than a card does — it is the thing you are meant to
+  // look at, and a 7° swing is what sells "floating" rather than "printed".
+  const orbitFieldRef = usePointerField(7);
   // Which topic you're standing in on the ALGORITHM map, and the route that
   // lights up to show it. Note this is not always the category of `nextUp`:
   // the path interleaves pandas and SQL questions, and when one of those is
@@ -191,7 +194,17 @@ export default function RoadmapGraph({
         }
       },
     });
-    play(root.querySelectorAll('.graph-node'), presets.enter());
+    // The entrance leaves an inline `transform: scale(1)` on every node, which
+    // silently beats the CSS rule that gives each one its depth in the orbit —
+    // the map would tilt as a flat picture. Drop the inline value once the
+    // animation has landed, exactly as the edges do with their dash values.
+    const nodes = [...root.querySelectorAll('.graph-node')];
+    play(nodes, {
+      ...presets.enter(),
+      onComplete: () => {
+        for (const el of nodes) el.style.removeProperty('transform');
+      },
+    });
   }, [play, liveEdges]);
 
   const name = useMemo(() => loadUiPrefs().name, []);
@@ -209,10 +222,13 @@ export default function RoadmapGraph({
     <div className="stats roadmap-home" ref={revealRef}>
       {/* ── the hero ────────────────────────────────────────────────────────
           One screenful that answers "what am I doing right now?" before you
-          scroll. It greets you, names the next problem in display type, and
-          puts one red button under it. Everything else on this page is
-          smaller than this on purpose. */}
-      <section className="hero" data-reveal ref={heroFieldRef}>
+          scroll — and the map is *in* it, not two screens below.
+          Left: who you are, what's next, and one red button. Right: the whole
+          path, floating in space. The map used to sit under the fold, which
+          meant the single most striking thing in the app was something you had
+          to go looking for. */}
+      <section className="hero hero-split" data-reveal ref={heroFieldRef}>
+        <div className="hero-copy">
         <div className="hero-lead">
           <h1 className="hero-title">{hello}</h1>
           {/* One live status line under the greeting: what's waiting, then where
@@ -317,6 +333,118 @@ export default function RoadmapGraph({
             </button>
           )}
         </div>
+        </div>
+
+        {/* ── the map, in orbit ──────────────────────────────────────────────
+            Two moving parts, one transform each, because a single element
+            cannot own both a keyframe and a pointer-driven variable without the
+            two fighting:
+              .orbit-drift  — a long, slow bob (keyframe)
+              .graph-canvas — the fitted scale AND the lean toward the cursor
+                              (--rx/--ry from usePointerField on .hero-orbit,
+                              smoothed by a CSS transition)
+            The nodes each carry a `--z`, so the lean parallaxes them against
+            the edges instead of tipping a flat picture. */}
+        <div className="hero-orbit" ref={orbitFieldRef}>
+          <div className="orbit-space" aria-hidden="true" />
+          <div className="orbit-drift">
+            <div className="graph-fit" ref={fitRef} style={{ height: GRAPH_H * scale }}>
+              {/* The lean is composed into the CANVAS's own transform, not an
+                  ancestor's. Chromium loses hit-testing for descendants of a
+                  rotateX/rotateY ancestor — the topics stay drawn but stop
+                  being clickable — so the rotation has to live on the nodes'
+                  direct parent. CSS owns `transform` here; React only passes
+                  the fitted scale in as a variable. */}
+              <div
+                className="graph-canvas"
+                ref={canvasRef}
+                style={{ width: GRAPH_W, height: GRAPH_H, '--scale': scale }}
+              >
+                  <svg
+                    className="graph-edges"
+                    width={GRAPH_W}
+                    height={GRAPH_H}
+                    viewBox={`0 0 ${GRAPH_W} ${GRAPH_H}`}
+                    aria-hidden="true"
+                  >
+                    <defs>
+                      <marker
+                        id="arrow"
+                        viewBox="0 0 10 10"
+                        refX="8"
+                        refY="5"
+                        markerWidth="7"
+                        markerHeight="7"
+                        orient="auto-start-reverse"
+                      >
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#e9e7de" />
+                      </marker>
+                    </defs>
+                    {GRAPH_EDGES.map((edge, i) => {
+                      const d = edgePath(edge);
+                      // The route down to the topic you're on carries a slow
+                      // travelling current, so the map points at you instead of
+                      // being read.
+                      const live = liveEdges.has(`${edge[0]}>${edge[1]}`);
+                      return d ? (
+                        <path
+                          key={i}
+                          data-edge
+                          className={live ? 'live' : ''}
+                          d={d}
+                          fill="none"
+                          strokeWidth="2.5"
+                          markerEnd="url(#arrow)"
+                        />
+                      ) : null;
+                    })}
+                  </svg>
+                  {GRAPH_NODES.map((n) => {
+                    const st = stats[n.key] || { total: 0, solved: 0 };
+                    if (st.total === 0) return null; // e.g. 'other' before any imports
+                    const pct = st.total ? (st.solved / st.total) * 100 : 0;
+                    const done = st.total > 0 && st.solved === st.total;
+                    // "You are here": the topic your next step belongs to, so
+                    // the map answers "where am I?" at a glance.
+                    const current = !done && currentKey === n.key;
+                    const started = !done && !current && st.solved > 0;
+                    return (
+                      <button
+                        key={n.key}
+                        className={`graph-node ${done ? 'done' : ''} ${current ? 'current' : ''} ${started ? 'started' : ''}`}
+                        style={{
+                          left: n.x,
+                          top: n.y,
+                          width: NODE_W,
+                          height: NODE_H,
+                          // Depth, so the lean parallaxes instead of tipping a
+                          // flat picture. Further down the path = closer to you.
+                          // Always POSITIVE: under preserve-3d a child behind
+                          // its parent's plane loses the hit test to the parent,
+                          // and the topics would stop being clickable.
+                          '--z': `${Math.round((n.y / GRAPH_H) * 54 + 6)}px`,
+                        }}
+                        onClick={() => setOpenCat(n.key)}
+                        title={`${label(n.key)} — ${st.solved}/${st.total} solved`}
+                      >
+                        <span className="graph-node-label">{label(n.key)}</span>
+                        <span className="graph-node-count">
+                          {st.solved}/{st.total}
+                        </span>
+                        <span className="graph-node-bar">
+                          <span className="graph-node-fill" style={{ '--fill': pct / 100 }} />
+                        </span>
+                      </button>
+                    );
+                  })}
+              </div>
+            </div>
+          </div>
+          <p className="orbit-cap">
+            <span className="orbit-cap-lead">The path — {shownNodes.length} topics, in order.</span>{' '}
+            An arrow means &ldquo;learn this one first&rdquo;. Tap a topic for its questions.
+          </p>
+        </div>
       </section>
 
       {/* Python is the support act: a quiet lane that shrinks to a chip once
@@ -372,95 +500,6 @@ export default function RoadmapGraph({
           ))}
         </div>
       )}
-
-      <div className="map-head">
-        <h2>
-          The path — {shownNodes.length} topics, in order
-          <span className="map-head-count">
-            {solvedCount}/{questions.length} solved
-          </span>
-        </h2>
-        <p className="map-hint">
-          Top to bottom. An arrow means &ldquo;learn this pattern first&rdquo;; click a topic to
-          open its questions.
-        </p>
-      </div>
-
-      <div className="graph-fit" ref={fitRef} style={{ height: GRAPH_H * scale }}>
-        <div
-          className="graph-canvas"
-          ref={canvasRef}
-          style={{
-            width: GRAPH_W,
-            height: GRAPH_H,
-            transform: `scale(${scale})`,
-            transformOrigin: 'top left',
-          }}
-        >
-          <svg
-            className="graph-edges"
-            width={GRAPH_W}
-            height={GRAPH_H}
-            viewBox={`0 0 ${GRAPH_W} ${GRAPH_H}`}
-            aria-hidden="true"
-          >
-            <defs>
-              <marker
-                id="arrow"
-                viewBox="0 0 10 10"
-                refX="8"
-                refY="5"
-                markerWidth="7"
-                markerHeight="7"
-                orient="auto-start-reverse"
-              >
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#e9e7de" />
-              </marker>
-            </defs>
-            {GRAPH_EDGES.map((edge, i) => {
-              const d = edgePath(edge);
-              // The route down to the topic you're on carries a slow travelling
-              // current, so the map points at you instead of being read.
-              const live = liveEdges.has(`${edge[0]}>${edge[1]}`);
-              return d ? (
-                <path
-                  key={i}
-                  data-edge
-                  className={live ? 'live' : ''}
-                  d={d}
-                  fill="none"
-                  strokeWidth="2.5"
-                  markerEnd="url(#arrow)"
-                />
-              ) : null;
-            })}
-          </svg>
-          {GRAPH_NODES.map((n) => {
-            const st = stats[n.key] || { total: 0, solved: 0 };
-            if (st.total === 0) return null; // e.g. 'other' before any imports
-            const pct = st.total ? (st.solved / st.total) * 100 : 0;
-            const done = st.total > 0 && st.solved === st.total;
-            // "You are here": the topic your next step belongs to, so the map
-            // answers "where am I?" at a glance instead of only "how much left".
-            const current = !done && currentKey === n.key;
-            const started = !done && !current && st.solved > 0;
-            return (
-              <button
-                key={n.key}
-                className={`graph-node ${done ? 'done' : ''} ${current ? 'current' : ''} ${started ? 'started' : ''}`}
-                style={{ left: n.x, top: n.y, width: NODE_W, height: NODE_H }}
-                onClick={() => setOpenCat(n.key)}
-                title={`${label(n.key)} — ${st.solved}/${st.total} solved`}
-              >
-                <span className="graph-node-label">{label(n.key)}</span>
-                <span className="graph-node-bar">
-                  <span className="graph-node-fill" style={{ '--fill': pct / 100 }} />
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
       {/* Data tracks — separate entities, not woven into the algorithm map */}
       <div className="data-tracks">

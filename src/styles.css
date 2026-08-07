@@ -6308,8 +6308,11 @@ kbd,
 /* ── home layout ────────────────────────────────────────────────────────
    The front door gets more room than a reading page, and its top zone is a
    hero + rail rather than four full-width bars stacked down the screen. */
+/* Wider than the rest of the app on purpose: the hero has to hold the copy
+   stack AND the map side by side, and a 1040px cage made the map too small to
+   be the thing you look at. */
 .roadmap-home {
-  max-width: 1040px;
+  max-width: 1320px;
 }
 
 .home-top {
@@ -7777,6 +7780,11 @@ p,
    is one screenful that answers it: who you are, where you are, and the next
    problem in type big enough to read across the room, with a single red button
    under it. Everything below is deliberately smaller. */
+/* ── the hero: copy on the left, the map in orbit on the right ─────────────
+   The map used to live two screens below the fold, which meant the single most
+   striking thing in the app was something you had to go looking for. It is now
+   half the first screen, and the copy column carries the whole "what do I do
+   now" stack beside it. */
 .hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
@@ -7787,6 +7795,27 @@ p,
   align-items: start;
   padding: var(--s-6) 0 var(--s-7);
   position: relative;
+}
+.hero-split {
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+  grid-template-areas: 'copy orbit';
+  gap: var(--s-7);
+  align-items: center;
+  padding-block: var(--s-5) var(--s-6);
+}
+.hero-copy {
+  grid-area: copy;
+  display: grid;
+  gap: var(--s-5);
+  align-content: start;
+  min-width: 0;
+}
+/* Inside the split the copy column is a single stack, so the old two-cell
+   grid areas stop applying. */
+.hero-split .hero-lead,
+.hero-split .hero-next,
+.hero-split .hero-actions {
+  grid-area: auto;
 }
 /* A soft light behind the hero so the top of the page has depth without a
    single box or border being drawn. It sits under everything and never
@@ -8281,6 +8310,189 @@ p,
 .set-name-input:focus-visible {
   border-color: var(--sky);
   outline: none;
+}
+
+/* ── the map, in orbit ──────────────────────────────────────────────────────
+   "Float like in space." Four things make that read, and each lives on its own
+   element because one element cannot own two transforms:
+
+     .hero-orbit   the frame + perspective + the starfield behind
+     .orbit-drift  a 14s bob (keyframe)
+     .orbit-tilt   leans toward the cursor (--rx/--ry, written by
+                   usePointerField, smoothed by a CSS transition so it is
+                   interruption-safe and costs one transform per frame)
+     .graph-node   each carries a --z, so the lean PARALLAXES the topics against
+                   the edges instead of tipping a flat picture
+
+   No box, no border, no card: the map hangs in the field. */
+.hero-orbit {
+  grid-area: orbit;
+  position: relative;
+  min-width: 0;
+  /* A gutter the map is fitted INSIDE: the scale is measured from this box, so
+     padding here keeps the widest topic — and the extra width its depth buys it
+     under perspective — clear of the page edge instead of flush against it. */
+  padding-inline: var(--s-5);
+}
+/* The field it hangs in: a drifting star layer and a soft nebula that follows
+   the cursor. Both are transforms/gradients on a pseudo-element — nothing here
+   is a DOM node and nothing here can be clicked. */
+.orbit-space {
+  position: absolute;
+  inset: -12% -10% -6%;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      54% 48% at calc(50% + (var(--px, 50%) - 50%) * 0.35) calc(46% + (var(--py, 50%) - 50%) * 0.35),
+      color-mix(in srgb, var(--sky) 24%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      42% 42% at 76% 80%,
+      color-mix(in srgb, var(--crimson) 18%, transparent),
+      transparent 72%
+    );
+  transition: background-position 600ms var(--ease);
+}
+.orbit-space::before {
+  content: '';
+  position: absolute;
+  inset: -30%;
+  background-image:
+    radial-gradient(1.7px 1.7px at 12% 22%, var(--text), transparent),
+    radial-gradient(1.4px 1.4px at 68% 12%, var(--text-dim), transparent),
+    radial-gradient(2px 2px at 84% 46%, var(--text), transparent),
+    radial-gradient(1.3px 1.3px at 26% 68%, var(--text-dim), transparent),
+    radial-gradient(1.6px 1.6px at 52% 88%, var(--text), transparent),
+    radial-gradient(1.2px 1.2px at 8% 52%, var(--text-dim), transparent),
+    radial-gradient(1.9px 1.9px at 92% 76%, var(--text), transparent),
+    radial-gradient(1.3px 1.3px at 40% 34%, var(--text-dim), transparent),
+    radial-gradient(1.5px 1.5px at 60% 58%, var(--text-dim), transparent),
+    radial-gradient(1.2px 1.2px at 34% 6%, var(--text-dim), transparent),
+    radial-gradient(1.8px 1.8px at 4% 84%, var(--text), transparent),
+    radial-gradient(1.3px 1.3px at 78% 30%, var(--text-dim), transparent);
+  opacity: 0.62;
+  animation: orbit-stars 90s linear infinite;
+  will-change: transform;
+}
+@keyframes orbit-stars {
+  to {
+    transform: translate3d(3%, -4%, 0) rotate(4deg);
+  }
+}
+.orbit-drift {
+  position: relative;
+  z-index: 1;
+  animation: orbit-bob 14s ease-in-out infinite;
+  will-change: transform;
+  transform-style: preserve-3d;
+}
+/* It holds still the moment you reach for it. The topics are the app's primary
+   navigation, and a permanently drifting click target is a real cost — so the
+   map breathes at rest and stops as soon as the pointer (or the keyboard) is
+   on it. The field behind it keeps moving either way. */
+.hero-orbit:hover .orbit-drift,
+.hero-orbit:focus-within .orbit-drift {
+  animation-play-state: paused;
+}
+@keyframes orbit-bob {
+  0%,
+  100% {
+    transform: translate3d(0, -6px, 0);
+  }
+  50% {
+    transform: translate3d(0, 8px, 0);
+  }
+}
+/* preserve-3d collapses to flat under `overflow: hidden`, and .graph-fit sets
+   it — so inside the orbit the clip has to go, or the depth silently dies. */
+.hero-orbit .graph-fit {
+  overflow: visible;
+}
+/* The lean lives HERE, on the nodes' direct parent, not on a wrapper.
+   Chromium stops hit-testing the descendants of a rotateX/rotateY ancestor:
+   with the rotation one level up the topics still drew, still highlighted on
+   hover, and silently stopped being clickable. Composed with the fitted scale
+   in one declaration, with the pivot walked to the canvas centre and back so
+   the map leans about its middle while the scale still anchors top-left. */
+.hero-orbit .graph-canvas {
+  transform-style: preserve-3d;
+  transform-origin: top left;
+  transform: scale(var(--scale, 1)) translate(50%, 50%) perspective(1500px)
+    rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translate(-50%, -50%);
+  transition: transform 520ms var(--ease);
+}
+/* The nodes ride at their own depths. Hover has to restate the translateZ or
+   it would flatten the node it is lifting. */
+/* The header is sticky, so anything scrolled to the top of the viewport lands
+   under it — including a topic a keyboard user just tabbed to. */
+.graph-node {
+  scroll-margin-top: 88px;
+}
+.hero-orbit .graph-node {
+  transform: translateZ(var(--z, 0px));
+  transition:
+    border-color var(--dur-2) var(--ease),
+    background-color var(--dur-2) var(--ease),
+    transform var(--dur-1) var(--ease);
+}
+.hero-orbit .graph-node:hover,
+.hero-orbit .graph-node:focus-visible {
+  transform: translateZ(calc(var(--z, 0px) + 22px));
+}
+/* The map runs at ~0.87 scale in this column, so the type is set bigger to
+   land at a readable size after the transform — and the stack has to tighten
+   to match, or three rows in a fixed 56px node push the label out of the top. */
+.hero-orbit .graph-node {
+  gap: 2px;
+  padding-block: var(--s-1);
+}
+.hero-orbit .graph-node-label {
+  font-size: var(--t-md);
+  line-height: 1.2;
+}
+.hero-orbit .graph-node-count {
+  font-size: var(--t-micro);
+  line-height: 1;
+}
+.orbit-cap {
+  position: relative;
+  z-index: 1;
+  margin: var(--s-4) 0 0;
+  text-align: center;
+  font-size: var(--t-sm);
+  color: var(--text-dim);
+  max-width: 46ch;
+  margin-inline: auto;
+}
+.orbit-cap-lead {
+  color: var(--text);
+  font-weight: 600;
+}
+
+@media (max-width: 1080px) {
+  .hero-split {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'copy'
+      'orbit';
+    gap: var(--s-6);
+  }
+  /* Stacked, the map no longer needs to lean — a full-width diagram tilting
+     under the thumb is noise, not depth. */
+  .hero-orbit .graph-canvas {
+    transform: scale(var(--scale, 1));
+  }
+}
+@media (max-width: 700px) {
+  .orbit-drift {
+    animation: none;
+  }
+  .hero-orbit .graph-node-label {
+    font-size: var(--t-sm);
+  }
 }
 
 /* ── the map's live route ───────────────────────────────────────────────────

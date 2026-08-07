@@ -197,14 +197,37 @@ a primary action's arrow in its own disc (the one thing that moves on hover);
 also inline so it's right without JS); `CountUp.jsx` races a number to its value by
 animating a plain object (no per-frame React render) and always lands on the truth.
 
-**Home** (`RoadmapGraph.jsx`) opens on `.hero`: `state/greeting.js` greets you by name
-(`uiPrefs.name`, default Nick, editable in Settings — solves-today > streak ≥3 > clock),
-a live status line, the mission bar, then `.hero-next` — the next unsolved question at
-display scale with the page's one red CTA — and `.hero-actions` (reviews / warm-up / mock
-/ drill / readiness ring). `.learn-lane` is the Python curriculum, deliberately quieter
-than `.hero-next` (smoke asserts the size ratio). The map draws itself in on mount: every
-`path[data-edge]` animates `stroke-dashoffset` to 0 on a stagger and the nodes cascade
-behind them; the current topic keeps a slow halo.
+**Home** (`RoadmapGraph.jsx`) is a **two-column hero**: copy left, the map in orbit right.
+`.hero-copy` carries `state/greeting.js`'s greeting (`uiPrefs.name`, default Nick, editable in
+Settings — solves-today > streak ≥3 > clock), a live status line, the mission bar, `.hero-next`
+(the next unsolved question at display scale with the page's one red CTA) and `.hero-actions`
+(reviews / warm-up / mock / drill / readiness ring). `.hero-orbit` holds the algorithm map — it
+used to live two screens below the fold, which meant the most striking thing in the app was
+something you had to go looking for. `.roadmap-home` is 1320px (wider than everything else) so
+both columns fit; `.learn-lane` is the Python curriculum, deliberately quieter than
+`.hero-next` (smoke asserts the size ratio). Stacks to one column under 1080px.
+
+**The orbit** — "float like in space" — is four things, each on its own element because one
+element cannot own two transforms:
+- `.orbit-space` — a drifting starfield (`orbit-stars`, 90s) plus a nebula whose centre tracks
+  `--px/--py`. Pseudo-elements only; nothing here is a DOM node or can be clicked.
+- `.orbit-drift` — a 14s bob (`orbit-bob`) that **pauses on `:hover`/`:focus-within`**. The
+  topics are the app's primary navigation and a permanently drifting click target is a real
+  cost, so the map breathes at rest and holds still the moment you reach for it.
+- `.graph-canvas` — the fitted scale AND the lean, composed in one declaration with the pivot
+  walked to the centre and back (`scale() translate(50%,50%) perspective() rotateX() rotateY()
+  translate(-50%,-50%)`, `--rx/--ry` from `usePointerField(7)` on `.hero-orbit`). **The rotation
+  must live on the nodes' direct parent**: Chromium stops hit-testing the descendants of a
+  rotateX/rotateY ancestor, so with the tilt one level up the topics still drew and still lit on
+  hover but silently stopped being clickable. React only passes `--scale`; CSS owns `transform`.
+- `.graph-node` — each carries a `--z` so the lean parallaxes the topics against the edges.
+  **Always positive**: under `preserve-3d` a child behind its parent's plane loses the hit test
+  to the parent. `presets.enter()` leaves an inline `transform` that would beat the CSS rule, so
+  the mount effect strips it in `onComplete` (same trick as the edges' dash values).
+`.graph-fit` drops `overflow:hidden` inside the orbit (it collapses `preserve-3d` to flat), and
+`.hero-orbit` carries a `padding-inline` gutter — the scale is measured from that box, so the
+widest topic stays clear of the page edge. Node type is set one step larger to survive the
+~0.87 scale, and the node stack tightens to fit three rows in 56px.
 
 **Ambient motion** — the page stays alive at rest, and every loop is either information or
 below the notice threshold: the aurora (two `.hero::before/::after` fields drifting on 19s
@@ -215,11 +238,13 @@ connected walk, and never empty — at the top of the map it lights the way *out
 `currentKey` follows the next unsolved question **that lives on the map**, not `nextUp` —
 the path interleaves pandas/SQL, and the algorithm map must never lose its "you are here".
 The mount draw-in clears its inline dash values on `.live` edges in `onComplete` so the CSS
-loop can take over. `.map-head/.graph-fit/.data-tracks` use `animation-timeline: view()`
-(scroll-driven, no JS) and therefore carry **no** `data-reveal` — one owner per element.
-Smoke asserts the settled page keeps ≥4 infinite animations running, that the card leans
-under the pointer, and that a `reducedMotion:'reduce'` context has **zero** loops, no
-pointer vars and nothing left invisible.
+loop can take over. `.data-tracks` uses `animation-timeline: view()` (scroll-driven, no JS)
+and therefore carries **no** `data-reveal` — one owner per element. Smoke asserts the settled
+page keeps ≥4 infinite animations running, that the card leans under the pointer, and that a
+`reducedMotion:'reduce'` context has **zero** loops, no pointer vars and nothing left
+invisible. Smoke clicks map topics through `clickTopic()` — hover (which pauses the bob),
+let the lean settle, then click; a moving target is not something Playwright will click, and
+that is the point.
 
 **The pattern drill** (`PatternQuiz.jsx`) runs on the stage: a 20s countdown per question
 (`QUIZ_SECONDS` — recognition you have to *derive* is not recognition, so running out grades

@@ -76,6 +76,18 @@ async function setEditor(page, code) {
 
 const resultText = (page) => page.locator('.pane-result').innerText();
 
+// The home map breathes at rest and pauses the moment the pointer is on it, so
+// its topic nodes are only a stable click target once hovered. Hover first
+// (force skips the very stability check we are about to satisfy), then click.
+async function clickTopic(page, name) {
+  const node = page.locator('.graph-node', { hasText: name });
+  await node.hover({ force: true });
+  // The pointer arriving also starts the lean, and a node a few degrees into a
+  // 520ms tilt is a target that moves out from under the cursor. Let it land.
+  await page.waitForTimeout(700);
+  await node.click();
+}
+
 // Stats / Patterns / Sensei live in the header's Library menu.
 async function openLibrary(page, label) {
   await page.locator('.hdr-menu-btn').click();
@@ -345,7 +357,7 @@ try {
   );
 
   // clicking a topic opens its question list as a popup
-  await page.locator('.graph-node', { hasText: 'Arrays & Hashing' }).click();
+  await clickTopic(page, 'Arrays & Hashing');
   await page.locator('.cat-modal').waitFor({ timeout: 5000 });
   check((await page.locator('.cat-q').count()) >= 5, 'topic popup lists its questions');
   await page.locator('.cat-q', { hasText: 'Two Sum' }).click();
@@ -1678,7 +1690,7 @@ try {
   );
 
   // ---- algorithm visualizer: replays a real traced execution ----
-  await page.locator('.graph-node', { hasText: 'Arrays & Hashing' }).click();
+  await clickTopic(page, 'Arrays & Hashing');
   await page.locator('.cat-q', { hasText: 'Two Sum' }).click();
   // Two Sum is solved by now, so the hint ladder is folded away and the model
   // approaches take its place — after the fact, a ladder of hints is the wrong
