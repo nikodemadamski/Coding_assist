@@ -156,4 +156,9 @@ export const COMPLEXITY = {
   'py-n-queens': 'O(n!) time, O(n) space — backtracking with diagonal sets',
   'py-median-two-sorted': 'O(log(min(m, n))) time, O(1) space — binary search on the cut',
   'py-word-search-ii': 'O(m · n · 4ᴸ) time, O(total letters) space — trie-pruned DFS',
+  'py-employee-free-time': 'O(n log n) time, O(n) space — merge then read gaps',
+  'py-smallest-range-k-lists': 'O(n log k) time, O(k) space — min-heap over k pointers',
+  'py-word-ladder': 'O(N · L · 26) time, O(N · L) space — BFS on an implicit graph',
+  'py-burst-balloons': 'O(n³) time, O(n²) space — interval DP on the last burst',
+  'py-candy': 'O(n) time, O(n) space — two sweeps, max of both',
 };

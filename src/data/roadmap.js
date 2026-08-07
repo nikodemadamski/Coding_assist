@@ -253,6 +253,7 @@ export const PATH = [
   'py-kth-largest',
   'py-last-stone-weight',
   'py-task-scheduler',
+  'py-smallest-range-k-lists',
   // 12 · Backtracking
   'py-subsets',
   'py-subsets-ii',
@@ -267,6 +268,7 @@ export const PATH = [
   'py-rotting-oranges',
   'py-pacific-atlantic',
   'py-alien-order',
+  'py-word-ladder',
   'py-course-schedule',
   'py-course-schedule-ii',
   'py-count-components',
@@ -287,18 +289,21 @@ export const PATH = [
   'py-longest-common-subseq',
   'py-min-path-sum',
   'py-edit-distance',
+  'py-burst-balloons',
   // 15 · Greedy
   'py-max-subarray',
   'py-jump-game',
   'py-jump-game-ii',
   'py-gas-station',
   'py-hand-of-straights',
+  'py-candy',
   // 16 · Intervals
   'py-meeting-rooms',
   'py-merge-intervals',
   'py-insert-interval',
   'py-non-overlapping',
   'py-min-meeting-rooms',
+  'py-employee-free-time',
   // 17 · Math & geometry
   'py-plus-one',
   'py-happy-number',

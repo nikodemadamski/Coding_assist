@@ -1484,4 +1484,78 @@ export const APPROACHES = {
       note: 'The trie turns "does any word continue this way?" into one dict lookup, so a dead prefix dies immediately instead of after a full walk. Popping the word off its terminal node as you find it is what keeps duplicates out without a set.',
     },
   ],
+  'py-employee-free-time': [
+    {
+      name: 'Sweep every minute',
+      complexity: 'O(T · k) time, O(1) space',
+      code: "def free_time(schedules):\n    flat = [iv for person in schedules for iv in person]\n    if not flat:\n        return []\n    lo = min(iv[0] for iv in flat)\n    hi = max(iv[1] for iv in flat)\n    res = []\n    t = lo\n    while t < hi:\n        busy = any(a <= t < b for a, b in flat)\n        if not busy:\n            start = t\n            while t < hi and not any(a <= t < b for a, b in flat):\n                t += 1\n            res.append([start, t])\n        else:\n            t += 1\n    return res",
+      note: 'Walks the clock one tick at a time. It only works because these tests use small integers — real timestamps would make T astronomical, and it quietly assumes time is discrete, which the problem never said.',
+    },
+    {
+      name: 'Flatten, merge, read the gaps',
+      complexity: 'O(n log n) time, O(n) space — merge then read gaps',
+      code: 'def free_time(schedules):\n    flat = sorted(\n        (iv for person in schedules for iv in person), key=lambda iv: iv[0]\n    )\n    if not flat:\n        return []\n    merged = [list(flat[0])]\n    for start, end in flat[1:]:\n        if start <= merged[-1][1]:\n            merged[-1][1] = max(merged[-1][1], end)\n        else:\n            merged.append([start, end])\n    return [[merged[i][1], merged[i + 1][0]] for i in range(len(merged) - 1)]',
+      note: 'Who owns an interval never matters — only whether ANYONE is busy. Throw the ownership away, merge, and the free time is literally the space between blocks.',
+    },
+  ],
+
+  'py-smallest-range-k-lists': [
+    {
+      name: 'Every combination',
+      complexity: 'O(nᵏ · k) time, O(k) space',
+      code: 'def smallest_range(lists):\n    if not all(lists):\n        return []\n    best = None\n    for pick in itertools.product(*lists):\n        lo, hi = min(pick), max(pick)\n        if best is None or hi - lo < best[1] - best[0] or (hi - lo == best[1] - best[0] and lo < best[0]):\n            best = [lo, hi]\n    return best',
+      note: 'One value from each list, every way. Correct, and it never finishes: three lists of a thousand is a billion combinations.',
+    },
+    {
+      name: 'Advance the smallest finger',
+      complexity: 'O(n log k) time, O(k) space — min-heap over k pointers',
+      code: 'def smallest_range(lists):\n    heap = [(row[0], i, 0) for i, row in enumerate(lists) if row]\n    if len(heap) != len(lists):\n        return []\n    heapq.heapify(heap)\n    high = max(row[0] for row in lists)\n    best = [heap[0][0], high]\n    while True:\n        low, i, j = heapq.heappop(heap)\n        if high - low < best[1] - best[0]:\n            best = [low, high]\n        if j + 1 == len(lists[i]):\n            return best\n        nxt = lists[i][j + 1]\n        high = max(high, nxt)\n        heapq.heappush(heap, (nxt, i, j + 1))',
+      note: 'The range is pinned by the smallest and largest finger, so moving anything but the smallest can only keep it or widen it. That single observation collapses the search — and the running max is tracked by hand, because a heap hands you the minimum and nothing else.',
+    },
+  ],
+
+  'py-word-ladder': [
+    {
+      name: 'Build the graph first',
+      complexity: 'O(N² · L) time, O(N²) space',
+      code: "def ladder_length(begin, end, word_list):\n    words = list(dict.fromkeys([begin] + list(word_list)))\n    if end not in words:\n        return 0\n    def near(a, b):\n        return sum(x != y for x, y in zip(a, b)) == 1\n    adj = {w: [o for o in words if near(w, o)] for w in words}\n    seen = {begin}\n    queue = deque([(begin, 1)])\n    while queue:\n        word, depth = queue.popleft()\n        if word == end:\n            return depth\n        for nxt in adj[word]:\n            if nxt not in seen:\n                seen.add(nxt)\n                queue.append((nxt, depth + 1))\n    return 0",
+      note: 'Comparing every pair to find the edges costs O(N²·L) before the search starts. With 5,000 words that is 25 million comparisons to answer a question BFS could have answered in a few thousand steps.',
+    },
+    {
+      name: 'Generate neighbours on demand',
+      complexity: 'O(N · L · 26) time, O(N · L) space — BFS on an implicit graph',
+      code: "def ladder_length(begin, end, word_list):\n    pool = set(word_list)\n    if end not in pool:\n        return 0\n    queue = deque([(begin, 1)])\n    pool.discard(begin)\n    while queue:\n        word, depth = queue.popleft()\n        if word == end:\n            return depth\n        for i in range(len(word)):\n            for ch in 'abcdefghijklmnopqrstuvwxyz':\n                nxt = word[:i] + ch + word[i + 1 :]\n                if nxt in pool:\n                    pool.discard(nxt)\n                    queue.append((nxt, depth + 1))\n    return 0",
+      note: 'The graph is never built. A word’s neighbours are generated by substitution and filtered through the set, so the cost per word depends on the word length and not on how many words exist. Discarding at enqueue time is the visited check.',
+    },
+  ],
+
+  'py-burst-balloons': [
+    {
+      name: 'Recurse on what is left',
+      complexity: 'O(2ⁿ · n²) time, O(2ⁿ) space',
+      code: 'def max_coins(nums):\n    @cache\n    def best(rest):\n        if not rest:\n            return 0\n        top = 0\n        for i in range(len(rest)):\n            left = rest[i - 1] if i > 0 else 1\n            right = rest[i + 1] if i + 1 < len(rest) else 1\n            gain = left * rest[i] * right + best(rest[:i] + rest[i + 1 :])\n            top = max(top, gain)\n        return top\n\n    return best(tuple(nums))',
+      note: 'The honest translation of the question: try bursting each balloon first and recurse on what remains. Memoising it does NOT rescue it — the state is a SUBSET of balloons, and there are 2ⁿ of those. Memoising the wrong state is the trap this problem is really about.',
+    },
+    {
+      name: 'Interval DP on the LAST balloon',
+      complexity: 'O(n³) time, O(n²) space — interval DP on the last burst',
+      code: 'def max_coins(nums):\n    vals = [1] + [n for n in nums] + [1]\n    n = len(vals)\n    dp = [[0] * n for _ in range(n)]\n    for width in range(2, n):\n        for i in range(n - width):\n            j = i + width\n            for k in range(i + 1, j):\n                gain = dp[i][k] + dp[k][j] + vals[i] * vals[k] * vals[j]\n                if gain > dp[i][j]:\n                    dp[i][j] = gain\n    return dp[0][n - 1]',
+      note: 'Choosing what bursts FIRST leaves two halves that affect each other. Choosing what bursts LAST does not: by then everything else in the range is gone, so its neighbours are the range boundaries, which never move. That turns the state from a subset into a pair of indices — n² states instead of 2ⁿ. The padding 1s make the missing-neighbour rule disappear.',
+    },
+  ],
+
+  'py-candy': [
+    {
+      name: 'Fix violations until none are left',
+      complexity: 'O(n²) time, O(n) space',
+      code: 'def min_candies(ratings):\n    n = len(ratings)\n    sweets = [1] * n\n    changed = True\n    while changed:\n        changed = False\n        for i in range(n):\n            if i > 0 and ratings[i] > ratings[i - 1] and sweets[i] <= sweets[i - 1]:\n                sweets[i] = sweets[i - 1] + 1\n                changed = True\n            if i + 1 < n and ratings[i] > ratings[i + 1] and sweets[i] <= sweets[i + 1]:\n                sweets[i] = sweets[i + 1] + 1\n                changed = True\n    return sum(sweets)',
+      note: 'Keep sweeping until nothing is broken. It converges and it is easy to argue correct, but each fix can break a neighbour, so a long descending run repairs itself one position per pass.',
+    },
+    {
+      name: 'One sweep each way',
+      complexity: 'O(n) time, O(n) space — two sweeps, max of both',
+      code: 'def min_candies(ratings):\n    n = len(ratings)\n    if n == 0:\n        return 0\n    sweets = [1] * n\n    for i in range(1, n):\n        if ratings[i] > ratings[i - 1]:\n            sweets[i] = sweets[i - 1] + 1\n    for i in range(n - 2, -1, -1):\n        if ratings[i] > ratings[i + 1]:\n            sweets[i] = max(sweets[i], sweets[i + 1] + 1)\n    return sum(sweets)',
+      note: 'Each child has two constraints and one pass can only see the neighbour it has already decided. Left to right settles the left rule; right to left settles the right one; the max of the two is the smallest number satisfying both.',
+    },
+  ],
 };

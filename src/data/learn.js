@@ -700,4 +700,34 @@ export const LEARN = {
     insight:
       'The cost of the naive version is not the DFS, it is repetition: a thousand words starting "pre" trace that prefix a thousand times. Walking the board once while descending a trie shares that work — and the pruning is what actually saves you, because a letter with no child in the trie ends the branch after one dict lookup rather than after a full-depth walk.\n\nTwo details separate a working solution from a fast one. Popping the stored word off its terminal node as you find it keeps duplicates out without a set, and it also shrinks the trie as you go. And marking the square (board[r][c] = "#") before recursing is the "no reusing a square" rule — restoring it afterwards is the same undo as every other backtracking problem.',
   },
+  'py-employee-free-time': {
+    why: 'The interval problem that teaches you to throw information away. The per-person structure looks essential and is pure noise — the moment you flatten it, this becomes Merge Intervals with two extra lines.',
+    constraints: ['1 ≤ len(schedules) ≤ 100', '1 ≤ intervals per person ≤ 100', 'each person’s intervals are sorted and disjoint'],
+    insight:
+      'The question "when is everyone free?" is the complement of "when is anyone busy?", and the second is far easier because it does not care whose interval it is. Flattening is not a shortcut here — it is the insight.\n\nThe part worth rehearsing is reading gaps off a merged list. After merging you have disjoint blocks in order, so free time is exactly `[block[i].end, block[i+1].start]` for consecutive pairs. Nothing before the first block or after the last one counts, and that falls out for free because those pairs do not exist.\n\nIn an interview, mention the k-way merge with a heap as the alternative: it avoids sorting all n intervals when the schedules are long and there are few people.',
+  },
+  'py-smallest-range-k-lists': {
+    why: 'The k-pointer heap pattern in its purest form — the same machinery as merging k sorted lists, but the answer is a property of ALL the pointers at once rather than the stream they produce.',
+    constraints: ['1 ≤ len(lists) ≤ 3500', '1 ≤ len(list) ≤ 50', 'each list is sorted ascending'],
+    insight:
+      'The move that unlocks it is proving which pointer to advance. The range must reach from the smallest pointed-at value to the largest. Advancing the largest leaves the low end where it is and can only raise the high end. Advancing a middle one does nothing to either bound. So only advancing the smallest can possibly shrink the range — which means there is never a choice to make, and no search.\n\nThe implementation detail that bites: a min-heap gives you the minimum cheaply and the maximum not at all, so the running high has to be maintained by hand as you push. Forget that and you get a plausible answer that is wrong on the cases where the new value is the biggest so far.\n\nStopping is the other half. The instant one list is exhausted, no further range can contain a value from every list, so the best seen is final.',
+  },
+  'py-word-ladder': {
+    why: 'BFS on a graph that is never built. The lesson is that "graph problem" does not mean "construct a graph" — it means there are states and moves, and generating the moves on demand is usually cheaper than materialising the edges.',
+    constraints: ['1 ≤ len(word) ≤ 10', '1 ≤ len(word_list) ≤ 5000', 'all words have the same length, lowercase'],
+    insight:
+      'Equal-cost steps means BFS, and the level you reach the target on IS the answer — no DP, no Dijkstra.\n\nThe expensive mistake is finding the edges by comparing every pair of words: O(N²·L) before the search begins. Generating a word’s neighbours instead — substitute each of 26 letters into each of L positions and keep what is in the set — costs O(26·L) per word regardless of how big the word list is. With 5,000 words that is the difference between 25 million comparisons and a few thousand.\n\nRemove a word from the pool as you ENQUEUE it, not as you dequeue it. Doing it at dequeue lets the same word be queued once per neighbour that reaches it, and the queue blows up on dense word lists.',
+  },
+  'py-burst-balloons': {
+    why: 'The problem where the direction of thinking is the entire difficulty. The code is fifteen lines of ordinary DP; getting to it requires inverting the question, and that inversion is the transferable skill.',
+    constraints: ['0 ≤ len(nums) ≤ 300', '0 ≤ nums[i] ≤ 100'],
+    insight:
+      'Ask which balloon to burst FIRST and the problem does not decompose: popping it makes its two neighbours adjacent, so the left and right sub-problems now influence each other and are not sub-problems at all. Every greedy heuristic dies here too — bursting the biggest first is easy to disprove.\n\nAsk which balloon bursts LAST inside a range and everything falls into place. When it goes, every other balloon in the range is already gone, so its neighbours are exactly the two balloons bounding the range — and those are outside the range, so they are untouched. Now the two sides genuinely are independent:\n\n`dp[i][j] = max over k in (i, j) of dp[i][k] + dp[k][j] + nums[i]·nums[k]·nums[j]`\n\nPadding with 1 at both ends makes the "missing neighbour counts as 1" rule vanish instead of becoming four special cases. Fill by increasing width so every sub-range is ready before it is needed.',
+  },
+  'py-candy': {
+    why: 'The two-sweep greedy. When each element has a constraint on both sides, one pass can only ever satisfy one of them — recognising that is worth more than this specific problem.',
+    constraints: ['0 ≤ len(ratings) ≤ 2·10⁴', '0 ≤ ratings[i] ≤ 2·10⁴'],
+    insight:
+      'Each child is constrained by the neighbour on the left and the neighbour on the right. Sweeping left to right, the right-hand neighbour has not been decided yet, so that rule cannot be enforced — and any attempt to patch it as you go cascades backwards.\n\nSo run the sweep twice with the comparison flipped, and take the `max` at each position. That max is doing real work: it takes whichever rule binds harder for that child, which is both sufficient (each rule is satisfied by one of the passes) and minimal (nothing gets more than the binding rule requires).\n\nEqual ratings are the trap. The rule only fires on strictly higher, so two equal neighbours have no constraint between them at all — [1, 2, 2] is 1 + 2 + 1 = 4, not 6. Any solution that gives equal neighbours equal sweets is over-paying.',
+  },
 };

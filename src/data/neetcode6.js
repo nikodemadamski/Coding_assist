@@ -177,4 +177,154 @@ export const NEETCODE_6 = [
     solution:
       "def find_words(board, words):\n    root = {}\n    for w in words:\n        node = root\n        for ch in w:\n            node = node.setdefault(ch, {})\n        node['$'] = w\n\n    rows, cols = len(board), len(board[0])\n    found = []\n\n    def walk(r, c, node):\n        ch = board[r][c]\n        nxt = node.get(ch)\n        if nxt is None:\n            return\n        word = nxt.pop('$', None)\n        if word is not None:\n            found.append(word)\n        board[r][c] = '#'\n        for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):\n            nr, nc = r + dr, c + dc\n            if 0 <= nr < rows and 0 <= nc < cols and board[nr][nc] != '#':\n                walk(nr, nc, nxt)\n        board[r][c] = ch\n\n    for r in range(rows):\n        for c in range(cols):\n            walk(r, c, root)\n    return found\n",
   },
+  // ── intervals: merge across schedules, then read the GAPS ─────────────────
+  {
+    id: 'py-employee-free-time',
+    track: 'python',
+    title: 'When Is Everyone Free?',
+    difficulty: 'hard',
+    pattern: 'intervals',
+    description:
+      "You are given `schedules`, one entry per person. Each entry is that person's busy periods as `[start, end]` pairs, already sorted and never overlapping each other.\n\nReturn every period during which **nobody** is busy, as a sorted list of `[start, end]`. Ignore the time before the first person starts and after the last one finishes — only the gaps in between count.",
+    examples: [
+      'free_time([[[1, 2], [5, 6]], [[1, 3]], [[4, 10]]])  ->  [[3, 4]]',
+      'free_time([[[1, 3], [6, 7]], [[2, 4]], [[2, 5], [9, 12]]])  ->  [[5, 6], [7, 9]]',
+    ],
+    function_name: 'free_time',
+    starter_code: 'def free_time(schedules):\n    ...\n',
+    tests: [
+      { args: [[[[1, 2], [5, 6]], [[1, 3]], [[4, 10]]]], expected: [[3, 4]] },
+      { args: [[[[1, 3], [6, 7]], [[2, 4]], [[2, 5], [9, 12]]]], expected: [[5, 6], [7, 9]] },
+      { args: [[[[1, 2]]]], expected: [] },
+      { args: [[[[1, 2], [3, 4]]]], expected: [[2, 3]] },
+      { args: [[[[1, 4]], [[2, 3]]]], expected: [] },
+      { args: [[[[1, 2]], [[3, 4]], [[5, 6]]]], expected: [[2, 3], [4, 5]] },
+    ],
+    hint: 'Whose busy period it is never matters. Pour every interval into one list, merge the overlaps, and the free time is exactly the space between consecutive merged blocks.',
+    approach:
+      "The per-person structure is a distraction. Nobody is free at time t precisely when SOME interval covers t, so flatten every schedule into one list and forget who owns what.\n\nSort by start and merge: extend the current block while the next interval starts at or before the block's end, otherwise close the block and open a new one. The answer is then the space between consecutive merged blocks — the merge does the hard part, and reading off gaps is two lines.\n\nThe alternative, a min-heap over the k schedules to merge them in order, is worth mentioning in an interview: it avoids sorting everything when the schedules are long and k is small.",
+    solution:
+      'def free_time(schedules):\n    flat = sorted(\n        (iv for person in schedules for iv in person), key=lambda iv: iv[0]\n    )\n    if not flat:\n        return []\n    merged = [list(flat[0])]\n    for start, end in flat[1:]:\n        if start <= merged[-1][1]:\n            merged[-1][1] = max(merged[-1][1], end)\n        else:\n            merged.append([start, end])\n    return [[merged[i][1], merged[i + 1][0]] for i in range(len(merged) - 1)]\n',
+  },
+
+  // ── heap: k pointers advanced by the smallest ─────────────────────────────
+  {
+    id: 'py-smallest-range-k-lists',
+    track: 'python',
+    title: 'Smallest Range Touching Every List',
+    difficulty: 'hard',
+    pattern: 'heap',
+    description:
+      'You have `lists`, each one sorted ascending. Find the smallest range `[a, b]` that contains at least one number from **every** list.\n\nA range is smaller when `b - a` is smaller; if two ranges tie, the one with the smaller `a` wins. Return it as `[a, b]`.',
+    examples: [
+      'smallest_range([[4, 10, 15, 24, 26], [0, 9, 12, 20], [5, 18, 22, 30]])  ->  [20, 24]',
+      'smallest_range([[1, 2, 3], [1, 2, 3], [1, 2, 3]])  ->  [1, 1]',
+    ],
+    function_name: 'smallest_range',
+    starter_code: 'def smallest_range(lists):\n    ...\n',
+    tests: [
+      { args: [[[4, 10, 15, 24, 26], [0, 9, 12, 20], [5, 18, 22, 30]]], expected: [20, 24] },
+      { args: [[[1, 2, 3], [1, 2, 3], [1, 2, 3]]], expected: [1, 1] },
+      { args: [[[1], [2], [3]]], expected: [1, 3] },
+      { args: [[[10, 10], [11, 11]]], expected: [10, 11] },
+      { args: [[[1, 2, 3]]], expected: [1, 1] },
+      { args: [[[-5, 0], [1], [2]]], expected: [0, 2] },
+    ],
+    hint: 'Keep one finger in each list. The range is always [smallest finger, largest finger] — and the ONLY way to shrink it is to move the smallest finger forward.',
+    approach:
+      "Hold a pointer into each list. Whatever those pointers touch, the current range must span from the smallest of them to the largest, so the range is fully determined by the pointers.\n\nNow ask which pointer to advance. Moving the largest, or anything in between, can only keep the range the same width or widen it — the low end stays put and the high end cannot fall. Only advancing the **smallest** can shrink it. That is the whole algorithm, and a min-heap makes \"which is smallest\" O(log k).\n\nTrack the running maximum separately as you push, because a heap gives you the minimum for free and the maximum not at all. Stop the moment any list runs out: from then on no range can cover every list.",
+    solution:
+      'def smallest_range(lists):\n    heap = [(row[0], i, 0) for i, row in enumerate(lists) if row]\n    if len(heap) != len(lists):\n        return []\n    heapq.heapify(heap)\n    high = max(row[0] for row in lists)\n    best = [heap[0][0], high]\n    while True:\n        low, i, j = heapq.heappop(heap)\n        if high - low < best[1] - best[0]:\n            best = [low, high]\n        if j + 1 == len(lists[i]):\n            return best\n        nxt = lists[i][j + 1]\n        high = max(high, nxt)\n        heapq.heappush(heap, (nxt, i, j + 1))\n',
+  },
+
+  // ── graphs: BFS over a graph that is never built ──────────────────────────
+  {
+    id: 'py-word-ladder',
+    track: 'python',
+    title: 'One Letter at a Time',
+    difficulty: 'hard',
+    pattern: 'graphs',
+    description:
+      'Change `begin` into `end` by altering one letter at a time, where every word along the way — including `end` — must appear in `word_list`. All words are the same length.\n\nReturn how many words the shortest such chain contains, counting both ends. Return `0` if it cannot be done.',
+    examples: [
+      'ladder_length("hit", "cog", ["hot", "dot", "dog", "lot", "log", "cog"])  ->  5   # hit→hot→dot→dog→cog',
+      'ladder_length("hit", "cog", ["hot", "dot", "dog", "lot", "log"])  ->  0   # cog is not available',
+    ],
+    function_name: 'ladder_length',
+    starter_code: 'def ladder_length(begin, end, word_list):\n    ...\n',
+    tests: [
+      { args: ['hit', 'cog', ['hot', 'dot', 'dog', 'lot', 'log', 'cog']], expected: 5 },
+      { args: ['hit', 'cog', ['hot', 'dot', 'dog', 'lot', 'log']], expected: 0 },
+      { args: ['a', 'c', ['a', 'b', 'c']], expected: 2 },
+      { args: ['hot', 'dog', ['hot', 'dog']], expected: 0 },
+      { args: ['hot', 'hot', ['hot']], expected: 1 },
+      { args: ['red', 'tax', ['ted', 'tex', 'red', 'tax', 'tad', 'den', 'rex', 'pee']], expected: 4 },
+    ],
+    hint: 'Shortest path with equal-cost steps means BFS, not DP. Do not build the graph — generate a word’s neighbours on demand by trying all 26 letters in each position.',
+    approach:
+      'Every step costs the same, so the shortest chain is a breadth-first search and the answer is the level you find `end` on.\n\nThe trap is building the graph first. Comparing every pair of words to find the ones differing by a letter is O(N²·L) before the search even starts. Instead generate neighbours on demand: for each position, substitute all 26 letters and keep the results that are still in the unvisited set — O(26·L) per word, independent of how many words there are.\n\nRemove a word from the set the moment you queue it. That is the visited check, and doing it at enqueue rather than dequeue is what stops the same word being queued once per neighbour.',
+    solution:
+      "def ladder_length(begin, end, word_list):\n    pool = set(word_list)\n    if end not in pool:\n        return 0\n    queue = deque([(begin, 1)])\n    pool.discard(begin)\n    while queue:\n        word, depth = queue.popleft()\n        if word == end:\n            return depth\n        for i in range(len(word)):\n            for ch in 'abcdefghijklmnopqrstuvwxyz':\n                nxt = word[:i] + ch + word[i + 1 :]\n                if nxt in pool:\n                    pool.discard(nxt)\n                    queue.append((nxt, depth + 1))\n    return 0\n",
+  },
+
+  // ── dp-2d: interval DP, chosen by what bursts LAST ────────────────────────
+  {
+    id: 'py-burst-balloons',
+    track: 'python',
+    title: 'The Last Balloon',
+    difficulty: 'hard',
+    pattern: 'dp-2d',
+    description:
+      'A row of balloons carries the numbers in `nums`. Bursting balloon `i` pays `nums[i-1] * nums[i] * nums[i+1]`, where a missing neighbour counts as `1`. The balloon vanishes and its neighbours become adjacent.\n\nBurst every balloon, in whatever order you like. Return the most you can be paid.',
+    examples: [
+      'max_coins([3, 1, 5, 8])  ->  167   # burst 1, then 5, then 3, then 8',
+      'max_coins([1, 5])  ->  10',
+    ],
+    function_name: 'max_coins',
+    starter_code: 'def max_coins(nums):\n    ...\n',
+    tests: [
+      { args: [[3, 1, 5, 8]], expected: 167 },
+      { args: [[1, 5]], expected: 10 },
+      { args: [[]], expected: 0 },
+      { args: [[5]], expected: 5 },
+      { args: [[1, 2, 3]], expected: 12 },
+      { args: [[7, 9, 8, 0, 7, 1, 3, 5, 5, 2, 3]], expected: 1654 },
+    ],
+    hint: 'Thinking about which balloon bursts FIRST is hopeless — it splits the row into two halves that are no longer independent. Ask which one bursts LAST in a range instead.',
+    approach:
+      "Picking the first balloon to burst does not decompose: the two sides left behind become neighbours, so their sub-problems depend on each other. That is why the greedy and the obvious recursion both fail.\n\nInvert it. Fix the balloon that bursts **last** inside a range. By the time it goes, everything else in that range is gone, so its neighbours are exactly the range's two boundary balloons — which are untouched by definition. Now the two sides really are independent, and the recurrence is clean:\n\n`dp[i][j] = max over k in (i, j) of dp[i][k] + dp[k][j] + nums[i]·nums[k]·nums[j]`\n\nPad the array with a 1 at each end so the boundary balloons always exist and the missing-neighbour rule needs no special case. Fill by increasing range width. O(n³) time, O(n²) space — and it is one of the few problems where the direction of the thinking, not the code, is the whole difficulty.",
+    solution:
+      'def max_coins(nums):\n    vals = [1] + [n for n in nums] + [1]\n    n = len(vals)\n    dp = [[0] * n for _ in range(n)]\n    for width in range(2, n):\n        for i in range(n - width):\n            j = i + width\n            for k in range(i + 1, j):\n                gain = dp[i][k] + dp[k][j] + vals[i] * vals[k] * vals[j]\n                if gain > dp[i][j]:\n                    dp[i][j] = gain\n    return dp[0][n - 1]\n',
+  },
+
+  // ── greedy: two sweeps, because one direction cannot see both rules ───────
+  {
+    id: 'py-candy',
+    track: 'python',
+    title: 'Sweets Along the Line',
+    difficulty: 'hard',
+    pattern: 'greedy',
+    description:
+      'Children stand in a line with the given `ratings`. Every child must get at least one sweet, and any child rated higher than the child immediately beside them must get more sweets than that neighbour.\n\nReturn the smallest number of sweets that satisfies both rules.',
+    examples: [
+      'min_candies([1, 0, 2])  ->  5   # 2, 1, 2',
+      'min_candies([1, 2, 2])  ->  4   # 1, 2, 1',
+    ],
+    function_name: 'min_candies',
+    starter_code: 'def min_candies(ratings):\n    ...\n',
+    tests: [
+      { args: [[1, 0, 2]], expected: 5 },
+      { args: [[1, 2, 2]], expected: 4 },
+      { args: [[]], expected: 0 },
+      { args: [[1]], expected: 1 },
+      { args: [[1, 3, 2, 2, 1]], expected: 7 },
+      { args: [[1, 2, 87, 87, 87, 2, 1]], expected: 13 },
+      { args: [[5, 4, 3, 2, 1]], expected: 15 },
+    ],
+    hint: 'One sweep can only enforce the rule against the neighbour it has already seen. Sweep left to right for the left-hand rule, then right to left for the other, and take the larger requirement at each child.',
+    approach:
+      "There are two constraints per child — beat the left neighbour when rated higher, beat the right neighbour when rated higher — and a single pass can only ever see one of them, because the other neighbour has not been decided yet.\n\nSo do it twice. Start everyone on one sweet. Going left to right, whenever a rating climbs, give that child one more than the child before. Going right to left, whenever a rating climbs in that direction, give the child at least one more than the child after — `max` of what it already has, so the first pass is never undone.\n\nTaking the maximum of the two requirements is what makes the result both valid and minimal: each child gets exactly enough for whichever rule binds harder, and nothing more.",
+    solution:
+      'def min_candies(ratings):\n    n = len(ratings)\n    if n == 0:\n        return 0\n    sweets = [1] * n\n    for i in range(1, n):\n        if ratings[i] > ratings[i - 1]:\n            sweets[i] = sweets[i - 1] + 1\n    for i in range(n - 2, -1, -1):\n        if ratings[i] > ratings[i + 1]:\n            sweets[i] = max(sweets[i], sweets[i + 1] + 1)\n    return sum(sweets)\n',
+  },
 ];
