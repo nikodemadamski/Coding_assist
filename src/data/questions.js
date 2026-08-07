@@ -1138,6 +1138,7 @@ import { NEETCODE_2 } from './neetcode2.js';
 import { NEETCODE_3 } from './neetcode3.js';
 import { NEETCODE_4 } from './neetcode4.js';
 import { NEETCODE_5 } from './neetcode5.js';
+import { NEETCODE_6 } from './neetcode6.js';
 import { LEARN } from './learn.js';
 import { COMPLEXITY } from './complexity.js';
 import { APPROACHES } from './approaches.js';
@@ -1164,6 +1165,7 @@ const RAW_QUESTIONS = [
   ...NEETCODE_3,
   ...NEETCODE_4,
   ...NEETCODE_5,
+  ...NEETCODE_6,
 ];
 
 // Questions whose result order is not significant, so a correct answer in a
@@ -1182,6 +1184,10 @@ const UNORDERED = {
   'py-generate-parens': 'outer',
   'py-pacific-atlantic': 'outer',
   'py-top-k-frequent': 'outer',
+  // A set of boards; each board's ROW order is load-bearing, so outer, not deep.
+  'py-n-queens': 'outer',
+  // A set of words found in the grid.
+  'py-word-search-ii': 'outer',
 };
 
 // Merge the premium learning layer (why / constraints / insight), the

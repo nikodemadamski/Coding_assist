@@ -669,4 +669,35 @@ export const LEARN = {
   'sql-window-top-per-group': {
     why: 'ROW_NUMBER() OVER (PARTITION BY … ORDER BY …) picks the top row per group with no self-join — the most-asked hard SQL pattern in data-science interviews.',
   },
+  // ── batch 6: the hard tier ────────────────────────────────────────────────
+  'py-alien-order': {
+    why: 'Topological sort disguised. The skill being tested is not the algorithm — it is noticing that a sorted list of words IS a graph, and that each adjacent pair contributes exactly one edge.',
+    constraints: ['1 ≤ len(words) ≤ 100', '1 ≤ len(word) ≤ 100', 'lowercase letters only'],
+    insight:
+      'Two traps sink most attempts. The first: comparing every pair of words instead of adjacent ones — non-adjacent pairs add no information a chain of adjacent ones does not already give you, and they cost O(n²). The second: only the FIRST differing letter is evidence. In ["wrt", "wrf"] the w and r tell you nothing, t before f is the fact, and everything after it is unconstrained.\n\nThe invalid case is worth memorising because it is silent: ["abc", "ab"] cannot be sorted under any alphabet, since a prefix always sorts first. Miss it and you return a plausible, wrong answer. A cycle is the other failure, and Kahn’s algorithm hands it to you free — if you could not place every letter, the constraints contradict.',
+  },
+  'py-longest-valid-parens': {
+    why: 'The problem that teaches you to put INDICES on the stack rather than characters. Balance-counting proves a string is valid; it cannot tell you where the longest valid run starts, and that gap is the whole lesson.',
+    constraints: ['0 ≤ len(s) ≤ 3·10⁴', 's contains only "(" and ")"'],
+    insight:
+      'The reason a plain counter fails: a stray ")" splits the string, and after it you have to start measuring again — from where? The stack answers that. Its bottom entry is always the index of the last position that broke a run, seeded with -1 so the very first run has something to measure back from.\n\nThe O(1)-space version is worth understanding even though the stack is what you would write in an interview. Sweeping left to right, a surplus of ")" means the run is dead and you reset. But a surplus of "(" is undetectable that way — "(((" never resets and never scores — so the identical sweep runs backwards with the comparison flipped. Two passes, two counters, and the same answer.',
+  },
+  'py-n-queens': {
+    why: 'The canonical constraint search. Every backtracking problem is choose → recurse → undo, and this is the one where the undo is impossible to skip and the pruning is impossible to fake.',
+    constraints: ['1 ≤ n ≤ 9'],
+    insight:
+      'The insight that turns this from painful to routine is that both diagonals are arithmetic. Every square on a ↘ diagonal has the same row - col; every square on a ↙ diagonal has the same row + col. Three sets — columns, row - col, row + col — reduce "is this square attacked?" from a scan of the board to three hash lookups.\n\nGoing row by row is the other half: it makes a row conflict structurally impossible, so the search space is which column per row, not which square. n! in the worst case, but the pruning bites early — a bad choice in row 2 is abandoned before rows 3 through n are ever considered, which is exactly what generating all permutations first cannot do.',
+  },
+  'py-median-two-sorted': {
+    why: 'The problem that teaches you to binary search something other than an array. There is no value to search for here — you search for the position of a cut, and the answer falls out of it.',
+    constraints: ['0 ≤ m, n ≤ 1000', 'm + n ≥ 1', 'both lists are already sorted'],
+    insight:
+      'A median is a partition: it is the point where half the values are below and half above. So instead of hunting for a number, decide how many of the shorter list belong on the left. That single choice fixes how many of the longer list must join them, because the left half has a known size.\n\nThe cut is correct when each side’s largest left value is no bigger than the other side’s smallest right value. If a_left > b_right you took too many from a, so move left; otherwise move right. Searching the shorter list is what makes it O(log(min(m, n))) rather than O(log(m + n)).\n\nThe ±infinity sentinels do real work: they make "the cut is at the very start" and "the cut is at the very end" behave like every other case, which is how the empty-list inputs pass without a single special branch.',
+  },
+  'py-word-search-ii': {
+    why: 'Where two patterns compose. Backtracking alone re-walks the board once per word; a trie collapses every shared prefix into one path, and the combination is the standard answer to "find many patterns in one structure".',
+    constraints: ['1 ≤ rows, cols ≤ 12', '1 ≤ len(words) ≤ 3·10⁴', 'lowercase letters only'],
+    insight:
+      'The cost of the naive version is not the DFS, it is repetition: a thousand words starting "pre" trace that prefix a thousand times. Walking the board once while descending a trie shares that work — and the pruning is what actually saves you, because a letter with no child in the trie ends the branch after one dict lookup rather than after a full-depth walk.\n\nTwo details separate a working solution from a fast one. Popping the stored word off its terminal node as you find it keeps duplicates out without a set, and it also shrinks the trie as you go. And marking the square (board[r][c] = "#") before recursing is the "no reusing a square" rule — restoring it afterwards is the same undo as every other backtracking problem.',
+  },
 };

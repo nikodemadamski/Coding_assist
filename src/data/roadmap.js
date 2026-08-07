@@ -173,6 +173,7 @@ export const PATH = [
   'py-search-rotated',
   'py-search-2d-matrix',
   'py-koko-bananas',
+  'py-median-two-sorted',
   // 6 · pandas: the data-science muscle
   'pd-filter-rows',
   'pd-select-columns',
@@ -247,6 +248,7 @@ export const PATH = [
   'py-max-path-sum',
   // 10 · Tries
   'py-implement-trie',
+  'py-word-search-ii',
   // 11 · Heap
   'py-kth-largest',
   'py-last-stone-weight',
@@ -257,12 +259,14 @@ export const PATH = [
   'py-combination-sum',
   'py-permutations',
   'py-palindrome-partition',
+  'py-n-queens',
   'py-word-search',
   // 13 · Graphs
   'py-number-of-islands',
   'py-max-area-island',
   'py-rotting-oranges',
   'py-pacific-atlantic',
+  'py-alien-order',
   'py-course-schedule',
   'py-course-schedule-ii',
   'py-count-components',
@@ -273,6 +277,7 @@ export const PATH = [
   'py-coin-change',
   'py-longest-increasing-subseq',
   'py-max-product-subarray',
+  'py-longest-valid-parens',
   'py-longest-palindrome-substr',
   'py-count-palindromic-substrings',
   'py-decode-ways',

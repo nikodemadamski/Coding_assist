@@ -1403,4 +1403,85 @@ export const APPROACHES = {
       note: 'The smaller running max is the binding constraint, so you can settle that side immediately — both arrays collapse into two variables.',
     },
   ],
+  // ── batch 6: the hard tier ────────────────────────────────────────────────
+  'py-alien-order': [
+    {
+      name: 'Try every alphabet',
+      complexity: 'O(k! · n) time, O(k) space',
+      code: "def alien_order(words):\n    letters = sorted({c for w in words for c in w})\n    for perm in itertools.permutations(letters):\n        rank = {c: i for i, c in enumerate(perm)}\n        if all(\n            [rank[c] for c in first] <= [rank[c] for c in second]\n            for first, second in zip(words, words[1:])\n        ):\n            return ''.join(perm)\n    return ''",
+      note: 'Perfectly correct and completely unusable: 26 letters is 4·10²⁶ orderings. Worth writing once, because it makes the question concrete — an alphabet is just a ranking, and a list is sorted when every adjacent pair is in order.',
+    },
+    {
+      name: 'Topological sort, smallest first',
+      complexity: 'O(n) time, O(1) space — topological sort',
+      code: "def alien_order(words):\n    adj = {c: set() for w in words for c in w}\n    indeg = {c: 0 for c in adj}\n    for first, second in zip(words, words[1:]):\n        if len(first) > len(second) and first.startswith(second):\n            return ''\n        for a, b in zip(first, second):\n            if a != b:\n                if b not in adj[a]:\n                    adj[a].add(b)\n                    indeg[b] += 1\n                break\n    ready = [c for c in indeg if indeg[c] == 0]\n    heapq.heapify(ready)\n    out = []\n    while ready:\n        c = heapq.heappop(ready)\n        out.append(c)\n        for nxt in sorted(adj[c]):\n            indeg[nxt] -= 1\n            if indeg[nxt] == 0:\n                heapq.heappush(ready, nxt)\n    return ''.join(out) if len(out) == len(indeg) else ''",
+      note: 'Each adjacent pair yields exactly ONE edge — the first differing letter — and everything after it is noise. A heap instead of a queue makes the answer unique rather than merely valid. n is the total number of characters; the alphabet is bounded at 26, so the graph is constant-sized.',
+    },
+  ],
+
+  'py-longest-valid-parens': [
+    {
+      name: 'Check every substring',
+      complexity: 'O(n²) time, O(1) space',
+      code: 'def longest_valid_parentheses(s):\n    best = 0\n    for i in range(len(s)):\n        bal = 0\n        for j in range(i, len(s)):\n            bal += 1 if s[j] == "(" else -1\n            if bal < 0:\n                break\n            if bal == 0:\n                best = max(best, j - i + 1)\n    return best',
+      note: 'Grow every start to the right, tracking balance. Breaking the moment balance goes negative is what keeps this O(n²) rather than O(n³) — but it is still re-walking the same text from every position.',
+    },
+    {
+      name: 'Stack of indices',
+      complexity: 'O(n) time, O(n) space — index stack',
+      code: 'def longest_valid_parentheses(s):\n    best = 0\n    stack = [-1]\n    for i, ch in enumerate(s):\n        if ch == "(":\n            stack.append(i)\n        else:\n            stack.pop()\n            if not stack:\n                stack.append(i)\n            else:\n                best = max(best, i - stack[-1])\n    return best',
+      note: 'The stack holds POSITIONS, and the bottom one is always "where the last run was broken". That -1 seed is the whole trick: without it the first valid run has nothing to measure back to.',
+    },
+    {
+      name: 'Two counter passes',
+      complexity: 'O(n) time, O(1) space — two counter passes',
+      code: 'def longest_valid_parentheses(s):\n    best = 0\n    opened = closed = 0\n    for ch in s:\n        opened += ch == "("\n        closed += ch == ")"\n        if opened == closed:\n            best = max(best, 2 * closed)\n        elif closed > opened:\n            opened = closed = 0\n    opened = closed = 0\n    for ch in reversed(s):\n        opened += ch == "("\n        closed += ch == ")"\n        if opened == closed:\n            best = max(best, 2 * opened)\n        elif opened > closed:\n            opened = closed = 0\n    return best',
+      note: 'Left to right, a surplus of ")" can only mean the run is dead — reset. But a surplus of "(" is invisible that way ("(()" never resets), so the same sweep runs backwards with the test flipped. Two counters, no stack.',
+    },
+  ],
+
+  'py-n-queens': [
+    {
+      name: 'Every column permutation',
+      complexity: 'O(n! · n²) time, O(n) space',
+      code: "def solve_n_queens(n):\n    res = []\n    for perm in itertools.permutations(range(n)):\n        if all(\n            abs(perm[i] - perm[j]) != j - i\n            for i in range(n)\n            for j in range(i + 1, n)\n        ):\n            res.append(['.' * c + 'Q' + '.' * (n - c - 1) for c in perm])\n    return res",
+      note: 'A permutation already enforces one queen per row and per column, so only diagonals need checking. Honest and short — but it builds all n! boards before rejecting any, where backtracking abandons a bad prefix after two rows.',
+    },
+    {
+      name: 'Backtracking with diagonal sets',
+      complexity: 'O(n!) time, O(n) space — backtracking with diagonal sets',
+      code: "def solve_n_queens(n):\n    res = []\n    cols, diag, anti = set(), set(), set()\n    board = [['.'] * n for _ in range(n)]\n\n    def place(row):\n        if row == n:\n            res.append([''.join(r) for r in board])\n            return\n        for col in range(n):\n            if col in cols or (row - col) in diag or (row + col) in anti:\n                continue\n            cols.add(col)\n            diag.add(row - col)\n            anti.add(row + col)\n            board[row][col] = 'Q'\n            place(row + 1)\n            board[row][col] = '.'\n            cols.remove(col)\n            diag.remove(row - col)\n            anti.remove(row + col)\n\n    place(0)\n    return res",
+      note: 'row - col is constant down a ↘ diagonal and row + col down a ↙ one, which turns "is this square attacked?" into three set lookups. The add / recurse / remove sandwich is backtracking in three lines.',
+    },
+  ],
+
+  'py-median-two-sorted': [
+    {
+      name: 'Merge and take the middle',
+      complexity: 'O((m + n) log(m + n)) time, O(m + n) space',
+      code: 'def find_median_sorted_arrays(a, b):\n    merged = sorted(a + b)\n    n = len(merged)\n    mid = n // 2\n    if n % 2:\n        return float(merged[mid])\n    return (merged[mid - 1] + merged[mid]) / 2',
+      note: 'The obvious answer, and it throws away the fact that both inputs are already sorted. Interleaving them by hand gets you to O(m + n) — still linear, and still building a list you only need one value from.',
+    },
+    {
+      name: 'Binary search the partition',
+      complexity: 'O(log(min(m, n))) time, O(1) space — binary search on the cut',
+      code: 'def find_median_sorted_arrays(a, b):\n    if len(a) > len(b):\n        a, b = b, a\n    m, n = len(a), len(b)\n    lo, hi = 0, m\n    half = (m + n + 1) // 2\n    while lo <= hi:\n        i = (lo + hi) // 2\n        j = half - i\n        a_left = a[i - 1] if i > 0 else -inf\n        a_right = a[i] if i < m else inf\n        b_left = b[j - 1] if j > 0 else -inf\n        b_right = b[j] if j < n else inf\n        if a_left <= b_right and b_left <= a_right:\n            if (m + n) % 2:\n                return float(max(a_left, b_left))\n            return (max(a_left, b_left) + min(a_right, b_right)) / 2\n        if a_left > b_right:\n            hi = i - 1\n        else:\n            lo = i + 1\n    return 0.0',
+      note: 'Stop looking for a value and look for a CUT. Choosing how many of the shorter list sit on the left fixes the rest, and the cut is right when each side\u2019s last-left is \u2264 the other side\u2019s first-right. The \u00b1inf sentinels are what make the empty-side cases need no special code.',
+    },
+  ],
+
+  'py-word-search-ii': [
+    {
+      name: 'One search per word',
+      complexity: 'O(w · m · n · 4ᴸ) time, O(L) space',
+      code: "def find_words(board, words):\n    rows, cols = len(board), len(board[0])\n\n    def has(r, c, word, k):\n        if not (0 <= r < rows and 0 <= c < cols) or board[r][c] != word[k]:\n            return False\n        if k == len(word) - 1:\n            return True\n        ch = board[r][c]\n        board[r][c] = '#'\n        found = any(\n            has(r + dr, c + dc, word, k + 1)\n            for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1))\n        )\n        board[r][c] = ch\n        return found\n\n    return [\n        w\n        for w in words\n        if any(has(r, c, w, 0) for r in range(rows) for c in range(cols))\n    ]",
+      note: 'Correct, and it re-walks the same squares for every word that shares a prefix. With a thousand words beginning "pre", that prefix is traced a thousand times.',
+    },
+    {
+      name: 'Trie-pruned single walk',
+      complexity: 'O(m · n · 4ᴸ) time, O(total letters) space — trie-pruned DFS',
+      code: "def find_words(board, words):\n    root = {}\n    for w in words:\n        node = root\n        for ch in w:\n            node = node.setdefault(ch, {})\n        node['$'] = w\n\n    rows, cols = len(board), len(board[0])\n    found = []\n\n    def walk(r, c, node):\n        ch = board[r][c]\n        nxt = node.get(ch)\n        if nxt is None:\n            return\n        word = nxt.pop('$', None)\n        if word is not None:\n            found.append(word)\n        board[r][c] = '#'\n        for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):\n            nr, nc = r + dr, c + dc\n            if 0 <= nr < rows and 0 <= nc < cols and board[nr][nc] != '#':\n                walk(nr, nc, nxt)\n        board[r][c] = ch\n\n    for r in range(rows):\n        for c in range(cols):\n            walk(r, c, root)\n    return found",
+      note: 'The trie turns "does any word continue this way?" into one dict lookup, so a dead prefix dies immediately instead of after a full walk. Popping the word off its terminal node as you find it is what keeps duplicates out without a set.',
+    },
+  ],
 };

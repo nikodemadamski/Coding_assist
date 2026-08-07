@@ -149,4 +149,11 @@ export const COMPLEXITY = {
   'sql-left-join-null': 'O(n + m) with a hash/index join',
   'sql-subquery': 'O(n) — the subquery runs once, then one scan',
   'sql-window-top-per-group': 'O(n log n) — window sort per partition',
+  // ── batch 6: the hard tier. Each string is byte-identical to the LAST entry
+  // of APPROACHES[id] — the model answer the Big-O check-in grades against.
+  'py-alien-order': 'O(n) time, O(1) space — topological sort',
+  'py-longest-valid-parens': 'O(n) time, O(1) space — two counter passes',
+  'py-n-queens': 'O(n!) time, O(n) space — backtracking with diagonal sets',
+  'py-median-two-sorted': 'O(log(min(m, n))) time, O(1) space — binary search on the cut',
+  'py-word-search-ii': 'O(m · n · 4ᴸ) time, O(total letters) space — trie-pruned DFS',
 };
