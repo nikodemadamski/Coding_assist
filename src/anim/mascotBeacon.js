@@ -18,7 +18,31 @@ export const beacon = {
   // per key so the mascot can bob on each one rather than once per burst.
   lastKeyAt: 0,
   keyCount: 0,
+  // What just happened to you, and when. A pulse kind out of mascotMood's
+  // MOODS ('pass' | 'fail' | 'proud' | 'oops' | 'cheer'), or null at rest.
+  mood: null,
+  moodAt: 0,
 };
+
+// The app tells the mascot that something happened. Deliberately NOT React
+// state: a run finishing must not re-render the header, and the canvas is
+// already reading this object every frame. Firing the same mood twice in a row
+// restamps it, so two failures in a row wince twice.
+// The canvas reads `beacon.mood` per frame and needs no notification. The
+// *label* does: a mascot that visibly reacts and says nothing is a joke only
+// sighted users are in on. This fires a handful of times per session, not per
+// frame, so a React render on it is free.
+const moodWatchers = new Set();
+export function subscribeMood(fn) {
+  moodWatchers.add(fn);
+  return () => moodWatchers.delete(fn);
+}
+
+export function setMood(kind) {
+  beacon.mood = kind || null;
+  beacon.moodAt = performance.now();
+  for (const fn of moodWatchers) fn(beacon.mood);
+}
 
 // Keys that mean "writing", as opposed to "navigating". Arrows and modifiers
 // shouldn't make the mascot look busy.

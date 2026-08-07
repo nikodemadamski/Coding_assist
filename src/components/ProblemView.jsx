@@ -10,6 +10,7 @@ import BigOCheck from './BigOCheck.jsx';
 import VisualizerModal from './VisualizerModal.jsx';
 import { runQuestion } from '../engine/runnerClient.js';
 import { resetPythonRuntime } from '../engine/pyClient.js';
+import { setMood } from '../anim/mascotBeacon.js';
 import { isSolved } from '../state/progress.js';
 import { lessonsForQuestion } from '../data/lessonLinks.js';
 import { lessonById } from '../data/lessons.js';
@@ -336,6 +337,11 @@ export default function ProblemView({
     try {
       const rep = await runQuestion(question, code, handleStatus);
       setReport(rep);
+      // The mascot watches the same result you do. Code that broke gets a
+      // wince rather than a scolding — that isn't a wrong answer, it's a typo.
+      setMood(
+        rep.status === 'error' ? 'oops' : !rep.allPassed ? 'fail' : isSubmit ? 'proud' : 'pass'
+      );
       if (isSubmit) {
         if (mockMode) {
           // The mock owns the outcome — hand it the report and let it run the
@@ -359,6 +365,7 @@ export default function ProblemView({
         }
       }
     } catch (err) {
+      setMood('oops');
       setReport({
         status: 'error',
         errorType: 'runtime',

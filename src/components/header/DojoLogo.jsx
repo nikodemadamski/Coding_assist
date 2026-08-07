@@ -1,6 +1,8 @@
-import { Component, Suspense, lazy, useMemo, useRef, useState } from 'react';
+import { Component, Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import { prefersReducedMotion } from '../../anim/useAnime.js';
 import { costumeForView, mascotLabel } from '../../state/mascot.js';
+import { PULSE_MS, moodLabel } from '../../state/mascotMood.js';
+import { subscribeMood } from '../../anim/mascotBeacon.js';
 import { outfitFor } from '../../state/shop.js';
 
 // The brand: a 3D `dojo` where o-j-o is a face.
@@ -140,8 +142,30 @@ function useThemeColors(theme) {
   }, [theme]);
 }
 
+// The mood, as React state — but only the *kind*, and only while it lasts.
+// The canvas animates from the beacon directly; this exists so the button's
+// accessible name can say what the face is doing. It re-renders once when a
+// reaction starts and once when it expires, which is the whole cost.
+function useMoodPulse() {
+  const [mood, setMood] = useState(null);
+  useEffect(() => {
+    let timer = 0;
+    const stop = subscribeMood((kind) => {
+      clearTimeout(timer);
+      setMood(kind);
+      if (kind) timer = setTimeout(() => setMood(null), PULSE_MS[kind] ?? 2000);
+    });
+    return () => {
+      clearTimeout(timer);
+      stop();
+    };
+  }, []);
+  return mood;
+}
+
 export default function DojoLogo({ onClick, theme, view = 'home', progress = {}, belt = null }) {
   const { accent, ink } = useThemeColors(theme);
+  const mood = useMoodPulse();
   const [hovered, setHovered] = useState(false);
   const burst = useRef(0);
   // Read once on mount: the preference does not change mid-session in practice,
@@ -151,6 +175,10 @@ export default function DojoLogo({ onClick, theme, view = 'home', progress = {},
   // The room's costume takes its slot; whatever you bought fills the rest.
   const outfit = useMemo(() => outfitFor(progress, costume), [progress, costume]);
   const beltColor = belt?.color ?? ink;
+  // `mood` is only ever set while a pulse is live, so a zero clock here means
+  // "now" — the label module does the room fallback when there is no pulse.
+  const feeling = moodLabel({ pulse: mood, pulseAt: 0, view, now: 0 });
+  const label = [mascotLabel(view), belt && `${belt.name} belt`, feeling].filter(Boolean).join(' · ');
 
   const fallback = <FlatMark accent={accent} ink={ink} costume={costume} beltColor={beltColor} />;
 
@@ -165,7 +193,7 @@ export default function DojoLogo({ onClick, theme, view = 'home', progress = {},
       onPointerLeave={() => setHovered(false)}
       onFocus={() => setHovered(true)}
       onBlur={() => setHovered(false)}
-      aria-label={belt ? `${mascotLabel(view)} · ${belt.name} belt` : mascotLabel(view)}
+      aria-label={label}
     >
       <span className="dojo-mark">
         {flat ? (
@@ -180,6 +208,7 @@ export default function DojoLogo({ onClick, theme, view = 'home', progress = {},
                 burst={burst}
                 outfit={outfit}
                 beltColor={beltColor}
+                view={view}
               />
             </Suspense>
           </MarkBoundary>

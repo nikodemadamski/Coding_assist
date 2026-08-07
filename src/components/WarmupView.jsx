@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { WARMUP_LEVELS, WARMUP_SETS, checkAnswer } from '../data/warmups.js';
 import { useReveal } from '../anim/useReveal.js';
+import { setMood } from '../anim/mascotBeacon.js';
 
 // Warm-up mode: rapid-fire "type the Python" drills, like stretching before
 // the workout. Pick a difficulty, then answer one-liners against a countdown.
@@ -89,11 +90,15 @@ export default function WarmupView({ progress, onResult, onExit }) {
       setCorrect((c) => [...c, { prompt: item.prompt, answer: item.answer, ms }]);
       setInput('');
       if (idx + 1 >= queue.length) {
+        // Only the ends of a run get a reaction. Fifty right answers at typing
+        // speed would leave the mascot permanently mid-hop, which is noise.
+        setMood('cheer');
         endRun('finished');
       } else {
         setIdx(idx + 1);
       }
     } else {
+      setMood('fail');
       endRun('mistake', { item, given: input });
     }
   }

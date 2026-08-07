@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { beacon, watchBeacon, typingHeat } from '../../anim/mascotBeacon.js';
+import { expressionFor } from '../../state/mascotMood.js';
 
 // The wordmark, in three dimensions: d · o · j · o — where the two o's are eyes,
 // the j's tittle is the nose, and a stroke under them is the smile.
@@ -21,7 +22,8 @@ const EYE_R = 1.28;
 // One eye: a ring with a pupil that tracks the pointer and blinks on its own.
 // The lids are two flat discs that close over it, which reads far better at
 // 34px than squashing the whole eye.
-function Eye({ x, accent, pointer, hovered, blink, typing }) {
+function Eye({ x, accent, pointer, hovered, blink, typing, face }) {
+  const ring = useRef(null);
   const pupil = useRef(null);
   const lid = useRef(null);
 
@@ -39,16 +41,24 @@ function Eye({ x, accent, pointer, hovered, blink, typing }) {
     }
     if (lid.current) {
       // The lid does double duty: a full close for a blink, and a half-close
-      // for the squint of concentration while you're mid-sentence.
-      const target = Math.max(blink.current, typing.current * 0.34);
+      // for the squint the expression asks for — concentration while you work,
+      // and nothing at all when he's delighted.
+      const target = Math.max(blink.current, Math.max(0, face.current.squint));
       lid.current.scale.y += (target - lid.current.scale.y) * Math.min(1, dt * 26);
       lid.current.visible = lid.current.scale.y > 0.02;
+    }
+    if (ring.current) {
+      // A negative squint is the other direction: eyes widening. Growing the
+      // ring says "delighted" far more cheaply than a second mesh would.
+      const open = 1 + Math.max(0, -face.current.squint) * 0.16;
+      const s = ring.current.scale.x + (open - ring.current.scale.x) * Math.min(1, dt * 14);
+      ring.current.scale.setScalar(s);
     }
   });
 
   return (
     <group position={[x, 0, 0]}>
-      <mesh>
+      <mesh ref={ring}>
         <torusGeometry args={[0.3, 0.085, 12, 32]} />
         <meshStandardMaterial
           color={accent}
@@ -108,24 +118,85 @@ function LetterJ({ ink, accent }) {
   );
 }
 
-// The smile: a half-torus under o-j-o. It deepens when you hover.
-function Smile({ accent, hovered, typing }) {
+// The mouth: a half-torus under o-j-o.
+//
+// One mesh covers the whole emotional range because scaling its arc is enough.
+// scale.y 1 is the resting smile, 1.6 a grin, 0 the flat line of someone
+// concentrating — and **negative flips the arc into a frown**, which is the
+// whole reason the mouth is a curve rather than a drawn shape.
+const MOUTH_Y = -0.66;
+const MOUTH_R = 0.62;
+function Smile({ accent, hovered, face }) {
   const ref = useRef(null);
+  const sy = useRef(1);
   useFrame((_, dt) => {
     if (!ref.current) return;
     const k = Math.min(1, dt * 8);
-    const target = hovered ? 1.16 : 1;
-    ref.current.scale.x += (target - ref.current.scale.x) * k;
-    // Flattening the arc turns the grin into the small straight line of
-    // someone concentrating. It springs back the moment you stop.
-    const flat = 1 - typing.current * 0.78;
-    ref.current.scale.y += (target * flat - ref.current.scale.y) * k;
+    const wide = hovered ? 1.16 : 1;
+    ref.current.scale.x += (wide - ref.current.scale.x) * k;
+    // A frown swings a long way for the same number, so the downward half of
+    // the range is compressed — otherwise the arc climbs into the letters.
+    // Both ends of the range are compressed, for the same reason: at full
+    // value the arc leaves the canvas. A grin that gets clipped reads as a
+    // rendering bug, not as joy.
+    const m = face.current.mouth;
+    const target = m < 0 ? m * 0.55 : m <= 1 ? m : 1 + (m - 1) * 0.45;
+    sy.current += (target - sy.current) * k;
+    ref.current.scale.y = sy.current * wide;
+    // When it flips, drop it by its own arc height so the frown's apex lands
+    // exactly on the line the smile used to sit on. Without this the mouth
+    // climbs through the `j`'s descender.
+    const flipped = Math.max(0, -ref.current.scale.y);
+    ref.current.position.y = MOUTH_Y - flipped * MOUTH_R;
   });
   return (
-    <mesh ref={ref} position={[NOSE_X, -0.66, 0]} rotation={[0, 0, Math.PI]}>
-      <torusGeometry args={[0.62, 0.05, 8, 26, Math.PI]} />
+    <mesh ref={ref} position={[NOSE_X, MOUTH_Y, 0]} rotation={[0, 0, Math.PI]}>
+      <torusGeometry args={[MOUTH_R, 0.05, 8, 26, Math.PI]} />
       <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.5} roughness={0.4} />
     </mesh>
+  );
+}
+
+// The brows. They do most of the emotional work — knitted and low is the
+// lecturer watching you type, raised is delight — so they have to be *seen*.
+//
+// At rest they tuck against the underside of the belt band, where they read as
+// part of it. Knitting drops them onto the top of the eye ring — the accent
+// behind them is what makes them legible at 34px, which a bar floating in the
+// 0.08 gap between ring and band never was. Raising them sends them back up
+// into the band, so delight is brows gone and eyes wide.
+const BROW_Y = 0.42;
+function Brows({ ink, face }) {
+  const left = useRef(null);
+  const right = useRef(null);
+  useFrame((_, dt) => {
+    const k = Math.min(1, dt * 12);
+    const b = face.current.brow;
+    // -1 knits: inner ends drop toward the nose. +1 arches them up and out.
+    const tilt = -b * 0.42;
+    const y = BROW_Y + b * 0.15;
+    // side = which way is "outer" in x, so one expression mirrors correctly.
+    for (const [ref, side] of [
+      [left, -1],
+      [right, 1],
+    ]) {
+      if (!ref.current) continue;
+      ref.current.rotation.z += (side * tilt - ref.current.rotation.z) * k;
+      ref.current.position.y += (y - ref.current.position.y) * k;
+    }
+  });
+  return (
+    <>
+      {[
+        [EYE_L, left],
+        [EYE_R, right],
+      ].map(([x, ref]) => (
+        <mesh key={x} ref={ref} position={[x, BROW_Y, 0.34]}>
+          <boxGeometry args={[0.46, 0.085, 0.07]} />
+          <meshStandardMaterial color={ink} roughness={0.5} />
+        </mesh>
+      ))}
+    </>
   );
 }
 
@@ -577,10 +648,18 @@ function Sparks({ accent, burst }) {
 // The whole mark: idle float, a spring-ish lean toward the pointer, and the
 // blink timer. All the per-frame work happens here so the leaf meshes stay
 // cheap.
-function Mark({ accent, ink, hovered, burst, outfit, beltColor, fit }) {
+function Mark({ accent, ink, hovered, burst, outfit, beltColor, fit, view }) {
   const group = useRef(null);
   const pointer = useRef({ x: 0, y: 0 });
   const typing = useRef(0);
+  // What the face is feeling this frame — recomputed from the room and the last
+  // event, then read by the brows, the eyes and the mouth. A ref, not state:
+  // an expression must not cost a React render sixty times a second.
+  const face = useRef({ brow: 0, squint: 0, mouth: 1, bounce: 0, shake: 0 });
+  // Lean and float are eased toward a target; the impulses are added on top
+  // afterwards, so a hop never poisons the value the easing is converging on.
+  const leanY = useRef(0);
+  const floatY = useRef(REST_Y);
   const blink = useRef(0);
   const nextBlink = useRef(2 + Math.random() * 3);
   const lastKey = useRef(0);
@@ -626,11 +705,22 @@ function Mark({ accent, ink, hovered, burst, outfit, beltColor, fit }) {
     }
     bob.current = Math.max(0, bob.current - dt * 7);
 
+    // ── how he feels about it ────────────────────────────────────────────
+    // The room sets the resting face; whatever last happened to you overrides
+    // it and then fades back. Everything below just renders the five numbers.
+    face.current = expressionFor({
+      pulse: beacon.mood,
+      pulseAt: beacon.moodAt,
+      view,
+      typing: typing.current,
+      now: performance.now(),
+    });
+
     if (group.current) {
       // Idle: a slow figure-of-eight so it is never quite still.
       // REST_Y lifts the whole mark, because the belt hangs below the letters
       // and the face still has to look optically centred in its box.
-      const floatY = REST_Y + Math.sin(t * 0.9) * 0.045 - bob.current * 0.05;
+      const restY = REST_Y + Math.sin(t * 0.9) * 0.045 - bob.current * 0.05;
       const idleRotY = Math.sin(t * 0.55) * 0.14;
       const idleRotX = Math.cos(t * 0.75) * 0.06;
       // Lean toward the cursor, harder while hovered — and dip toward the
@@ -640,9 +730,16 @@ function Mark({ accent, ink, hovered, burst, outfit, beltColor, fit }) {
       const targetX =
         idleRotX - pointer.current.y * reach * 0.6 + typing.current * 0.2 + bob.current * 0.05;
       const k = Math.min(1, dt * (hovered ? 7 : 3.5));
-      group.current.rotation.y += (targetY - group.current.rotation.y) * k;
+      leanY.current += (targetY - leanY.current) * k;
       group.current.rotation.x += (targetX - group.current.rotation.x) * k;
-      group.current.position.y += (floatY - group.current.position.y) * Math.min(1, dt * 8);
+      floatY.current += (restY - floatY.current) * Math.min(1, dt * 8);
+      // The two impulses ride on top of the settled values, at their own
+      // frequencies — a hop you can count, and a head-shake that says no.
+      // Small on purpose: the mark is fitted to its box with almost no
+      // headroom, so a big hop just clips the hat off.
+      const hop = face.current.bounce * 0.11 * Math.abs(Math.sin(t * 12));
+      group.current.position.y = floatY.current + hop;
+      group.current.rotation.y = leanY.current + Math.sin(t * 21) * face.current.shake * 0.4;
       // The pulse multiplies the fitted scale rather than replacing it.
       const s = scale * (hovered ? 1.07 : 1);
       group.current.scale.x += (s - group.current.scale.x) * Math.min(1, dt * 9);
@@ -665,10 +762,11 @@ function Mark({ accent, ink, hovered, burst, outfit, beltColor, fit }) {
   return (
     <group ref={group} scale={scale}>
       <LetterD ink={ink} />
-      <Eye x={EYE_L} accent={accent} pointer={pointer} hovered={hovered} blink={blink} typing={typing} />
+      <Eye x={EYE_L} accent={accent} pointer={pointer} hovered={hovered} blink={blink} typing={typing} face={face} />
       <LetterJ ink={ink} accent={accent} />
-      <Eye x={EYE_R} accent={accent} pointer={pointer} hovered={hovered} blink={blink} typing={typing} />
-      <Smile accent={accent} hovered={hovered} typing={typing} />
+      <Eye x={EYE_R} accent={accent} pointer={pointer} hovered={hovered} blink={blink} typing={typing} face={face} />
+      <Smile accent={accent} hovered={hovered} face={face} />
+      <Brows ink={ink} face={face} />
       <Belt color={beltColor} />
       <Outfit outfit={outfit} accent={accent} ink={ink} />
       <Sparks accent={accent} burst={burst} />
@@ -690,6 +788,9 @@ export default function DojoFace({
   // Divides the fitted scale. 1 is snug (the header bar); a stage passes more
   // to leave the whole character comfortably inside its frame.
   fit = 1,
+  // Which room he's in. It sets the resting face — serious where you work,
+  // easy everywhere else — which events then interrupt.
+  view = 'home',
 }) {
   const localBurst = useRef(0);
   return (
@@ -711,6 +812,7 @@ export default function DojoFace({
         outfit={outfit}
         beltColor={beltColor}
         fit={fit}
+        view={view}
       />
     </Canvas>
   );

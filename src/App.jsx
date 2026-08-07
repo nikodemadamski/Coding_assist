@@ -49,6 +49,7 @@ import { coinBalance } from './state/shop.js';
 import { markVisit, recordDaySolve, recordDayFail } from './state/activity.js';
 import { getInitialTheme, applyTheme } from './state/theme.js';
 import { nextCelebration } from './state/celebrate.js';
+import { setMood } from './anim/mascotBeacon.js';
 
 export default function App() {
   const [progress, setProgress] = useState(loadProgress);
@@ -157,7 +158,10 @@ export default function App() {
     }
     const cel = nextCelebration(milestoneRef.current, cur);
     milestoneRef.current = cur;
-    if (cel) setCelebration(cel);
+    if (cel) {
+      setCelebration(cel);
+      setMood('cheer'); // a belt or a streak milestone — he celebrates with you
+    }
   }, [solvedCount, streakVal]);
 
   const currentQuestion =

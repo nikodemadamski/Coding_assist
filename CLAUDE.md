@@ -9,9 +9,9 @@ copy text from LeetCode/NeetCode.**
 
 ```bash
 npm run dev / build / lint
-npm test                     # 18 unit suites, incl. run-seed-tests (runs EVERY solution
+npm test                     # 24 unit suites, incl. run-seed-tests (runs EVERY solution
                              # and EVERY alternative approach through real engines)
-# Browser smoke (~240 checks). CDN is blocked in the dev container:
+# Browser smoke (~340 checks). CDN is blocked in the dev container:
 node tests/setup-local-pyodide.mjs         # once per container
 VITE_PYODIDE_BASE=/pyodide/ npm run build
 CHROMIUM_PATH=/opt/pw-browsers/chromium node tests/smoke.mjs
@@ -243,6 +243,27 @@ idles, leans toward the cursor, and scatters sparks on click. **It is behind `Re
 blocks first paint; reduced motion, no WebGL, and a failed chunk (an error boundary) all fall
 back to the same inline `FlatMark` SVG, so the brand is never missing. three.js can't parse
 `var(--…)`, so `useThemeColors` resolves the tokens to real values, keyed on `theme`.
+
+**It reacts to what happens to you.** `state/mascotMood.js` is the pure brain (tested by
+`mascot-mood-tests.mjs`): `expressionFor({pulse, pulseAt, view, typing, now})` returns five
+channels — `brow` / `squint` / `mouth` / `bounce` / `shake` — by blending an **ambient** face
+(the room: `WORKING_VIEWS` → the severe `focus` lecturer face, deepened by typing; everywhere
+else `idle`) with a **pulse** (`pass` | `proud` | `fail` | `oops` | `cheer`), which owns the
+face for its first third of `PULSE_MS` then melts back — a reaction that never ends is a mask.
+`bounce`/`shake` are impulses and spend themselves by halfway, so the movement stops while
+the feeling lasts. Events go in through `setMood(kind)` on the beacon (module-level, zero
+renders — the canvas reads `beacon.mood` in `useFrame`): ProblemView Run green → `pass`,
+Submit recorded → `proud`, tests failed → `fail`, code that won't run → `oops`; LessonView
+routes every exercise resolution through one wrapped `setState`; the warm-up reacts only at
+the *ends* of a run (50 hops would be noise); App's celebration → `cheer`. `subscribeMood`
+drives a two-render-per-event `useMoodPulse()` in DojoLogo so `moodLabel()` reaches the
+aria-label. Rendering notes: `Brows` rest tucked under the belt band at `BROW_Y` 0.42 and
+knit down onto the eye ring (the 0.08 sliver between ring top 0.385 and band bottom 0.465
+made them invisible); the mouth is **one** half-torus whose `scale.y` goes negative to flip
+into a frown, dropped by its own arc height so the apex lands on the old smile line, with
+both ends of the range compressed or the arc leaves the canvas; the hop is small for the
+same reason (the mark is fitted with almost no headroom).
+
 The mascot **wears your belt as a headband** — a band in `beltFor().color` across the brow
 at `BAND_Y`, always on; it is rank, not costume, so no room can take it off. It sits on the
 brow rather than under the chin because the smile's arc reaches down past the letters (a

@@ -506,6 +506,15 @@ try {
     'a YouTube escape hatch waits at the bottom of the ladder'
   );
 
+  // ---- the mascot reacts to what happens to you ------------------------
+  // The room sets a resting face; the outcome of a run overrides it. All of it
+  // reaches the accessible name too, so the reaction is not sighted-only.
+  const feeling = () => page.locator('.header-logo').getAttribute('aria-label');
+  check(
+    /watching you work/.test(await feeling()),
+    `opening a problem puts the mascot in its working face (${await feeling()})`
+  );
+
   // ---- the test console: the cases, named, before you have run anything ----
   check(
     (await page.locator('.console-tab').allInnerTexts()).some((t) => t.startsWith('Testcase')),
@@ -597,6 +606,16 @@ try {
   await page.locator('.pv-toolbar button', { hasText: /^Run/ }).click();
   await page.locator('.error-box').waitFor({ timeout: 30000 });
   check((await resultText(page)).includes('Syntax error'), 'syntax error surfaced');
+  check(
+    /sympathetic/.test(await feeling()),
+    `code that will not run gets sympathy, not a scolding (${await feeling()})`
+  );
+
+  // ---- a wrong answer: it runs, it is simply not right ----
+  await setEditor(page, 'def two_sum(nums, target):\n    return [9, 9]');
+  await page.locator('.pv-toolbar button', { hasText: /^Run/ }).click();
+  await page.locator('.result-summary').waitFor({ timeout: 60000 });
+  check(/wincing/.test(await feeling()), `a failed run makes the mascot wince (${await feeling()})`);
 
   // ---- correct solution: Run then Submit ----
   const solution =
@@ -605,6 +624,7 @@ try {
   await page.locator('.pv-toolbar button', { hasText: /^Run/ }).click();
   await page.locator('.result-summary.pass').waitFor({ timeout: 60000 });
   check((await resultText(page)).includes('5/5 tests passed'), 'correct solution passes all tests');
+  check(/delighted/.test(await feeling()), `green tests delight it (${await feeling()})`);
   await page.locator('.console-tab', { hasText: 'Testcase' }).click();
   check(
     (await page.locator('.case-chip.pass').count()) === 5 &&
@@ -616,6 +636,7 @@ try {
   await page.locator('.pv-toolbar button', { hasText: 'Submit' }).click();
   await page.locator('.solved-banner').waitFor({ timeout: 60000 });
   check(true, 'Submit marks the problem solved');
+  check(/proud of you/.test(await feeling()), `and a submit makes it proud (${await feeling()})`);
   check(
     /Solved in \d/.test(await page.locator('.solved-banner').innerText()),
     'the banner reports how long the first solve took'

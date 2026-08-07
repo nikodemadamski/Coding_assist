@@ -8,6 +8,7 @@ import { checkAnswer } from '../data/warmups.js';
 import { itemAsQuestion, LESSON_CHAPTERS } from '../data/lessons.js';
 import { runQuestion } from '../engine/runnerClient.js';
 import { runPythonSnippet } from '../engine/pyClient.js';
+import { setMood } from '../anim/mascotBeacon.js';
 
 // The lesson player: a tiny read, then one exercise at a time. Never timed,
 // never punitive — two misses on a typed answer reveal it (with the why and a
@@ -70,7 +71,15 @@ function shuffledIndices(n) {
 function ItemPlayer({ lesson, item, idx, onResolved }) {
   const [input, setInput] = useState('');
   const [attempts, setAttempts] = useState(0);
-  const [state, setState] = useState('open'); // open | correct | revealed
+  const [state, setResolution] = useState('open'); // open | correct | revealed
+  // Every route out of an exercise goes through here, so the mascot reacts to
+  // all of them without seven call sites having to remember to tell him.
+  // A reveal is sympathy, not disappointment — the lesson is never punitive.
+  const setState = (next) => {
+    setResolution(next);
+    if (next === 'correct') setMood('pass');
+    else if (next === 'revealed') setMood('oops');
+  };
   const [runOut, setRunOut] = useState(null); // predict "run it" proof
   const [code, setCode] = useState(item.code ?? item.starter_code ?? '');
   const [report, setReport] = useState(null);
@@ -101,6 +110,8 @@ function ItemPlayer({ lesson, item, idx, onResolved }) {
       setState('correct');
     } else if (n >= 2) {
       setState('revealed');
+    } else {
+      setMood('fail');
     }
   }
 
@@ -119,6 +130,7 @@ function ItemPlayer({ lesson, item, idx, onResolved }) {
     if (rep.allPassed) {
       setState('correct');
     } else {
+      setMood('fail');
       setFailedRuns((f) => f + 1);
     }
   }
@@ -184,7 +196,10 @@ function ItemPlayer({ lesson, item, idx, onResolved }) {
       setReport(rep);
       setRunning(false);
       if (rep.allPassed) setState('correct');
-      else setFailedRuns((f) => f + 1);
+      else {
+        setMood('fail');
+        setFailedRuns((f) => f + 1);
+      }
     }
     const revealOrder = () => {
       setOrder(item.lines.map((_, i) => i));
