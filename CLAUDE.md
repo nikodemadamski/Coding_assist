@@ -11,7 +11,7 @@ copy text from LeetCode/NeetCode.**
 npm run dev / build / lint
 npm test                     # 24 unit suites, incl. run-seed-tests (runs EVERY solution
                              # and EVERY alternative approach through real engines)
-# Browser smoke (~340 checks). CDN is blocked in the dev container:
+# Browser smoke (~358 checks). CDN is blocked in the dev container:
 node tests/setup-local-pyodide.mjs         # once per container
 VITE_PYODIDE_BASE=/pyodide/ npm run build
 CHROMIUM_PATH=/opt/pw-browsers/chromium node tests/smoke.mjs
@@ -135,9 +135,18 @@ move). Smoke's `checkRevealSettled` asserts nothing is left transparent.
   `itemState()` is the single source for owned/locked/affordable/buyable so the button, the
   tag and the lock note can't disagree. `outfitFor(progress, roomCostume)` resolves what the
   mascot wears: the room's costume takes its slot, your equipped kit fills the rest.
+- `patternQuiz.js` — the recognition drill, both halves. Round building
+  (`buildQuizRound`, distractors from the question's OWN track or elimination gives it away)
+  **and the record**: `recordQuizRound` folds a round into `progress.quiz`
+  `{rounds, right, wrong, bestPct, lastAt, byPattern}`, `patternAccuracy` reports a single
+  pattern only past `MIN_SEEN` (3 — a percentage off one answer is a coin toss shown as a
+  fact, so one round of ten scores nothing per-card and smoke asserts that), `overallAccuracy`
+  needs no threshold, `weakPatterns` is worst-first with ties broken by miss count,
+  `roundSummary`/`verdictFor` grade one round (a slow perfect round is told to speed up; a
+  round lost to run-outs is diagnosed as the clock, not as ignorance).
 - others: activity (daily goal + todayPulse), mockSession (formats incl. data round via
   format.tracks, optimalComplexity = last approach's complexity else question.complexity), practiceSession (skills→review→new queue; skill checks = due lesson reviews, never requeue),
-  patternQuiz, celebrate, theme, uiPrefs, vizPointers (▲ markers from subscript scan).
+  celebrate, theme, uiPrefs, vizPointers (▲ markers from subscript scan).
 
 ## INVARIANTS — edges that must stay in sync
 
@@ -203,6 +212,24 @@ loop can take over. `.map-head/.graph-fit/.data-tracks` use `animation-timeline:
 Smoke asserts the settled page keeps ≥4 infinite animations running, that the card leans
 under the pointer, and that a `reducedMotion:'reduce'` context has **zero** loops, no
 pointer vars and nothing left invisible.
+
+**The pattern drill** (`PatternQuiz.jsx`) runs on the stage: a 20s countdown per question
+(`QUIZ_SECONDS` — recognition you have to *derive* is not recognition, so running out grades
+as wrong, via `settle('')` where `''` can never equal a correct key), 1–4 to answer and Enter
+to advance, `.stage-prog` segments carrying a third `miss` state so the shape of the round is
+readable, feedback that shows the card's **cues** rather than restating the answer, and a
+debrief whose heaviest block is the list of patterns you couldn't name — each a button into
+its template card. The round is filed once, on completion, so quitting halfway doesn't record
+a two-question round. Patterns then reads that record back: an accuracy line with your weakest
+pattern in the head, and a per-card `%` once a pattern clears `MIN_SEEN`.
+
+**The data-track maps** (`TrackMap.jsx`) get the algorithm map's whole treatment: `page-head`,
+the track's own colour on the total (`--track-pandas` / `--track-sql` via a `--track` var),
+`liveRouteFor(graph.edges, currentKey)` lighting the route to the first topic with anything
+unsolved, `.graph-node.current`'s halo, a solved count on every node, and the same
+stroke-dashoffset draw-in. The fitted tree is **centred by a measured inset**, not a CSS
+max-width — a max-width driven by the scale feeds back into the width the scale is computed
+from.
 
 **The stage** is the shared full-height shell for one-thing-at-a-time surfaces (lesson
 player, warm-up run): `.stage` (h100%, flex col) → `.stage-top` (exit · `.stage-kicker` +

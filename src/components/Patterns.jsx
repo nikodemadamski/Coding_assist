@@ -3,6 +3,7 @@ import { useReveal } from '../anim/useReveal.js';
 import { PATTERN_GUIDE } from '../data/patternGuide.js';
 import { categoryKeyOf } from '../data/roadmap.js';
 import { isSolved } from '../state/progress.js';
+import { overallAccuracy, patternAccuracy, weakPatterns } from '../state/patternQuiz.js';
 
 // The "templates you must know" reference. One card per algorithm pattern:
 // when to reach for it, the recognition cues, the reusable code skeleton, its
@@ -32,6 +33,10 @@ export default function Patterns({ questions, progress, onOpenQuestion, onQuiz, 
   ];
 
   const revealRef = useReveal('patterns');
+  // Your own recognition record, from the drill. It turns this page from a
+  // reference you skim into a scorecard that tells you which cards to reread.
+  const overall = overallAccuracy(progress);
+  const weak = weakPatterns(progress, 1)[0];
 
   return (
     <div className="stats patterns" ref={revealRef}>
@@ -44,11 +49,26 @@ export default function Patterns({ questions, progress, onOpenQuestion, onQuiz, 
         </p>
         {onQuiz && (
           <button className="btn btn-primary patterns-quiz-btn" onClick={onQuiz}>
-            Quiz me — name the pattern
+            {overall ? 'Drill it again — name the pattern' : 'Quiz me — name the pattern'}
             <span className="cue-orb" aria-hidden="true">
               →
             </span>
           </button>
+        )}
+        {overall && (
+          <p className="patterns-record">
+            You name <strong>{overall.pct}%</strong> of them right over {overall.seen} calls
+            {weak && (
+              <>
+                {' — weakest is '}
+                <button className="patterns-record-weak" onClick={() => setOpen(weak.key)}>
+                  {weak.name}
+                </button>{' '}
+                at {weak.pct}%
+              </>
+            )}
+            .
+          </p>
         )}
       </header>
 
@@ -60,6 +80,9 @@ export default function Patterns({ questions, progress, onOpenQuestion, onQuiz, 
           const probs = probsOf(p);
           const solved = probs.filter((q) => isSolved(progress.solved[q.id])).length;
           const isOpen = open === p.key;
+          // Shown only once you've been asked enough times to mean it — a
+          // percentage off one answer is a coin toss dressed as a fact.
+          const recog = patternAccuracy(progress, p.key);
           return (
             <div className={`pattern-card ${isOpen ? 'open' : ''}`} key={p.key}>
               <button
@@ -70,6 +93,14 @@ export default function Patterns({ questions, progress, onOpenQuestion, onQuiz, 
                 <span className="pattern-card-name">{p.name}</span>
                 <span className="pattern-card-when">{p.when}</span>
                 <span className="pattern-card-meta">
+                  {recog && (
+                    <span
+                      className={`pattern-card-recog ${recog.pct >= 80 ? 'sharp' : recog.pct < 60 ? 'shaky' : ''}`}
+                      title={`You named this correctly ${recog.right} of ${recog.seen} times in the drill`}
+                    >
+                      {recog.pct}%
+                    </span>
+                  )}
                   {probs.length > 0 && (
                     <span className="pattern-card-count">
                       {solved}/{probs.length}

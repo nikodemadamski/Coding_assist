@@ -14,6 +14,7 @@ export const EMPTY_PROGRESS = {
   mock: [], // [{ id, title, difficulty, date, format, timeMs, passed, ... }]
   notes: {}, // questionId -> personal note ("what tripped me / key idea")
   bigo: { right: 0, wrong: 0 }, // after-solve complexity check-in record
+  quiz: null, // pattern-recognition record — see state/patternQuiz.js (quizRecord)
   lessons: {}, // lessonId -> { completedAt, runs, missedIdx, srs: { stage, nextDue } }
 };
 

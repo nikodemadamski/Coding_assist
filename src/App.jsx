@@ -49,6 +49,7 @@ import { coinBalance } from './state/shop.js';
 import { markVisit, recordDaySolve, recordDayFail } from './state/activity.js';
 import { getInitialTheme, applyTheme } from './state/theme.js';
 import { nextCelebration } from './state/celebrate.js';
+import { recordQuizRound } from './state/patternQuiz.js';
 import { setMood } from './anim/mascotBeacon.js';
 
 export default function App() {
@@ -420,7 +421,13 @@ export default function App() {
           />
         )}
         {view.name === 'quiz' && (
-          <PatternQuiz questions={allQuestions} onExit={() => setView({ name: 'patterns' })} />
+          <PatternQuiz
+            questions={allQuestions}
+            progress={progress}
+            onResult={(answers) => setProgress((p) => recordQuizRound(p, answers))}
+            onOpenPattern={(focusKey) => setView({ name: 'patterns', focusKey })}
+            onExit={() => setView({ name: 'patterns' })}
+          />
         )}
         {view.name === 'stats' && (
           <Stats

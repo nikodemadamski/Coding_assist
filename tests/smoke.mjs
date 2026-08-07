@@ -296,15 +296,43 @@ try {
   // a data-track card opens its own dedicated map tree
   await page.locator('.data-track-card', { hasText: 'pandas' }).click();
   check(
-    (await page.locator('.track-map-head h1').innerText()).toLowerCase().includes('pandas'),
+    (await page.locator('.track-head h1').innerText()).toLowerCase().includes('pandas'),
     'the pandas card opens a dedicated pandas track map'
   );
   check((await page.locator('.graph-node').count()) >= 4, 'the pandas track map shows its sub-topics');
+  // A track map is a map, not a diagram: it says how far in you are, which
+  // topic you are standing on, and lights the route down to it.
+  check(
+    /\d+\/\d+/.test(await page.locator('.track-count-n').innerText()),
+    'the track says how many of its questions you have solved'
+  );
+  check(
+    (await page.locator('.graph-node.current').count()) === 1,
+    'exactly one topic is marked as where you are on the track'
+  );
+  check(
+    (await page.locator('.track-map .graph-edges path.live').count()) >= 1,
+    'and the route to it carries the live current'
+  );
+  check(
+    (await page.locator('.graph-node-count').count()) >= 4,
+    'every topic carries its own solved count'
+  );
+  // The tree is narrower than the page, so it must be centred in it rather
+  // than left in a lake of empty space.
+  const treeBox = await page.locator('.track-map .graph-canvas').boundingBox();
+  const fitBox = await page.locator('.track-map .graph-fit').boundingBox();
+  const leftGap = treeBox.x - fitBox.x;
+  const rightGap = fitBox.x + fitBox.width - (treeBox.x + treeBox.width);
+  check(
+    Math.abs(leftGap - rightGap) < 4,
+    `the fitted tree is centred in its column (${Math.round(leftGap)} vs ${Math.round(rightGap)})`
+  );
   await page.locator('.graph-node').first().click();
   await page.locator('.cat-modal').waitFor({ timeout: 5000 });
   check((await page.locator('.cat-q').count()) >= 1, 'a track-map node opens its questions');
   await page.locator('.cat-modal .icon-btn[aria-label="Close"]').click();
-  await page.locator('.track-map-head .btn', { hasText: 'Back to the map' }).click();
+  await page.locator('.track-back').click();
   check((await page.locator('.graph-node').count()) >= 15, 'back returns to the algorithm map');
 
   await checkRevealSettled(page, 'Home');
@@ -1027,24 +1055,87 @@ try {
     'the stuck ladder jumps straight to this problem\'s pattern template'
   );
 
-  // ---- pattern-recognition quiz ----
+  // ---- the pattern drill: recognition, against a clock ----
   await page.locator('.patterns-quiz-btn').click();
   await page.locator('.quiz-options').waitFor({ timeout: 5000 });
-  check((await page.locator('.quiz-option').count()) === 4, 'quiz offers four pattern options');
-  check((await page.locator('.quiz-count').innerText()).includes('/ 10'), 'quiz runs a 10-question round');
-  await page.locator('.quiz-option').first().click();
+  check((await page.locator('.quiz-option').count()) === 4, 'the drill offers four pattern options');
+  check(
+    (await page.locator('.quiz-count').innerText()).includes('of 10'),
+    'a round is ten questions'
+  );
+  check(
+    (await page.locator('.stage-prog-seg').count()) === 10,
+    'the run shows a segment per question, so the shape of the round is visible'
+  );
+  // The clock is the point: recognition you have to work out is not recognition.
+  const firstClock = await page.locator('.quiz-clock').innerText();
+  check(/^\d+s$/.test(firstClock), `each question runs against a countdown (${firstClock})`);
+  await page.waitForTimeout(1200);
+  check(
+    (await page.locator('.quiz-clock').innerText()) !== firstClock,
+    'and the countdown actually counts down'
+  );
+
+  // 1-4 answers it from the keyboard — a recognition drill lives or dies on
+  // how fast you can get through it.
+  await page.keyboard.press('1');
   check(
     (await page.locator('.quiz-option.correct').count()) === 1,
-    'answering reveals the correct pattern'
+    'answering reveals which option was right'
   );
-  check(await page.locator('.quiz-feedback').isVisible(), 'quiz explains when to reach for the pattern');
-  await page.locator('.quiz-next').click();
+  check(await page.locator('.quiz-why').isVisible(), 'the drill explains when to reach for the pattern');
   check(
-    (await page.locator('.quiz-count').innerText()).includes('2 / 10'),
-    'Next advances the quiz'
+    (await page.locator('.quiz-cue').count()) > 0,
+    'and shows the cues to memorise, not just the answer'
   );
-  await page.locator('.quiz-bar .icon-btn[aria-label="Quit quiz"]').click();
-  check(await page.locator('.patterns-quiz-btn').isVisible(), 'quitting returns to Patterns');
+  check(
+    (await page.locator('.quiz-clock').innerText()) === '—',
+    'the clock stops once the question is settled'
+  );
+  await page.keyboard.press('Enter');
+  check(
+    (await page.locator('.quiz-count').innerText()).includes('2 of 10'),
+    'Enter advances to the next question'
+  );
+
+  // Run the round out and check the debrief is actionable, not just a score.
+  for (let i = 0; i < 9; i++) {
+    await page.keyboard.press(String((i % 4) + 1));
+    await page.waitForTimeout(90);
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(90);
+  }
+  await page.locator('.quiz-done').waitFor({ timeout: 8000 });
+  check(/You named/.test(await page.locator('.quiz-done h1').innerText()), 'the round ends in a debrief');
+  check((await page.locator('.quiz-stat').count()) === 3, 'the debrief scores accuracy, speed and run-outs');
+  const missed = await page.locator('.quiz-missed-row').count();
+  check(missed > 0, `the patterns you could not name are listed (${missed})`);
+  // The record is what makes the drill a training instrument rather than a toy.
+  const quizRec = await page.evaluate(
+    () => JSON.parse(localStorage.getItem('zoro.progress.v1')).quiz
+  );
+  check(quizRec?.rounds === 1, 'the round is filed against your recognition record');
+  check(
+    Object.keys(quizRec.byPattern || {}).length > 0,
+    'and tallied per pattern, so the app can name your weak spots'
+  );
+
+  // A missed pattern routes straight to the template that teaches it.
+  await page.locator('.quiz-missed-row').first().click();
+  await page.locator('.pattern-card.open').waitFor({ timeout: 5000 });
+  check(true, 'a missed pattern opens its own template card');
+  check(
+    await page.locator('.patterns-record').isVisible(),
+    'and the templates page now reports how reliably you name them'
+  );
+  // Per-card rates deliberately stay silent until a pattern has been asked
+  // three times (patternAccuracy's MIN_SEEN) — one round of ten spreads over
+  // roughly eight patterns, so nothing has earned a number yet. That threshold
+  // is pinned in quiz-tests; here we only assert the page does not invent one.
+  check(
+    (await page.locator('.pattern-card-recog').count()) === 0,
+    'a single round is not enough evidence to score an individual pattern'
+  );
   await page.locator('.header-logo').click();
 
   // ---- Sensei guide + attendance calendar ----

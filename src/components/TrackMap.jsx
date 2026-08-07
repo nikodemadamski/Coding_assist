@@ -2,8 +2,11 @@ import { useFocusTrap } from './useFocusTrap.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { isSolved, isDue, masteryLevel, todayStr } from '../state/progress.js';
 import { pathStep, byPathOrder } from '../data/roadmap.js';
-import { NODE_W, NODE_H } from '../data/roadmapGraph.js';
+import { NODE_W, NODE_H, liveRouteFor } from '../data/roadmapGraph.js';
 import { TRACK_GRAPHS } from '../data/trackGraphs.js';
+import { useAnime, stagger } from '../anim/useAnime.js';
+import { presets } from '../anim/presets.js';
+import { useReveal } from '../anim/useReveal.js';
 
 const MASTERY_LABEL = { new: 'new', learning: 'learning', reviewing: 'reviewing', mastered: 'mastered' };
 
@@ -19,10 +22,19 @@ export default function TrackMap({ trackKey, questions, progress, onOpenQuestion
   const fitRef = useRef(null);
   const today = todayStr();
 
+  // Fit the tree to the column, and remember how much slack is left over so
+  // the map can be centred in it. Measured, not CSS: a max-width driven by the
+  // scale would feed back into the width the scale is computed from.
+  const [inset, setInset] = useState(0);
   useEffect(() => {
     const el = fitRef.current;
     if (!el || !graph) return;
-    const fit = () => setScale(Math.min(el.clientWidth / graph.W, 1.2));
+    const fit = () => {
+      const w = el.clientWidth;
+      const s = Math.min(w / graph.W, 1.2);
+      setScale(s);
+      setInset(Math.max(0, (w - graph.W * s) / 2));
+    };
     fit();
     const ro = new ResizeObserver(fit);
     ro.observe(el);
@@ -47,14 +59,78 @@ export default function TrackMap({ trackKey, questions, progress, onOpenQuestion
     return m;
   }, [questions, trackKey]);
 
-  if (!graph) return null;
-
-  const nodeById = Object.fromEntries(graph.nodes.map((n) => [n.key, n]));
+  const nodeById = useMemo(
+    () => (graph ? Object.fromEntries(graph.nodes.map((n) => [n.key, n])) : {}),
+    [graph]
+  );
   const statOf = (key) => {
     const list = byPattern.get(key) || [];
     return { total: list.length, solved: list.filter((q) => isSolved(progress.solved[q.id])).length };
   };
   const labelOf = (key) => nodeById[key]?.label ?? key;
+
+  // Where you actually are on this track: the first topic, in graph order,
+  // that still has something unsolved in it. Without this the tree is a
+  // diagram; with it, it is a map with a "you are here".
+  const currentKey = useMemo(() => {
+    if (!graph) return null;
+    for (const n of graph.nodes) {
+      const list = byPattern.get(n.key) || [];
+      if (list.length && list.some((q) => !isSolved(progress.solved[q.id]))) return n.key;
+    }
+    return null;
+  }, [graph, byPattern, progress]);
+  const liveEdges = useMemo(
+    () => (graph ? liveRouteFor(graph.edges, currentKey) : new Set()),
+    [graph, currentKey]
+  );
+
+  // Totals for the head. A track page that doesn't say how far in you are is
+  // asking you to count the bars yourself.
+  const totals = useMemo(() => {
+    let total = 0;
+    let solved = 0;
+    for (const list of byPattern.values()) {
+      total += list.length;
+      solved += list.filter((q) => isSolved(progress.solved[q.id])).length;
+    }
+    return { total, solved };
+  }, [byPattern, progress]);
+
+  // The same arrival choreography as the algorithm map: the edges draw
+  // themselves from source to target, the topics pop in behind them, and the
+  // live route keeps its travelling current once the draw-in lets go of the
+  // dash values. useAnime snaps all of it to the finished state under
+  // prefers-reduced-motion.
+  const play = useAnime();
+  const canvasRef = useRef(null);
+  const revealRef = useReveal(`track-${trackKey}`);
+  useEffect(() => {
+    const root = canvasRef.current;
+    if (!root) return;
+    const paths = [...root.querySelectorAll('.graph-edges path[data-edge]')];
+    for (const el of paths) {
+      const len = el.getTotalLength?.() ?? 0;
+      el.style.strokeDasharray = String(len);
+      el.style.strokeDashoffset = String(len);
+    }
+    play(paths, {
+      strokeDashoffset: 0,
+      duration: 700,
+      ease: 'outQuad',
+      delay: stagger(24, { start: 160 }),
+      onComplete: () => {
+        for (const el of paths) {
+          if (!el.classList.contains('live')) continue;
+          el.style.removeProperty('stroke-dasharray');
+          el.style.removeProperty('stroke-dashoffset');
+        }
+      },
+    });
+    play(root.querySelectorAll('.graph-node'), presets.enter());
+  }, [play, liveEdges]);
+
+  if (!graph) return null;
 
   const edgePath = ([from, to]) => {
     const a = nodeById[from];
@@ -72,24 +148,42 @@ export default function TrackMap({ trackKey, questions, progress, onOpenQuestion
   const openStat = openKey ? statOf(openKey) : { total: 0, solved: 0 };
 
   return (
-    <div className="stats roadmap-home">
-      <div className="track-map-head">
-        <button className="btn" onClick={onBack}>
-          ← Back to the map
-        </button>
-        <h1>
-          {graph.label} track
-        </h1>
-      </div>
-      <p className="map-hint">
-        A separate journey from the algorithm path — learn top to bottom, click a topic to open
-        its questions.
-      </p>
+    <div className={`stats roadmap-home track-map track-${trackKey}`} ref={revealRef}>
+      <button className="btn track-back" onClick={onBack} data-reveal>
+        ← Back to the map
+      </button>
+      <header className="page-head track-head" data-reveal>
+        <h1>The {graph.label} track</h1>
+        <p className="page-lede">
+          A separate journey from the algorithm path — learn it top to bottom, and open a topic
+          to see its questions.
+        </p>
+        <p className="track-count">
+          <span className="track-count-n">
+            {totals.solved}
+            <span className="track-count-of">/{totals.total}</span>
+          </span>
+          <span className="track-count-l">solved</span>
+          {currentKey && (
+            <span className="track-here">
+              You&apos;re on <strong>{labelOf(currentKey)}</strong>
+            </span>
+          )}
+        </p>
+      </header>
 
+      {/* On a wide screen the tree is narrower than the page, so the fitted
+          canvas is centred rather than left in a lake of empty space. */}
       <div className="graph-fit" ref={fitRef} style={{ height: graph.H * scale }}>
         <div
           className="graph-canvas"
-          style={{ width: graph.W, height: graph.H, transform: `scale(${scale})`, transformOrigin: 'top left' }}
+          ref={canvasRef}
+          style={{
+            width: graph.W,
+            height: graph.H,
+            transform: `translateX(${inset}px) scale(${scale})`,
+            transformOrigin: 'top left',
+          }}
         >
           <svg
             className="graph-edges"
@@ -100,13 +194,24 @@ export default function TrackMap({ trackKey, questions, progress, onOpenQuestion
           >
             <defs>
               <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#e9e7de" />
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" />
               </marker>
             </defs>
             {graph.edges.map((edge, i) => {
               const d = edgePath(edge);
+              // The route down to the topic you're on carries a travelling
+              // current, so the map points at you instead of being read.
+              const live = liveEdges.has(`${edge[0]}>${edge[1]}`);
               return d ? (
-                <path key={i} d={d} fill="none" stroke="#e9e7de" strokeWidth="2.5" markerEnd="url(#arrow)" opacity="0.85" />
+                <path
+                  key={i}
+                  data-edge
+                  className={live ? 'live' : ''}
+                  d={d}
+                  fill="none"
+                  strokeWidth="2.5"
+                  markerEnd="url(#arrow)"
+                />
               ) : null;
             })}
           </svg>
@@ -118,12 +223,15 @@ export default function TrackMap({ trackKey, questions, progress, onOpenQuestion
             return (
               <button
                 key={n.key}
-                className={`graph-node ${done ? 'done' : ''}`}
+                className={`graph-node ${done ? 'done' : ''} ${n.key === currentKey ? 'current' : ''}`}
                 style={{ left: n.x, top: n.y, width: NODE_W, height: NODE_H }}
                 onClick={() => setOpenKey(n.key)}
                 title={`${labelOf(n.key)} — ${st.solved}/${st.total} solved`}
               >
                 <span className="graph-node-label">{labelOf(n.key)}</span>
+                <span className="graph-node-count">
+                  {st.solved}/{st.total}
+                </span>
                 <span className="graph-node-bar">
                   <span className="graph-node-fill" style={{ '--fill': pct / 100 }} />
                 </span>

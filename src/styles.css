@@ -2622,15 +2622,85 @@ details.hint[open] summary {
   max-width: var(--measure);
 }
 
-.track-map-head {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-  margin-bottom: 4px;
+/* ── a data track's own map ──────────────────────────────────────────────────
+   Same shell as the algorithm map, but the track's colour carries through the
+   heading, the live route and the node fills, so pandas and SQL are never
+   mistaken for each other or for the main path. */
+.track-back {
+  margin-bottom: var(--s-4);
 }
-.track-map-head h1 {
-  margin: 0;
+.track-head {
+  margin-bottom: var(--s-6);
+}
+.track-map.track-pandas {
+  --track: var(--track-pandas);
+}
+.track-map.track-sql {
+  --track: var(--track-sql);
+}
+.track-head h1::first-letter {
+  color: inherit;
+}
+.track-count {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  margin: var(--s-4) 0 0;
+  flex-wrap: wrap;
+}
+.track-count-n {
+  font-family: var(--font-display);
+  font-size: var(--t-2xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--track, var(--text));
+  line-height: 1;
+}
+.track-count-of {
+  font-size: var(--t-lg);
+  color: var(--text-dim);
+}
+.track-count-l {
+  color: var(--text-dim);
+  font-size: var(--t-sm);
+}
+.track-here {
+  margin-left: var(--s-4);
+  padding-left: var(--s-4);
+  border-left: 1px solid var(--line);
+  color: var(--text-dim);
+  font-size: var(--t-sm);
+}
+.track-here strong {
+  color: var(--gold);
+}
+/* The count belongs on the node itself — the bar says "some", the number says
+   how many, and on a seven-topic map that difference is the whole page. It is
+   a third row inside a fixed 56px node, so the stack tightens to fit rather
+   than pushing the label out of the top. */
+.graph-node-count {
+  font-family: var(--font-code);
+  font-size: var(--t-micro);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+  line-height: 1;
+}
+.track-map .graph-node {
+  gap: var(--s-1);
+  padding-block: var(--s-2);
+}
+.track-map .graph-node-label {
+  line-height: 1.2;
+}
+.graph-node.done .graph-node-count {
+  color: var(--jade);
+}
+.track-map .graph-node-fill {
+  background: var(--track, var(--jade));
+}
+.track-map .graph-node.done {
+  border-color: color-mix(in srgb, var(--track) 55%, var(--line));
+  background: color-mix(in srgb, var(--track) 12%, var(--panel));
 }
 
 /* data tracks — pandas & SQL, kept separate from the algorithm map */
@@ -3521,123 +3591,280 @@ details.hint[open] summary {
 .patterns-quiz-btn {
   margin-bottom: 18px;
 }
-.quiz-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  max-width: 720px;
+/* ── the pattern drill ───────────────────────────────────────────────────
+   Runs on the shared stage shell. Everything below is the drill's own
+   furniture: the clock, the option grid, and the debrief. */
+
+/* A miss is worth seeing in the run so far — the shape of the round is
+   information, not decoration. */
+.stage-prog-seg.miss {
+  background: var(--crimson);
 }
-.quiz-count {
-  font-family: var(--font-code);
+.quiz-count-of {
+  font-weight: 500;
   color: var(--text-dim);
 }
-.quiz-score {
-  margin-left: auto;
+.quiz-clock {
   font-family: var(--font-code);
-  color: var(--jade);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-lg);
+  font-weight: 600;
+  color: var(--text-dim);
+  min-width: 48px;
+  text-align: right;
 }
-.quiz-h1 {
-  margin: 14px 0 12px;
+.quiz-clock.low {
+  color: var(--crimson-bright);
+}
+.quiz-clock.is-stopped {
+  opacity: 0.4;
+}
+.quiz-score {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.1;
+  min-width: 46px;
+}
+.quiz-score-n {
+  font-size: var(--t-lg);
+  font-weight: 700;
+  color: var(--jade);
+  font-variant-numeric: tabular-nums;
+}
+.quiz-score-l {
+  font-size: var(--t-micro);
+  color: var(--text-dim);
+}
+.quiz-timerbar {
+  height: 4px;
+  background: var(--panel-2);
+  overflow: hidden;
+  flex: none;
+}
+.quiz-timer-fill {
+  height: 100%;
+  background: var(--jade);
+  transform: scaleX(var(--fill, 0));
+  transform-origin: left center;
+  transition: transform 0.1s linear;
+}
+.quiz-timerbar.low .quiz-timer-fill {
+  background: var(--crimson);
+}
+.quiz-timerbar.is-stopped .quiz-timer-fill {
+  opacity: 0.25;
+}
+
+.quiz-ask {
+  color: var(--text-dim);
+  font-size: var(--t-sm);
+  margin: 0 0 var(--s-2);
 }
 .quiz-card {
-  background: var(--panel);
-  border: 1px solid color-mix(in srgb, var(--gold) 38%, var(--line));
+  background: var(--panel-2);
+  border: 1px solid var(--line);
   border-radius: var(--r-md);
-  padding: 16px;
-  max-width: 720px;
-  margin-bottom: 16px;
+  padding: var(--s-5);
+  margin-bottom: var(--s-5);
 }
 .quiz-title {
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
   font-weight: 700;
   font-size: var(--t-lg);
-  margin-bottom: 6px;
+  margin: 0 0 var(--s-2);
 }
 .quiz-prompt {
   color: var(--text-dim);
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.55;
+  max-width: var(--measure);
 }
+
 .quiz-options {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 10px;
-  max-width: 720px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-2);
 }
 .quiz-option {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 14px 16px;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
   background: var(--panel);
   color: var(--text);
   font: inherit;
   font-weight: 600;
+  text-align: left;
   cursor: pointer;
-  transition: border-color 0.12s, background 0.12s;
+  transition: border-color var(--dur-1) var(--ease), transform var(--dur-1) var(--ease);
 }
 .quiz-option:hover:not(:disabled) {
   border-color: var(--gold);
+  transform: translateY(-1px);
 }
 .quiz-option:disabled {
   cursor: default;
 }
+/* The number is the shortcut, so it looks like a key you can press. */
+.quiz-key {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--r-xs);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  font-family: var(--font-code);
+  font-size: var(--t-micro);
+  color: var(--text-dim);
+}
 .quiz-option.correct {
   border-color: var(--jade);
-  background: color-mix(in srgb, var(--jade) 14%, transparent);
+  background: color-mix(in srgb, var(--jade) 14%, var(--panel));
 }
 .quiz-option.wrong {
   border-color: var(--crimson);
-  background: color-mix(in srgb, var(--crimson) 12%, transparent);
+  background: color-mix(in srgb, var(--crimson) 12%, var(--panel));
 }
 .quiz-option.dim {
-  opacity: 0.5;
+  opacity: 0.45;
 }
-.quiz-tick {
-  color: var(--jade);
-}
-.quiz-cross {
-  color: var(--crimson);
-}
-.quiz-feedback {
-  max-width: 720px;
-  margin-top: 16px;
-  padding: 14px 16px;
-  border-radius: var(--r-md);
-  border: 1px solid var(--line);
-  line-height: 1.5;
-}
-.quiz-feedback.good {
-  border-color: var(--jade);
-  background: color-mix(in srgb, var(--jade) 8%, transparent);
-}
-.quiz-feedback.bad {
-  border-color: var(--crimson-dim, var(--crimson));
-  background: color-mix(in srgb, var(--crimson) 8%, transparent);
-}
-.quiz-next {
-  display: block;
-  margin-top: 12px;
-}
-.quiz-result {
-  max-width: 720px;
-  padding: 16px;
+
+.quiz-why {
+  margin-top: var(--s-4);
+  padding: var(--s-4);
   border-radius: var(--r-md);
   border: 1px solid var(--line);
   line-height: 1.55;
-  margin-bottom: 18px;
 }
-.quiz-result.good {
-  border-color: var(--jade);
+.quiz-why.good {
+  border-color: color-mix(in srgb, var(--jade) 50%, var(--line));
   background: color-mix(in srgb, var(--jade) 8%, transparent);
 }
-.quiz-actions {
+.quiz-why.bad {
+  border-color: color-mix(in srgb, var(--crimson) 50%, var(--line));
+  background: color-mix(in srgb, var(--crimson) 8%, transparent);
+}
+.quiz-why-line {
+  margin: 0;
+  max-width: var(--measure);
+}
+.quiz-cues {
+  margin: var(--s-3) 0 0;
+  font-size: var(--t-sm);
+  color: var(--text-dim);
+}
+.quiz-cue {
+  font-family: var(--font-code);
+  color: var(--text);
+}
+
+/* ── the debrief ─────────────────────────────────────────────────────────── */
+
+.quiz-done {
+  padding-block: var(--s-7);
+}
+.quiz-done-kicker {
+  font-size: var(--t-sm);
+  color: var(--text-dim);
+  margin: 0 0 var(--s-2);
+}
+.quiz-done h1 {
+  margin: 0 0 var(--s-3);
+}
+.quiz-done-n {
+  color: var(--jade);
+}
+.quiz-done-line {
+  color: var(--text-dim);
+  max-width: var(--measure);
+  margin: 0 0 var(--s-6);
+  line-height: 1.6;
+}
+.quiz-done-stats {
   display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: var(--s-7);
+  padding-bottom: var(--s-6);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: var(--s-6);
+}
+.quiz-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.quiz-stat-n {
+  font-family: var(--font-display);
+  font-size: var(--t-2xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.quiz-stat-l {
+  font-size: var(--t-sm);
+  color: var(--text-dim);
+}
+.quiz-missed h2 {
+  font-size: var(--t-md);
+  margin: 0 0 var(--s-3);
+}
+.quiz-missed-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-2);
+}
+.quiz-missed-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--s-1) var(--s-3);
+  width: 100%;
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--dur-1) var(--ease), transform var(--dur-1) var(--ease);
+}
+.quiz-missed-row:hover {
+  border-color: var(--gold);
+  transform: translateX(2px);
+}
+.quiz-missed-name {
+  font-weight: 700;
+}
+/* Colour carries the state: the tally is the thing that says "you missed
+   this", so it is the thing that is red. */
+.quiz-missed-n {
+  font-family: var(--font-code);
+  font-size: var(--t-sm);
+  color: var(--crimson-bright);
+}
+.quiz-missed-when {
+  grid-column: 1 / -1;
+  color: var(--text-dim);
+  font-size: var(--t-sm);
+  line-height: 1.5;
+}
+.quiz-clean {
+  color: var(--text-dim);
+  max-width: var(--measure);
+}
+
+@media (max-width: 700px) {
+  .quiz-options {
+    grid-template-columns: 1fr;
+  }
+  .quiz-done-stats {
+    gap: var(--s-5);
+  }
 }
 
 /* ── celebration (belt / streak milestones) ─────────────────────────────── */
@@ -4936,6 +5163,39 @@ details.hint[open] summary {
   font-family: var(--font-code);
   font-size: var(--t-tiny);
   color: var(--jade);
+}
+/* How reliably you NAME this one in the drill — a different axis from how many
+   of its problems you have solved, so it gets its own mark and its own colour
+   rule: silent by default, gold when shaky, jade once it is automatic. */
+.pattern-card-recog {
+  font-family: var(--font-code);
+  font-size: var(--t-tiny);
+  color: var(--text-dim);
+}
+.pattern-card-recog.sharp {
+  color: var(--jade);
+}
+.pattern-card-recog.shaky {
+  color: var(--gold);
+}
+.patterns-record {
+  margin: var(--s-3) 0 0;
+  color: var(--text-dim);
+  font-size: var(--t-sm);
+  max-width: var(--measure);
+}
+.patterns-record strong {
+  color: var(--text);
+}
+.patterns-record-weak {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: var(--gold);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 .pattern-card-toggle {
   font-family: var(--font-code);
