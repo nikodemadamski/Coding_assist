@@ -209,7 +209,14 @@ button {
 .app-main {
   flex: 1;
   min-height: 0;
-  overflow: auto;
+  /* The page scrolls one way. Ambient layers (the hero's aurora, the orbit's
+     starfield) deliberately bleed past their containers so their gradients
+     never look cut off, and any one of them reaching the page edge would turn
+     the whole app into a sideways scroller. Clipping HERE means the cut lands
+     at the window edge, where there is nothing to see — clipping it at the
+     hero instead drew a visible seam around the box. */
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /* ── header ────────────────────────────────────────────────────────────── */
@@ -7942,24 +7949,6 @@ p,
   color: var(--text);
   font-variant-numeric: tabular-nums;
 }
-.hero-bar {
-  display: block;
-  height: 6px;
-  margin-top: var(--s-5);
-  border-radius: var(--r-full);
-  background: var(--panel-2);
-  overflow: hidden;
-}
-.hero-bar-fill {
-  display: block;
-  height: 100%;
-  border-radius: var(--r-full);
-  background: linear-gradient(90deg, var(--jade), var(--sky));
-  transform: scaleX(var(--fill, 0));
-  transform-origin: left center;
-  transition: transform 1.1s var(--ease);
-}
-
 /* ── the one loud thing ─────────────────────────────────────────────────── */
 .hero-next {
   grid-area: next;
@@ -8193,7 +8182,6 @@ p,
     animation: none;
   }
   .hero-next::after,
-  .hero-bar-fill,
   .learn-lane-fill {
     transition: none;
   }
@@ -8333,6 +8321,10 @@ p,
      padding here keeps the widest topic — and the extra width its depth buys it
      under perspective — clear of the page edge instead of flush against it. */
   padding-inline: var(--s-5);
+  /* No clip here on purpose. The nebula is meant to bleed past the frame, and
+     cutting it at this box drew a visible rounded edge around the map. The
+     page-level guarantee lives on .app-main, where the cut lands at the window
+     edge and there is nothing to see. */
 }
 /* The field it hangs in: a drifting star layer and a soft nebula that follows
    the cursor. Both are transforms/gradients on a pseudo-element — nothing here
@@ -8406,11 +8398,10 @@ p,
     transform: translate3d(0, 8px, 0);
   }
 }
-/* preserve-3d collapses to flat under `overflow: hidden`, and .graph-fit sets
-   it — so inside the orbit the clip has to go, or the depth silently dies. */
-.hero-orbit .graph-fit {
-  overflow: visible;
-}
+/* .graph-fit keeps its clip. It is NOT part of the 3D chain any more (the lean
+   lives on .graph-canvas, which owns its own preserve-3d for the nodes), so
+   clipping here costs nothing and stops the canvas's unscaled 840px layout box
+   from escaping the column. */
 /* The lean lives HERE, on the nodes' direct parent, not on a wrapper.
    Chromium stops hit-testing the descendants of a rotateX/rotateY ancestor:
    with the rotation one level up the topics still drew, still highlighted on
@@ -8511,37 +8502,6 @@ p,
 @keyframes edge-current {
   to {
     stroke-dashoffset: -18;
-  }
-}
-
-/* ── the mission bar ────────────────────────────────────────────────────────
-   A light travels the solved portion while there's still path left to walk,
-   and stops the moment you finish it. Progress that is still moving looks
-   different from progress that is done. */
-.hero-bar {
-  position: relative;
-}
-.hero-bar-fill::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in srgb, #fff 55%, transparent),
-    transparent
-  );
-  transform: translateX(-100%);
-  animation: bar-sweep 3.4s var(--ease) infinite;
-}
-@keyframes bar-sweep {
-  0% {
-    transform: translateX(-100%);
-  }
-  55%,
-  100% {
-    transform: translateX(200%);
   }
 }
 
@@ -8652,7 +8612,6 @@ p,
   .hero::before,
   .hero::after,
   .graph-edges path.live,
-  .hero-bar-fill::after,
   .hero-next-cue .cue-orb {
     animation: none;
   }
@@ -8664,9 +8623,6 @@ p,
     transform: none;
   }
   .hero-next::after {
-    display: none;
-  }
-  .hero-bar-fill::after {
     display: none;
   }
 }

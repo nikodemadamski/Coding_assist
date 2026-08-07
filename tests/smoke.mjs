@@ -229,7 +229,7 @@ try {
     'the home still offers the Python curriculum, quietly'
   );
   check(
-    (await page.locator('.hero-act', { hasText: 'mock interview' }).count()) === 0,
+    (await page.locator('.hero-act', { hasText: /mock/i }).count()) === 0,
     'Mock interview is hidden until the first solve'
   );
   const fitsViewport = await page.evaluate(
@@ -271,7 +271,7 @@ try {
       .map((a) => a.animationName || a.effect?.target?.className || '?')
   );
   check(ambient.length >= 4, `the settled home page keeps ${ambient.length} ambient animations running`);
-  for (const name of ['aurora-a', 'edge-current', 'bar-sweep', 'orb-breathe']) {
+  for (const name of ['aurora-a', 'edge-current', 'orbit-stars', 'orb-breathe']) {
     check(ambient.includes(name), `  ↳ ${name} is still running at rest`);
   }
   // the flowing current must be exactly one connected route, never a diagram
@@ -346,6 +346,80 @@ try {
   await page.locator('.cat-modal .icon-btn[aria-label="Close"]').click();
   await page.locator('.track-back').click();
   check((await page.locator('.graph-node').count()) >= 15, 'back returns to the algorithm map');
+
+  // ---- the page scrolls one way, at every width -------------------------
+  // Ambient layers (the hero aurora, the orbit's starfield) bleed past their
+  // containers on purpose so their gradients never look cut off. Clipping them
+  // at the shell means that bleed lands at the window edge instead of turning
+  // the app into a sideways scroller — and no real element may overflow either.
+  check(
+    (await page.evaluate(() => getComputedStyle(document.querySelector('.app-main')).overflowX)) ===
+      'hidden',
+    'the app shell never scrolls sideways'
+  );
+  for (const w of [1440, 1180, 1024, 820]) {
+    await page.setViewportSize({ width: w, height: 900 });
+    await page.waitForTimeout(700);
+    const spill = await page.evaluate(() => {
+      const main = document.querySelector('.app-main');
+      const clipped = (el) => {
+        for (let a = el.parentElement; a && a !== main; a = a.parentElement) {
+          if (getComputedStyle(a).overflowX !== 'visible') return true;
+        }
+        return false;
+      };
+      return [...main.querySelectorAll('.roadmap-home *')]
+        .filter((el) => {
+          // Layers that declare themselves ambient are ALLOWED to bleed — that
+          // is what stops their gradients looking cut off, and the shell clips
+          // them at the window. Everything else must fit the page.
+          if (el.hasAttribute('data-bleed')) return false;
+          const r = el.getBoundingClientRect();
+          return r.width > 0 && r.right > main.clientWidth + 1 && !clipped(el);
+        })
+        .map((el) => `${el.tagName}.${String(el.className).slice(0, 24)}`)
+        .slice(0, 3);
+    });
+    check(spill.length === 0, `home: nothing spills past the window at ${w}px (${spill.join(', ') || 'clean'})`);
+  }
+
+  // The map is fitted to the WINDOW, both axes — a short laptop screen must
+  // shrink it rather than push the hero past the fold.
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.waitForTimeout(800);
+  const tallScale = await page.evaluate(
+    () => +getComputedStyle(document.querySelector('.graph-canvas')).getPropertyValue('--scale')
+  );
+  await page.setViewportSize({ width: 1440, height: 620 });
+  await page.waitForTimeout(800);
+  const shortScale = await page.evaluate(
+    () => +getComputedStyle(document.querySelector('.graph-canvas')).getPropertyValue('--scale')
+  );
+  check(
+    shortScale < tallScale,
+    `a shorter window shrinks the map instead of overflowing it (${tallScale.toFixed(2)} → ${shortScale.toFixed(2)})`
+  );
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.waitForTimeout(800);
+
+  // ---- every number on the hero means something --------------------------
+  // No decorative glyphs: each quick action leads with one of your own figures
+  // and says in its tooltip why you would press it.
+  const actTitles = await page.locator('.hero-act').evaluateAll((els) =>
+    els.map((el) => el.getAttribute('title') || '')
+  );
+  check(
+    actTitles.length > 0 && actTitles.every((t) => t.length > 20),
+    `every quick action explains why you would press it (${actTitles.length} chips)`
+  );
+  check(
+    (await page.locator('.hero-bar').count()) === 0,
+    'the unlabelled progress bar is gone — the status line above it already said the same thing'
+  );
+  check(
+    (await page.locator('.learn-lane-bar').count()) === 0,
+    'and the lesson bar stays hidden until it has a fraction worth showing'
+  );
 
   await checkRevealSettled(page, 'Home');
 
@@ -1203,13 +1277,18 @@ try {
     await page.locator('.patterns-record').isVisible(),
     'and the templates page now reports how reliably you name them'
   );
-  // Per-card rates deliberately stay silent until a pattern has been asked
-  // three times (patternAccuracy's MIN_SEEN) — one round of ten spreads over
-  // roughly eight patterns, so nothing has earned a number yet. That threshold
-  // is pinned in quiz-tests; here we only assert the page does not invent one.
+  // Per-card rates stay silent until a pattern has been asked three times
+  // (patternAccuracy's MIN_SEEN). A ten-question round usually spreads over
+  // eight-ish patterns, so usually nothing qualifies — but "usually" is not a
+  // test. Assert the RULE: the number of cards showing a percentage is exactly
+  // the number of patterns the saved record has seen enough of.
+  const earned = await page.evaluate(() => {
+    const q = JSON.parse(localStorage.getItem('zoro.progress.v1')).quiz ?? { byPattern: {} };
+    return Object.values(q.byPattern).filter((p) => p.right + p.wrong >= 3).length;
+  });
   check(
-    (await page.locator('.pattern-card-recog').count()) === 0,
-    'a single round is not enough evidence to score an individual pattern'
+    (await page.locator('.pattern-card-recog').count()) === earned,
+    `only patterns asked ≥3 times carry a recognition rate (${earned} qualified)`
   );
   await page.locator('.header-logo').click();
 
@@ -1802,7 +1881,7 @@ try {
   await page.locator('.icon-btn[aria-label="Back to problem list"]').click();
 
   // ---- warm-up mode: rapid-fire typing drills ----
-  await page.locator('.hero-act', { hasText: 'warm-up' }).click();
+  await page.locator('.hero-act', { hasText: /warm-up/i }).click();
   check((await page.locator('.wu-level-card').count()) === 3, 'warm-up offers 3 difficulty levels');
   await page.locator('.wu-level-card', { hasText: 'Beginner' }).click();
   await page.locator('.wu-prompt').waitFor({ timeout: 10000 });
@@ -1906,7 +1985,7 @@ try {
   await page.locator('button', { hasText: '← Back to the dojo' }).click();
 
   // ---- mock interview: timed, hints locked, debrief ----
-  await page.locator('.hero-act', { hasText: 'mock interview' }).click();
+  await page.locator('.hero-act', { hasText: /mock/i }).click();
   check((await page.locator('.mock-format-card').count()) >= 3, 'mock offers multiple interview rounds');
   await page.locator('.mock-format-card', { hasText: 'Warm-up round' }).click();
   await page.locator('.mock-timer').waitFor({ timeout: 10000 });
@@ -1940,7 +2019,7 @@ try {
   await page.locator('.header-logo').click();
 
   // ---- mock data round: a timed pandas/SQL screen ----
-  await page.locator('.hero-act', { hasText: 'mock interview' }).click();
+  await page.locator('.hero-act', { hasText: /mock/i }).click();
   const dataCard = page.locator('.mock-format-card', { hasText: 'Data round' });
   check(
     (await dataCard.innerText()).includes('pandas · sql'),

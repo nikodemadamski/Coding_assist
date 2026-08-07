@@ -11,7 +11,7 @@ copy text from LeetCode/NeetCode.**
 npm run dev / build / lint
 npm test                     # 25 unit suites, incl. run-seed-tests (runs EVERY solution
                              # and EVERY alternative approach through real engines)
-# Browser smoke (~375 checks). CDN is blocked in the dev container:
+# Browser smoke (~384 checks). CDN is blocked in the dev container:
 node tests/setup-local-pyodide.mjs         # once per container
 VITE_PYODIDE_BASE=/pyodide/ npm run build
 CHROMIUM_PATH=/opt/pw-browsers/chromium node tests/smoke.mjs
@@ -199,9 +199,14 @@ animating a plain object (no per-frame React render) and always lands on the tru
 
 **Home** (`RoadmapGraph.jsx`) is a **two-column hero**: copy left, the map in orbit right.
 `.hero-copy` carries `state/greeting.js`'s greeting (`uiPrefs.name`, default Nick, editable in
-Settings — solves-today > streak ≥3 > clock), a live status line, the mission bar, `.hero-next`
-(the next unsolved question at display scale with the page's one red CTA) and `.hero-actions`
-(reviews / warm-up / mock / drill / readiness ring). `.hero-orbit` holds the algorithm map — it
+Settings — solves-today > streak ≥3 > clock), a live status line, `.hero-next` (the next
+unsolved question at display scale with the page's one red CTA) and `.hero-actions`. **Every
+chip leads with one of your own numbers** — reviews due / best warm-up streak / mocks run /
+misses today / readiness — and carries a `title` saying why you would press it; the decorative
+⚡ and ⏱ are gone. The unlabelled mission bar is gone too: it restated the sentence directly
+above it, and its shimmer swept only the *filled* portion, so at 6% solved it crossed 6% of the
+track and read as a broken loader. The lesson lane's bar is now conditional on `done > 0` for
+the same reason (DESIGN.md principle 6). `.hero-orbit` holds the algorithm map — it
 used to live two screens below the fold, which meant the most striking thing in the app was
 something you had to go looking for. `.roadmap-home` is 1320px (wider than everything else) so
 both columns fit; `.learn-lane` is the Python curriculum, deliberately quieter than
@@ -224,10 +229,19 @@ element cannot own two transforms:
   **Always positive**: under `preserve-3d` a child behind its parent's plane loses the hit test
   to the parent. `presets.enter()` leaves an inline `transform` that would beat the CSS rule, so
   the mount effect strips it in `onComplete` (same trick as the edges' dash values).
-`.graph-fit` drops `overflow:hidden` inside the orbit (it collapses `preserve-3d` to flat), and
 `.hero-orbit` carries a `padding-inline` gutter — the scale is measured from that box, so the
 widest topic stays clear of the page edge. Node type is set one step larger to survive the
-~0.87 scale, and the node stack tightens to fit three rows in 56px.
+~0.87 scale, and the node stack tightens to fit three rows in 56px. The fit is computed from
+**both axes** (`min(w/GRAPH_W, (innerHeight - CHROME)/GRAPH_H, 1.2)`, plus a `window.resize`
+listener because a height-only change never resizes the element), so a short laptop screen
+shrinks the map instead of pushing the hero past the fold.
+
+**Nothing scrolls sideways.** `.app-main` is `overflow-x: hidden` / `overflow-y: auto`: the
+hero aurora and the orbit's nebula bleed well past their containers on purpose so their
+gradients never look cut off, and clipping them at their own box drew a visible seam around
+the hero. Clipped at the shell, the cut lands at the window edge. Layers allowed to bleed
+declare `data-bleed`; smoke exempts exactly those and holds every other element to the page
+width at 1440/1180/1024/820.
 
 **Ambient motion** — the page stays alive at rest, and every loop is either information or
 below the notice threshold: the aurora (two `.hero::before/::after` fields drifting on 19s

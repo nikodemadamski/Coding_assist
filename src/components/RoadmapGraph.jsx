@@ -56,15 +56,33 @@ export default function RoadmapGraph({
   const fitRef = useRef(null);
   const today = todayStr();
 
-  // Fit the fixed-size canvas to whatever width we actually have.
+  // Fit the fixed-size canvas to the window — BOTH axes. Width alone left a
+  // tall map pushing the hero past the fold on a short laptop screen, and the
+  // page is only ever meant to scroll one way. CHROME is the header plus the
+  // caption and breathing room under the map; it is a constant on purpose,
+  // because measuring the element's own top would feed the height it is being
+  // used to compute back into itself.
+  const CHROME = 230;
   useEffect(() => {
     const el = fitRef.current;
     if (!el) return;
-    const fit = () => setScale(Math.min(el.clientWidth / GRAPH_W, 1.2));
+    const fit = () =>
+      setScale(
+        Math.max(
+          0.3,
+          Math.min(el.clientWidth / GRAPH_W, (window.innerHeight - CHROME) / GRAPH_H, 1.2)
+        )
+      );
     fit();
     const ro = new ResizeObserver(fit);
     ro.observe(el);
-    return () => ro.disconnect();
+    // A viewport that only changes height never resizes the element, so the
+    // observer alone would miss it.
+    window.addEventListener('resize', fit);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', fit);
+    };
   }, []);
 
   const byCat = useMemo(() => {
@@ -207,10 +225,16 @@ export default function RoadmapGraph({
     });
   }, [play, liveEdges]);
 
+  // Each quick action leads with one of your own numbers rather than a glyph.
+  const bestWarmup = useMemo(
+    () => Object.values(progress.warmup ?? {}).reduce((n, w) => Math.max(n, w?.best ?? 0), 0),
+    [progress]
+  );
+  const mockCount = (progress.mock ?? []).length;
+
   const name = useMemo(() => loadUiPrefs().name, []);
   const streak = currentStreak(progress.streak);
   const hello = greeting(new Date().getHours(), name, { streak, solvedToday: pulse.solves });
-  const pctDone = Math.round((solvedCount / questions.length) * 100);
   // A node with no questions (e.g. 'other' before any import) is never drawn,
   // so it must not be counted in the header either.
   const shownNodes = useMemo(
@@ -256,10 +280,6 @@ export default function RoadmapGraph({
             )}
           </p>
 
-          {/* The mission bar: the whole path in one line, filling as you go. */}
-          <div className="hero-bar" role="img" aria-label={`${pctDone}% of the path solved`}>
-            <span className="hero-bar-fill" style={{ '--fill': solvedCount / questions.length }} />
-          </div>
         </div>
 
         {/* The one loud thing. */}
@@ -310,24 +330,51 @@ export default function RoadmapGraph({
               {counts.due > 0 ? 'questions due' : 'next question'}
             </span>
           </button>
-          <button className="hero-act" onClick={onWarmup}>
-            <span className="hero-act-n">⚡</span>
-            <span className="hero-act-l">warm-up</span>
+          {/* Every chip leads with a number that MEANS something — your own
+              record, not a decorative glyph — and says in its tooltip why you
+              would press it. A lightning bolt told you nothing. */}
+          <button
+            className="hero-act"
+            onClick={onWarmup}
+            title={
+              bestWarmup > 0
+                ? `Your best run is ${bestWarmup} answers without a miss — go beat it`
+                : 'Rapid-fire one-liners against a clock: get the syntax out of the way first'
+            }
+          >
+            <span className="hero-act-n">{bestWarmup > 0 ? bestWarmup : '—'}</span>
+            <span className="hero-act-l">{bestWarmup > 0 ? 'best warm-up' : 'warm-up'}</span>
           </button>
           {!brandNew && (
-            <button className="hero-act" onClick={onMock} title="Timed, no hints — simulate the real interview">
-              <span className="hero-act-n">⏱</span>
-              <span className="hero-act-l">mock interview</span>
+            <button
+              className="hero-act"
+              onClick={onMock}
+              title={
+                mockCount > 0
+                  ? `${mockCount} mock${mockCount === 1 ? '' : 's'} run so far — timed, no hints, graded like the real thing`
+                  : 'Timed, no hints — the closest thing here to the real interview'
+              }
+            >
+              <span className="hero-act-n">{mockCount > 0 ? mockCount : '—'}</span>
+              <span className="hero-act-l">{mockCount > 0 ? 'mocks run' : 'mock interview'}</span>
             </button>
           )}
           {missCount > 0 && !brandNew && (
-            <button className="hero-act hero-act-bad" onClick={onDrill}>
+            <button
+              className="hero-act hero-act-bad"
+              onClick={onDrill}
+              title={`${missCount} question${missCount === 1 ? '' : 's'} you got wrong today — re-clear them while they still sting`}
+            >
               <span className="hero-act-n">{missCount}</span>
               <span className="hero-act-l">drill misses</span>
             </button>
           )}
           {onStats && !brandNew && (
-            <button className="hero-act hero-act-ring" onClick={onStats}>
+            <button
+              className="hero-act hero-act-ring"
+              onClick={onStats}
+              title={`${ready.score}/100 interview-ready — coverage, mastery, mocks, pace and Big-O, scored together`}
+            >
               <ReadinessRing score={ready.score} size={40} />
               <span className="hero-act-l">readiness</span>
             </button>
@@ -346,7 +393,11 @@ export default function RoadmapGraph({
             The nodes each carry a `--z`, so the lean parallaxes them against
             the edges instead of tipping a flat picture. */}
         <div className="hero-orbit" ref={orbitFieldRef}>
-          <div className="orbit-space" aria-hidden="true" />
+          {/* data-bleed: an ambient layer that deliberately extends past its
+              frame so the nebula never looks cut off. The shell clips it at the
+              window; smoke exempts anything that declares itself this way, and
+              holds every other element to the page width. */}
+          <div className="orbit-space" data-bleed aria-hidden="true" />
           <div className="orbit-drift">
             <div className="graph-fit" ref={fitRef} style={{ height: GRAPH_H * scale }}>
               {/* The lean is composed into the CANVAS's own transform, not an
@@ -461,12 +512,22 @@ export default function RoadmapGraph({
                     : `${lessonInfo.done}/${lessonInfo.total} lessons · next: ${lessonInfo.nextTitle}`}
                 </span>
               </span>
-              <span className="learn-lane-bar" aria-hidden="true">
+              {/* Only once it has something to say. At 0/52 this was a long
+                  empty line restating the sentence next to it — a bar earns its
+                  place by showing a fraction you can read at a glance, and an
+                  empty one shows nothing. */}
+              {lessonInfo.done > 0 && (
                 <span
-                  className="learn-lane-fill"
-                  style={{ '--fill': lessonInfo.done / lessonInfo.total }}
-                />
-              </span>
+                  className="learn-lane-bar"
+                  role="img"
+                  aria-label={`${lessonInfo.done} of ${lessonInfo.total} lessons done`}
+                >
+                  <span
+                    className="learn-lane-fill"
+                    style={{ '--fill': lessonInfo.done / lessonInfo.total }}
+                  />
+                </span>
+              )}
               {lessonInfo.due > 0 && (
                 <button className="btn btn-warmup" onClick={onLearn}>
                   {lessonInfo.due} skill check{lessonInfo.due === 1 ? '' : 's'} due

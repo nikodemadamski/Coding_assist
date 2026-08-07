@@ -27,6 +27,23 @@ interface stays quiet and lets **one thing per screen** be loud: the next action
 5. **Motion explains, it does not perform.** Transitions move opacity and
    transform only, on decelerating easing. No bounce, no springy overshoot in UI
    chrome (the lesson *concept* widgets are the one place physics is the point).
+6. **Everything on screen has to earn its place.** For every element, answer
+   "what does this tell me that nothing beside it already tells me?" If there is
+   no answer, delete it. In particular:
+   - **A meter must show a fraction worth reading.** An empty bar communicates
+     nothing, and a shimmer crossing an empty bar reads as broken. Bars appear
+     when they have progress to report, and never restate a sentence next to
+     them.
+   - **A number beats a glyph.** A quick-action chip leads with one of the
+     learner's own figures (reviews due, best streak, mocks run) — never a
+     decorative ⚡ or ⏱, which say nothing.
+   - **Every control says why you would press it**, in a tooltip if not in its
+     label.
+7. **The page scrolls one way.** Nothing may make the app scroll sideways at any
+   width. Ambient layers that deliberately bleed past their container mark
+   themselves `data-bleed`; the shell (`.app-main`) clips at the window, so the
+   cut lands where there is nothing to see. Smoke holds every other element to
+   the page width at four widths.
 
 ## Colour
 
