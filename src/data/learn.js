@@ -730,4 +730,34 @@ export const LEARN = {
     insight:
       'Each child is constrained by the neighbour on the left and the neighbour on the right. Sweeping left to right, the right-hand neighbour has not been decided yet, so that rule cannot be enforced — and any attempt to patch it as you go cascades backwards.\n\nSo run the sweep twice with the comparison flipped, and take the `max` at each position. That max is doing real work: it takes whichever rule binds harder for that child, which is both sufficient (each rule is satisfied by one of the passes) and minimal (nothing gets more than the binding rule requires).\n\nEqual ratings are the trap. The rule only fires on strictly higher, so two equal neighbours have no constraint between them at all — [1, 2, 2] is 1 + 2 + 1 = 4, not 6. Any solution that gives equal neighbours equal sweets is over-paying.',
   },
+  'py-binary-tree-cameras': {
+    why: 'Greedy on a tree, and the clearest example of why bottom-up beats top-down. The moment you try to decide from the root you are guessing; deciding from the leaves you are never wrong.',
+    constraints: ['1 ≤ number of nodes ≤ 1000', 'node values are irrelevant to the answer'],
+    insight:
+      'The reason top-down fails: a camera at the root covers the root, its two children and nothing else, while the leaves — the nodes that are hardest to reach — are left needing their own. Placing from the bottom inverts that. A leaf never gets a camera, because its parent covers it for the same price and covers two more nodes besides.\n\nThe implementation trick is returning a STATE instead of a count. Three are enough — needs covering, covered, holds a camera — and the rule at each node is short: if either child needs covering, buy one now (that child has no later chance); if either child has a camera, you are already covered; otherwise you are uncovered and it becomes your parent’s problem.\n\nThe root is the one node with nobody above it, so it needs the extra check after the walk. Forgetting that is the classic off-by-one-camera bug.',
+  },
+  'py-basic-calculator': {
+    why: 'Parsing without a parser. It teaches the shape of every bracket problem — a stack that saves the context you are about to destroy and restores it when the bracket closes.',
+    constraints: ['1 ≤ len(s) ≤ 3·10⁵', 'only digits, "+", "-", "(", ")" and spaces', 'the expression is always valid'],
+    insight:
+      'Because there is no `*` or `/`, there is no precedence, and without precedence you do not need an expression grammar — a running total plus a running sign is a complete evaluator.\n\nWhat you push at `(` is the thing people get wrong. You must push BOTH the total so far and the sign sitting in front of the bracket. Push only the total and `2-(5-6)` evaluates as `2+(5-6)`: the answer becomes 1 instead of 3, and it looks right on every test where the bracket is preceded by `+`.\n\nUnary minus needs no special case at all, which surprises people. `-2+1` starts with the total at zero, so the first `-` is applied to zero and the arithmetic is already correct.',
+  },
+  'py-russian-doll-envelopes': {
+    why: 'The problem that teaches you to remove a dimension with a sort. Two-dimensional nesting looks like it needs 2-D DP; the right sort makes it the 1-D problem you already know.',
+    constraints: ['1 ≤ len(envelopes) ≤ 10⁵', '1 ≤ width, height ≤ 10⁵'],
+    insight:
+      'Sorting by width handles one dimension: from then on, any subsequence is already non-decreasing in width, so only the heights need to increase.\n\nExcept that equal widths ruin it. Two envelopes of the same width can never nest, but after a plain width sort their heights sit next to each other and an LIS will happily use both. The fix is to sort by width ascending and height **descending**, so within a width the heights go down and no increasing subsequence can pick two of them. The constraint is enforced by the ordering rather than by a test inside the loop — that is the transferable idea.\n\nAfter that it is patience-sorting LIS. Worth knowing that the `tails` array is not itself a valid chain of envelopes; it only records the smallest possible tail for each achievable length, which is all you need to report the length.',
+  },
+  'py-first-missing-positive': {
+    why: 'The canonical "use the array as the hash table" problem. Constant space is not a detail here — it is the entire question, and the reasoning that unlocks it is a counting argument, not a coding trick.',
+    constraints: ['0 ≤ len(nums) ≤ 10⁵', 'values may be negative, zero or duplicated'],
+    insight:
+      'Start with the counting argument, because everything follows from it: n numbers can block at most n of the values 1..n, so the answer is somewhere in 1..n+1. Anything negative, zero, or larger than n is irrelevant and can be ignored entirely.\n\nThat licenses the array to be storage. Put value v at index v-1, and afterwards the first index disagreeing with its slot names the answer. Two loop details decide whether it works: use `while` rather than `if`, because a swap drops a new value at position i that may itself belong elsewhere; and guard with `nums[nums[i] - 1] != nums[i]`, comparing VALUES not indices, or a duplicated value swaps with its twin forever.\n\nIn an interview, write the set version first and say out loud that it is O(n) space, then improve it. It shows you know what the constraint is actually asking for.',
+  },
+  'py-max-points-line': {
+    why: 'A geometry problem whose difficulty is entirely numerical. The algorithm is a nested loop; getting the right answer depends on refusing to use floating point.',
+    constraints: ['1 ≤ len(points) ≤ 300', '-10⁴ ≤ x, y ≤ 10⁴', 'points may repeat'],
+    insight:
+      'Every line with at least two points passes through some point, so fixing each point and grouping the rest by slope is guaranteed to find the best line. The algorithm is that simple.\n\nThe trap is the slope. `dy / dx` is a float: at large coordinates two genuinely different slopes round to the same value, and a vertical line divides by zero. Store `(dx, dy)` reduced by their gcd instead — exact, and vertical becomes `(0, 1)` with no special case.\n\nTwo finishing touches. Normalise the sign, or `(1, 2)` and `(-1, -2)` are recorded as different directions along the same line and the count splits in half. And handle exact duplicates separately: they lie on every line through the fixed point and have no slope of their own, so they are added to whichever group turns out largest.',
+  },
 };

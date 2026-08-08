@@ -146,6 +146,7 @@ export const PATH = [
   'py-top-k-frequent',
   'py-product-except-self',
   'py-longest-consecutive',
+  'py-first-missing-positive',
   // 2 · Two pointers
   'py-valid-palindrome',
   'py-two-sum-sorted',
@@ -167,6 +168,7 @@ export const PATH = [
   'py-generate-parens',
   'py-car-fleet',
   'py-largest-rectangle',
+  'py-basic-calculator',
   // 5 · Binary search
   'py-binary-search',
   'py-find-min-rotated',
@@ -246,6 +248,7 @@ export const PATH = [
   'py-kth-smallest-bst',
   'py-lca-bst',
   'py-max-path-sum',
+  'py-binary-tree-cameras',
   // 10 · Tries
   'py-implement-trie',
   'py-word-search-ii',
@@ -280,6 +283,7 @@ export const PATH = [
   'py-longest-increasing-subseq',
   'py-max-product-subarray',
   'py-longest-valid-parens',
+  'py-russian-doll-envelopes',
   'py-longest-palindrome-substr',
   'py-count-palindromic-substrings',
   'py-decode-ways',
@@ -308,6 +312,7 @@ export const PATH = [
   'py-plus-one',
   'py-happy-number',
   'py-rotate-array',
+  'py-max-points-line',
   'py-spiral-matrix',
   'py-rotate-image',
   'py-pow',

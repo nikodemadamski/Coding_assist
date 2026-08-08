@@ -1558,4 +1558,78 @@ export const APPROACHES = {
       note: 'Each child has two constraints and one pass can only see the neighbour it has already decided. Left to right settles the left rule; right to left settles the right one; the max of the two is the smallest number satisfying both.',
     },
   ],
+  'py-binary-tree-cameras': [
+    {
+      name: 'Try every subset of nodes',
+      complexity: 'O(2ⁿ · n) time, O(n) space',
+      code: "def min_cameras(root):\n    nodes = []\n\n    def collect(node, parent):\n        if node is None:\n            return\n        idx = len(nodes)\n        nodes.append([node, parent, []])\n        collect(node[1], idx)\n        collect(node[2], idx)\n\n    collect(root, -1)\n    n = len(nodes)\n    if n == 0:\n        return 0\n    for i, (_, parent, _) in enumerate(nodes):\n        if parent >= 0:\n            nodes[parent][2].append(i)\n    best = n\n    for mask in range(1 << n):\n        placed = [i for i in range(n) if mask >> i & 1]\n        if len(placed) >= best:\n            continue\n        seen = set()\n        for i in placed:\n            seen.add(i)\n            if nodes[i][1] >= 0:\n                seen.add(nodes[i][1])\n            seen.update(nodes[i][2])\n        if len(seen) == n:\n            best = len(placed)\n    return best",
+      note: 'Every possible placement of cameras, checked. It is the definition written out, and it is the reason the greedy insight matters — 20 nodes is already a million subsets.',
+    },
+    {
+      name: 'Three states, decided bottom-up',
+      complexity: 'O(n) time, O(h) space — greedy DFS with three states',
+      code: 'def min_cameras(root):\n    NEED, OK, CAM = 0, 1, 2\n    count = 0\n\n    def walk(node):\n        nonlocal count\n        if node is None:\n            return OK\n        left = walk(node[1])\n        right = walk(node[2])\n        if left == NEED or right == NEED:\n            count += 1\n            return CAM\n        if left == CAM or right == CAM:\n            return OK\n        return NEED\n\n    if walk(root) == NEED:\n        count += 1\n    return count',
+      note: 'A camera at the root is nearly always wasted — leaves are the hardest nodes to cover and covering them from below is free. Returning a STATE rather than a count is what lets a parent decide, and the root is the one node with nobody above it to help.',
+    },
+  ],
+
+  'py-basic-calculator': [
+    {
+      name: 'Recursive descent',
+      complexity: 'O(n) time, O(n) space',
+      code: "def calculate(s):\n    pos = 0\n\n    def expr():\n        nonlocal pos\n        total = 0\n        sign = 1\n        while pos < len(s):\n            ch = s[pos]\n            if ch.isdigit():\n                num = 0\n                while pos < len(s) and s[pos].isdigit():\n                    num = num * 10 + int(s[pos])\n                    pos += 1\n                total += sign * num\n                continue\n            pos += 1\n            if ch == '+':\n                sign = 1\n            elif ch == '-':\n                sign = -1\n            elif ch == '(':\n                total += sign * expr()\n            elif ch == ')':\n                return total\n        return total\n\n    return expr()",
+      note: 'A parser written the way a textbook would: brackets recurse. Perfectly good, and it trades the explicit stack for the call stack — which on a deeply nested expression is the one you cannot control.',
+    },
+    {
+      name: 'One pass with a sign stack',
+      complexity: 'O(n) time, O(n) space — running total with a sign stack',
+      code: "def calculate(s):\n    result = 0\n    num = 0\n    sign = 1\n    stack = []\n    for ch in s:\n        if ch.isdigit():\n            num = num * 10 + int(ch)\n        elif ch in '+-':\n            result += sign * num\n            num = 0\n            sign = 1 if ch == '+' else -1\n        elif ch == '(':\n            stack.append(result)\n            stack.append(sign)\n            result = 0\n            sign = 1\n        elif ch == ')':\n            result += sign * num\n            num = 0\n            result *= stack.pop()\n            result += stack.pop()\n    return result + sign * num\n",
+      note: 'With no precedence to resolve, a running total and a running sign are enough. The sign has to be pushed alongside the total or `2-(5-6)` quietly becomes `2+(5-6)` — that single line is where most attempts break.',
+    },
+  ],
+
+  'py-russian-doll-envelopes': [
+    {
+      name: 'Longest chain by pairwise DP',
+      complexity: 'O(n²) time, O(n) space',
+      code: 'def max_envelopes(envelopes):\n    order = sorted(envelopes, key=lambda e: (e[0], e[1]))\n    n = len(order)\n    if n == 0:\n        return 0\n    best = [1] * n\n    for i in range(n):\n        for j in range(i):\n            if order[j][0] < order[i][0] and order[j][1] < order[i][1]:\n                best[i] = max(best[i], best[j] + 1)\n    return max(best)',
+      note: 'Sort, then ask for every pair whether one nests in the other. It sidesteps the equal-width trap by checking both dimensions explicitly — which is why it is the safe answer to write first, and why it is quadratic.',
+    },
+    {
+      name: 'Sort the trap away, then LIS',
+      complexity: 'O(n log n) time, O(n) space — width asc, height desc, then LIS',
+      code: 'def max_envelopes(envelopes):\n    order = sorted(envelopes, key=lambda e: (e[0], -e[1]))\n    tails = []\n    for _, height in order:\n        i = bisect.bisect_left(tails, height)\n        if i == len(tails):\n            tails.append(height)\n        else:\n            tails[i] = height\n    return len(tails)',
+      note: 'Height DESCENDING within equal widths is the whole idea: it makes two same-width envelopes impossible to pick together, so the constraint is enforced by the sort and never has to be checked. What is left is plain LIS.',
+    },
+  ],
+
+  'py-first-missing-positive': [
+    {
+      name: 'Put them in a set',
+      complexity: 'O(n) time, O(n) space',
+      code: 'def first_missing_positive(nums):\n    seen = set(nums)\n    i = 1\n    while i in seen:\n        i += 1\n    return i',
+      note: 'Four lines and genuinely O(n) time — the ONLY thing wrong with it is the O(n) space the question forbids. Worth writing first in an interview, then improving out loud.',
+    },
+    {
+      name: 'The array as its own hash table',
+      complexity: 'O(n) time, O(1) space — cyclic placement in place',
+      code: 'def first_missing_positive(nums):\n    n = len(nums)\n    for i in range(n):\n        while 1 <= nums[i] <= n and nums[nums[i] - 1] != nums[i]:\n            target = nums[i] - 1\n            nums[i], nums[target] = nums[target], nums[i]\n    for i in range(n):\n        if nums[i] != i + 1:\n            return i + 1\n    return n + 1',
+      note: 'With n numbers the answer is in 1..n+1, so values outside that range are noise. Send each useful value to its own index. `while`, not `if` — a swap brings in a new value that may also be misplaced — and the guard compares VALUES so duplicates stop instead of swapping forever.',
+    },
+  ],
+
+  'py-max-points-line': [
+    {
+      name: 'Every triple',
+      complexity: 'O(n³) time, O(1) space',
+      code: 'def max_points(points):\n    n = len(points)\n    if n <= 2:\n        return n\n    best = 2\n    for i in range(n):\n        for j in range(i + 1, n):\n            count = 0\n            for k in range(n):\n                ax, ay = points[i]\n                bx, by = points[j]\n                cx, cy = points[k]\n                if (bx - ax) * (cy - ay) == (by - ay) * (cx - ax):\n                    count += 1\n            best = max(best, count)\n    return best',
+      note: 'Take every pair as a candidate line and count who is on it, using the cross product so no division happens. Cubic, but it is the version that is obviously correct — and the cross-product test is worth keeping in the fast one too.',
+    },
+    {
+      name: 'Group by exact slope',
+      complexity: 'O(n²) time, O(n) space — reduced-fraction slopes',
+      code: 'def max_points(points):\n    n = len(points)\n    if n <= 2:\n        return n\n    best = 1\n    for i in range(n):\n        slopes = defaultdict(int)\n        same = 0\n        for j in range(i + 1, n):\n            dx = points[j][0] - points[i][0]\n            dy = points[j][1] - points[i][1]\n            if dx == 0 and dy == 0:\n                same += 1\n                continue\n            g = math.gcd(abs(dx), abs(dy))\n            dx, dy = dx // g, dy // g\n            if dx < 0 or (dx == 0 and dy < 0):\n                dx, dy = -dx, -dy\n            slopes[(dx, dy)] += 1\n        here = same + 1 + (max(slopes.values()) if slopes else 0)\n        best = max(best, here)\n    return best',
+      note: 'The slope must be a reduced (dx, dy) pair, never dy/dx — floats make distinct slopes compare equal at large coordinates and blow up on vertical lines. Normalising the sign stops (1, 2) and (-1, -2) counting as two different lines.',
+    },
+  ],
 };

@@ -327,4 +327,160 @@ export const NEETCODE_6 = [
     solution:
       'def min_candies(ratings):\n    n = len(ratings)\n    if n == 0:\n        return 0\n    sweets = [1] * n\n    for i in range(1, n):\n        if ratings[i] > ratings[i - 1]:\n            sweets[i] = sweets[i - 1] + 1\n    for i in range(n - 2, -1, -1):\n        if ratings[i] > ratings[i + 1]:\n            sweets[i] = max(sweets[i], sweets[i + 1] + 1)\n    return sum(sweets)\n',
   },
+  // ── trees: greedy on a tree, decided bottom-up ────────────────────────────
+  {
+    id: 'py-binary-tree-cameras',
+    track: 'python',
+    title: 'Cameras in the Branches',
+    difficulty: 'hard',
+    pattern: 'trees',
+    description:
+      'A camera placed at a node watches that node, its parent, and its immediate children. Given the root of a binary tree, return the fewest cameras needed so that **every** node is watched.\n\nThe tree is encoded as nested `[value, left, right]`, with `null` for an empty child. The values themselves are irrelevant.',
+    examples: [
+      'min_cameras([0, [0, null, [0, null, null]], null])  ->  1',
+      'min_cameras([0, null, null])  ->  1',
+      'min_cameras(null)  ->  0',
+    ],
+    function_name: 'min_cameras',
+    starter_code: 'def min_cameras(root):\n    ...\n',
+    tests: [
+      { args: [null], expected: 0 },
+      { args: [[0, null, null]], expected: 1 },
+      { args: [[0, [0, null, [0, null, null]], null]], expected: 1 },
+      { args: [[0, [0, [0, null, null], [0, null, null]], null]], expected: 1 },
+      { args: [[0, [0, null, null], [0, [0, null, null], [0, null, null]]]], expected: 2 },
+      { args: [[0, [0, [0, [0, null, null], null], null], null]], expected: 2 },
+    ],
+    hint: 'Decide bottom-up, and give each subtree one of three answers: I am uncovered, I am covered, I hold a camera. A parent only needs a camera when a child says "uncovered".',
+    approach:
+      'Top-down fails because a camera at the root is nearly always wasted — leaves are the nodes hardest to cover, and covering them from below is free.\n\nSo return a state from every node instead of a number. Three states are enough: **needs covering**, **covered**, **has a camera**. A node places a camera exactly when one of its children reports "needs covering" — because that child will never get another chance. If a child has a camera, this node is already covered. Otherwise both children are merely covered, so this node is uncovered and passes the problem up.\n\nThe only special case is the root, which has no parent to rescue it: if it comes back "needs covering", buy one more camera. Every node is visited once.',
+    solution:
+      'def min_cameras(root):\n    NEED, OK, CAM = 0, 1, 2\n    count = 0\n\n    def walk(node):\n        nonlocal count\n        if node is None:\n            return OK\n        left = walk(node[1])\n        right = walk(node[2])\n        if left == NEED or right == NEED:\n            count += 1\n            return CAM\n        if left == CAM or right == CAM:\n            return OK\n        return NEED\n\n    if walk(root) == NEED:\n        count += 1\n    return count\n',
+  },
+
+  // ── stack: parse with a stack instead of recursion ────────────────────────
+  {
+    id: 'py-basic-calculator',
+    track: 'python',
+    title: 'Evaluate It By Hand',
+    difficulty: 'hard',
+    pattern: 'stack',
+    description:
+      'Evaluate the arithmetic in a string `s`. It may contain non-negative integers, `+`, `-`, brackets `(` `)`, and spaces — and nothing else. A `-` may be unary, as in `-2` or `1-(-2)`.\n\nReturn the result as an integer. Do not use `eval`.',
+    examples: [
+      'calculate("1 + 1")  ->  2',
+      'calculate("(1+(4+5+2)-3)+(6+8)")  ->  23',
+      'calculate("2-(5-6)")  ->  3',
+    ],
+    function_name: 'calculate',
+    starter_code: 'def calculate(s):\n    ...\n',
+    tests: [
+      { args: ['1 + 1'], expected: 2 },
+      { args: [' 2-1 + 2 '], expected: 3 },
+      { args: ['(1+(4+5+2)-3)+(6+8)'], expected: 23 },
+      { args: ['2-(5-6)'], expected: 3 },
+      { args: ['-2+ 1'], expected: -1 },
+      { args: ['1-(-2)'], expected: 3 },
+      { args: [''], expected: 0 },
+      { args: ['(((10)))'], expected: 10 },
+    ],
+    hint: 'Carry a running result and a running sign. On `(` push both and start fresh; on `)` fold the bracket back in by multiplying by the pushed sign and adding the pushed result.',
+    approach:
+      'With only `+` and `-` there is no precedence to worry about, so you never need a full expression parser — a running total and a running sign is enough.\n\nBrackets are the only nesting, and a stack handles them: on `(`, push the total so far AND the sign in front of the bracket, then reset both. On `)`, close off the inner total, multiply it by the pushed sign, and add the pushed total back. The sign has to be pushed too, or `2-(5-6)` silently becomes `2+(5-6)`.\n\nDigits accumulate with `num = num * 10 + digit` because a number can be several characters. Unary minus needs no special case: `-2` starts with the total at zero, so `0 - 2` is the right answer already.',
+    solution:
+      "def calculate(s):\n    result = 0\n    num = 0\n    sign = 1\n    stack = []\n    for ch in s:\n        if ch.isdigit():\n            num = num * 10 + int(ch)\n        elif ch in '+-':\n            result += sign * num\n            num = 0\n            sign = 1 if ch == '+' else -1\n        elif ch == '(':\n            stack.append(result)\n            stack.append(sign)\n            result = 0\n            sign = 1\n        elif ch == ')':\n            result += sign * num\n            num = 0\n            result *= stack.pop()\n            result += stack.pop()\n    return result + sign * num\n",
+  },
+
+  // ── dp-1d: a sort that turns 2-D into the LIS you already know ────────────
+  {
+    id: 'py-russian-doll-envelopes',
+    track: 'python',
+    title: 'Envelopes Inside Envelopes',
+    difficulty: 'hard',
+    pattern: 'dp-1d',
+    description:
+      'Each envelope is `[width, height]`. One envelope fits inside another only when **both** its width and its height are strictly smaller.\n\nReturn the largest number of envelopes you can nest, each inside the next.',
+    examples: [
+      'max_envelopes([[5, 4], [6, 4], [6, 7], [2, 3]])  ->  3   # 2×3 → 5×4 → 6×7',
+      'max_envelopes([[1, 1], [1, 1], [1, 1]])  ->  1',
+    ],
+    function_name: 'max_envelopes',
+    starter_code: 'def max_envelopes(envelopes):\n    ...\n',
+    tests: [
+      { args: [[[5, 4], [6, 4], [6, 7], [2, 3]]], expected: 3 },
+      { args: [[[1, 1], [1, 1], [1, 1]]], expected: 1 },
+      { args: [[]], expected: 0 },
+      { args: [[[4, 5], [4, 6], [6, 7], [2, 3], [1, 1]]], expected: 4 },
+      { args: [[[30, 50], [12, 2], [3, 4], [12, 15]]], expected: 3 },
+      { args: [[[2, 100], [3, 200], [4, 300], [5, 500], [5, 400], [5, 250], [6, 370], [6, 360], [7, 380]]], expected: 5 },
+    ],
+    hint: 'Sort so that one dimension is already handled, then the answer is a Longest Increasing Subsequence on the other. The tie-break on equal widths is the whole problem.',
+    approach:
+      'Sorting by width reduces this to a one-dimensional question: among envelopes in width order, find the longest run of strictly increasing heights.\n\nBut equal widths break it. Two envelopes of the same width can never nest, and a naive width sort would happily let their heights form an increasing run. The fix is the trick: sort by width **ascending, height descending**. Now equal widths appear with heights going down, so no two of them can ever be part of the same increasing subsequence — the constraint is enforced by the sort rather than by a check.\n\nAfter that it is exactly LIS, and the `bisect` patience-sorting version gives O(n log n). Note the `tails` array is not a real subsequence; it is only the smallest possible tail for each length, which is all the length needs.',
+    solution:
+      'def max_envelopes(envelopes):\n    order = sorted(envelopes, key=lambda e: (e[0], -e[1]))\n    tails = []\n    for _, height in order:\n        i = bisect.bisect_left(tails, height)\n        if i == len(tails):\n            tails.append(height)\n        else:\n            tails[i] = height\n    return len(tails)\n',
+  },
+
+  // ── arrays-hashing: the array IS the hash table ───────────────────────────
+  {
+    id: 'py-first-missing-positive',
+    track: 'python',
+    title: 'The Smallest Positive That Is Missing',
+    difficulty: 'hard',
+    pattern: 'arrays-hashing',
+    description:
+      'Given `nums`, return the smallest positive integer that does **not** appear in it. Negative numbers, zero and duplicates may all be present.\n\nAim for `O(n)` time and constant extra space — the answer is always between `1` and `len(nums) + 1`.',
+    examples: [
+      'first_missing_positive([1, 2, 0])  ->  3',
+      'first_missing_positive([3, 4, -1, 1])  ->  2',
+      'first_missing_positive([7, 8, 9, 11, 12])  ->  1',
+    ],
+    function_name: 'first_missing_positive',
+    starter_code: 'def first_missing_positive(nums):\n    ...\n',
+    tests: [
+      { args: [[1, 2, 0]], expected: 3 },
+      { args: [[3, 4, -1, 1]], expected: 2 },
+      { args: [[7, 8, 9, 11, 12]], expected: 1 },
+      { args: [[]], expected: 1 },
+      { args: [[1]], expected: 2 },
+      { args: [[2, 2, 2]], expected: 1 },
+      { args: [[1, 1]], expected: 2 },
+    ],
+    hint: 'With n numbers the answer cannot exceed n + 1, so only values in 1..n matter. Put each such value at its own index by swapping, then the first index that disagrees is the answer.',
+    approach:
+      "Constant space rules out a set, so the array has to be the hash table. The observation that makes that possible: with n numbers you can block at most n of the values 1..n, so the answer is somewhere in 1..n+1 and everything outside that range is irrelevant.\n\nSo put value v at index v-1. Walk the array, and while the value at i belongs somewhere else, swap it there. Loop with `while`, not `if` — one swap brings in a new value that may itself be misplaced. Guard the swap with `nums[nums[i] - 1] != nums[i]` rather than an index check: on duplicates the target already holds the right value, and without that guard the two keep swapping forever.\n\nAfter the placement pass, the first index where `nums[i] != i + 1` gives the answer, and if every slot agrees the answer is n + 1. Two passes, no extra memory.",
+    solution:
+      'def first_missing_positive(nums):\n    n = len(nums)\n    for i in range(n):\n        while 1 <= nums[i] <= n and nums[nums[i] - 1] != nums[i]:\n            target = nums[i] - 1\n            nums[i], nums[target] = nums[target], nums[i]\n    for i in range(n):\n        if nums[i] != i + 1:\n            return i + 1\n    return n + 1\n',
+  },
+
+  // ── math-geometry: exact slopes, never floats ─────────────────────────────
+  {
+    id: 'py-max-points-line',
+    track: 'python',
+    title: 'The Busiest Straight Line',
+    difficulty: 'hard',
+    pattern: 'math-geometry',
+    description:
+      'Given `points` on a plane as `[x, y]` pairs, return the greatest number of them that lie on a single straight line.\n\nPoints may be repeated, and a repeated point counts every time it appears.',
+    examples: [
+      'max_points([[1, 1], [2, 2], [3, 3]])  ->  3',
+      'max_points([[1, 1], [3, 2], [5, 3], [4, 1], [2, 3], [1, 4]])  ->  4',
+    ],
+    function_name: 'max_points',
+    starter_code: 'def max_points(points):\n    ...\n',
+    tests: [
+      { args: [[[1, 1], [2, 2], [3, 3]]], expected: 3 },
+      { args: [[[1, 1], [3, 2], [5, 3], [4, 1], [2, 3], [1, 4]]], expected: 4 },
+      { args: [[[1, 1]]], expected: 1 },
+      { args: [[]], expected: 0 },
+      { args: [[[0, 0], [0, 1], [0, 2]]], expected: 3 },
+      { args: [[[1, 1], [1, 1], [2, 2]]], expected: 3 },
+      { args: [[[0, 0], [1, 1], [2, 2], [3, 4], [5, 6]]], expected: 3 },
+    ],
+    hint: 'Fix one point and group the others by the slope to it — the biggest group plus that point is a line. Store the slope as a reduced (dx, dy) pair, never as a float.',
+    approach:
+      "Any line with two or more points contains some point, so fixing each point in turn and grouping the rest by slope finds every line. The largest group plus the fixed point is the answer.\n\nThe part that separates a working solution from a subtly broken one is representing the slope. `dy / dx` is a float, and floats lie: very large coordinates make distinct slopes compare equal, and vertical lines divide by zero. Store `(dx, dy)` divided by their gcd instead — exact, and no special case for vertical.\n\nTwo details finish it. Normalise the sign, or `(1, 2)` and `(-1, -2)` are recorded as different directions along the same line. And count exact duplicates separately, since they sit on every line through the fixed point and have no slope of their own.",
+    solution:
+      'def max_points(points):\n    n = len(points)\n    if n <= 2:\n        return n\n    best = 1\n    for i in range(n):\n        slopes = defaultdict(int)\n        same = 0\n        for j in range(i + 1, n):\n            dx = points[j][0] - points[i][0]\n            dy = points[j][1] - points[i][1]\n            if dx == 0 and dy == 0:\n                same += 1\n                continue\n            g = math.gcd(abs(dx), abs(dy))\n            dx, dy = dx // g, dy // g\n            if dx < 0 or (dx == 0 and dy < 0):\n                dx, dy = -dx, -dy\n            slopes[(dx, dy)] += 1\n        here = same + 1 + (max(slopes.values()) if slopes else 0)\n        best = max(best, here)\n    return best\n',
+  },
 ];

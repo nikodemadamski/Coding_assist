@@ -21,10 +21,12 @@ Full gates (lint + test + build + smoke) before every push, no exceptions.
 
 ## Data layer — the merge pipeline (src/data/)
 
-`questions.js` composes SEED_QUESTIONS (**169**: 117 python / 26 pandas / 26 sql): RAW (inline
-python/pandas/sql + neetcode1–6.js; **neetcode6.js is the hard tier**, 10 questions covering
-graphs ×2 / dp-1d / dp-2d / backtracking / binary-search / tries / intervals / heap / greedy —
-every family that had zero hard problems)
+`questions.js` composes SEED_QUESTIONS (**174**: 122 python / 26 pandas / 26 sql): RAW (inline
+python/pandas/sql + neetcode1–6.js; **neetcode6.js is the hard tier**, 15 questions — graphs ×2,
+dp-1d ×2, and one each for dp-2d / backtracking / binary-search / tries / intervals / heap /
+greedy / trees / stack / arrays-hashing / math-geometry. **22 hard Python problems, up from 7.**
+Note when authoring an approach: a brute force still has to RUN — a permutation brute force over
+an 11-element test case passed but added nine minutes to `npm test`)
 → spread `LEARN[id]` (learn.js: why / insight / constraints / examples)
 → set `unordered` from UNORDERED map (deep|outer — order-insensitive grading)
 → set `complexity` from `COMPLEXITY[id]` (complexity.js) if absent

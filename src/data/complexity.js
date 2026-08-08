@@ -161,4 +161,9 @@ export const COMPLEXITY = {
   'py-word-ladder': 'O(N · L · 26) time, O(N · L) space — BFS on an implicit graph',
   'py-burst-balloons': 'O(n³) time, O(n²) space — interval DP on the last burst',
   'py-candy': 'O(n) time, O(n) space — two sweeps, max of both',
+  'py-binary-tree-cameras': 'O(n) time, O(h) space — greedy DFS with three states',
+  'py-basic-calculator': 'O(n) time, O(n) space — running total with a sign stack',
+  'py-russian-doll-envelopes': 'O(n log n) time, O(n) space — width asc, height desc, then LIS',
+  'py-first-missing-positive': 'O(n) time, O(1) space — cyclic placement in place',
+  'py-max-points-line': 'O(n²) time, O(n) space — reduced-fraction slopes',
 };
