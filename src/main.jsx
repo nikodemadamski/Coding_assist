@@ -1,11 +1,16 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
+import AppErrorBoundary from './components/AppErrorBoundary.jsx';
 import './styles.css';
 
+// The boundary wraps App at the root: with no backend, a throw in render is the
+// difference between "an error" and "the record is unreachable forever".
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <App />
+    <AppErrorBoundary>
+      <App />
+    </AppErrorBoundary>
   </React.StrictMode>
 );
 

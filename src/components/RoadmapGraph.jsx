@@ -15,6 +15,7 @@ import {
   isDue,
   masteryLevel,
   practiceCounts,
+  solvedCount,
   todayStr,
   weakSpots,
 } from '../state/progress.js';
@@ -113,11 +114,13 @@ export default function RoadmapGraph({
     () => todaysMisses(progress).filter((id) => validIds.has(id)).length,
     [progress, validIds]
   );
-  const solvedCount = useMemo(
-    () => questions.filter((q) => isSolved(progress.solved[q.id])).length,
+  // The shared count — see state/progress.js. Equivalent to the inline filter
+  // it replaces, kept in one place so it cannot drift from Stats or the shop.
+  const solveTotal = useMemo(
+    () => solvedCount(progress, questions),
     [questions, progress]
   );
-  const brandNew = solvedCount === 0;
+  const brandNew = solveTotal === 0;
   const nextUp = useMemo(
     () => nextOnPath(questions, (id) => isSolved(progress.solved[id])),
     [questions, progress]
@@ -272,9 +275,9 @@ export default function RoadmapGraph({
             ) : (
               <>
                 <strong>
-                  <CountUp value={solvedCount} />
+                  <CountUp value={solveTotal} />
                 </strong>{' '}
-                solved · <strong>{questions.length - solvedCount}</strong> to go ·{' '}
+                solved · <strong>{questions.length - solveTotal}</strong> to go ·{' '}
                 <strong>{ready.score}</strong>/100 ready
               </>
             )}
@@ -286,7 +289,7 @@ export default function RoadmapGraph({
         {nextUp ? (
           <button className="hero-next" onClick={() => onOpenQuestion(nextUp.id)} ref={nextFieldRef}>
             <span className="hero-next-kicker">
-              {solvedCount === 0 ? 'Start here' : 'Next problem'}
+              {solveTotal === 0 ? 'Start here' : 'Next problem'}
               {pathStep(nextUp.id) && <span className="step-num">{pathStep(nextUp.id)}</span>}
             </span>
             <span className="hero-next-title">{nextUp.title}</span>

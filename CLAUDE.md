@@ -9,9 +9,9 @@ copy text from LeetCode/NeetCode.**
 
 ```bash
 npm run dev / build / lint
-npm test                     # 26 unit suites, incl. run-seed-tests (runs EVERY solution
+npm test                     # 27 unit suites, incl. run-seed-tests (runs EVERY solution
                              # and EVERY alternative approach through real engines)
-# Browser smoke (~395 checks). CDN is blocked in the dev container:
+# Browser smoke (~404 checks). CDN is blocked in the dev container:
 node tests/setup-local-pyodide.mjs         # once per container
 VITE_PYODIDE_BASE=/pyodide/ npm run build
 CHROMIUM_PATH=/opt/pw-browsers/chromium node tests/smoke.mjs
@@ -124,10 +124,27 @@ move). Smoke's `checkRevealSettled` asserts nothing is left transparent.
 ## State (src/state/) — pure modules, all unit-tested
 
 - `storage.js` — localStorage keys: `zoro.progress.v1` (solved/drafts/srs/streak/activity/
-  warmup/mock/notes/bigo), `zoro.customQuestions.v1`, `zoro.backup.v1`, `zoro.ui.v1`
-  (uiPrefs: divider split, editor font), `zoro.theme.v1`, `zoro.onboarded.v1`.
+  warmup/mock/notes/bigo/shop/lessons/quiz), `zoro.customQuestions.v1`, `zoro.backup.v1`,
+  `zoro.ui.v1` (uiPrefs: divider split, editor font), `zoro.theme.v1`, `zoro.onboarded.v1`.
+  **`sanitizeProgress` gates BOTH the load path and import**, and it is not optional: a
+  spread alone (`{...EMPTY_PROGRESS, ...stored}`) lets a field of the WRONG TYPE overwrite
+  its default, and `?? []` downstream only guards null/undefined. One object where `mock`
+  should be an array threw inside render, and since the bad value sat in localStorage every
+  reload came back blank — no server copy, so the record was unreachable without devtools.
+  Every known field is now forced to its declared kind (`FIELD_KINDS`); UNKNOWN fields are
+  deliberately preserved so a newer build's data survives a round-trip through an older one.
+  `parseImport` runs the same gate — `app: 'zoroclaude-dojo'` says where a file came from,
+  not that it is well formed. `importSummary` powers the confirmation Settings shows BEFORE
+  overwriting anything (import is destructive and used to land the instant you picked a
+  file). Pinned by tests/storage-tests.mjs + two smoke checks.
 - `progress.js` — SRS (stages [1,3,7,16,30]), recordSolve (keeps mistakes; first-solve
   `firstSolveMs`), belts, weakSpots (≥2 mistakes), reviewForecast, backupStatus, recordBigO.
+  **`solvedCount(progress, questions)` is the ONE answer to "how many have I solved"** —
+  counted against the bank, never against the record's own keys. The record can hold ids the
+  bank no longer has (a deleted custom question, a seed id renamed later), and this existed
+  five times with two different answers: App/shop filtered, Stats and the Header counted raw
+  keys. Two stale ids showed 17 on home, 19 on Stats, and a belt distance that disagreed on
+  all three surfaces. Header now takes the count as a PROP rather than computing a sixth.
 - `readiness.js` — 0-100 score: coverage .3 / mastery .25 / mocks .25 / pace .2, plus a
   Big-O dimension at 10% once ≥15 answers (others scale ×0.9). Pace targets 15/25/40 min,
   median firstSolveMs, ≥3 samples per difficulty.

@@ -135,6 +135,19 @@ export function isSolved(entry) {
   return !!entry && (entry.solves || 0) > 0;
 }
 
+// How many questions you have actually solved. **The record is not the
+// authority on its own size** — it can hold ids the bank no longer has (a
+// deleted custom question, a seed id renamed in a later release), and those
+// must not be counted. This existed three times with two different answers:
+// App and shop filtered against the bank, Stats counted raw keys, so a record
+// with two stale ids showed 17 on the home screen, 19 on Stats, and a belt
+// distance that disagreed on all three surfaces. One function now, so a
+// disagreement is impossible rather than merely unlikely.
+export function solvedCount(progress, questions) {
+  const solved = progress?.solved ?? {};
+  return questions.filter((q) => isSolved(solved[q.id])).length;
+}
+
 export function dueQuestionIds(progress, validIds, today = todayStr()) {
   return Object.entries(progress.srs)
     .filter(([id, entry]) => validIds.has(id) && isDue(entry, today))

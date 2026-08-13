@@ -16,6 +16,7 @@ export const EMPTY_PROGRESS = {
   bigo: { right: 0, wrong: 0 }, // after-solve complexity check-in record
   quiz: null, // pattern-recognition record — see state/patternQuiz.js (quizRecord)
   lessons: {}, // lessonId -> { completedAt, runs, missedIdx, srs: { stage, nextDue } }
+  shop: {}, // { spent, owned: [itemId], equipped: { slot -> itemId } } — see state/shop.js
 };
 
 function safeParse(raw, fallback) {
@@ -27,15 +28,52 @@ function safeParse(raw, fallback) {
   }
 }
 
+// The shape every field must have. A spread alone is NOT enough protection:
+// `{...EMPTY_PROGRESS, ...stored}` lets a field of the WRONG TYPE overwrite the
+// correct default rather than fall back to it, and downstream `?? []` only
+// guards null/undefined. One object where `mock` should be an array used to
+// throw inside render — and with no server copy and the bad value sitting in
+// localStorage, every reload re-read it. The app was unrecoverable without
+// devtools. So every field is checked by kind, and anything that fails is
+// replaced with its default instead of being trusted.
+const PLAIN_OBJECT = 'object';
+const FIELD_KINDS = {
+  solved: PLAIN_OBJECT,
+  drafts: PLAIN_OBJECT,
+  srs: PLAIN_OBJECT,
+  streak: PLAIN_OBJECT,
+  activity: PLAIN_OBJECT,
+  warmup: PLAIN_OBJECT,
+  notes: PLAIN_OBJECT,
+  bigo: PLAIN_OBJECT,
+  lessons: PLAIN_OBJECT,
+  shop: PLAIN_OBJECT,
+  mock: 'array',
+  quiz: 'any', // legitimately null until the first drill round
+};
+
+const isPlainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+
+// Repair a parsed record into something every reader can rely on. Unknown keys
+// are kept (a newer version's field must survive a round-trip through an older
+// build), but every KNOWN key is forced to its declared kind.
+export function sanitizeProgress(raw) {
+  const base = structuredClone(EMPTY_PROGRESS);
+  if (!isPlainObject(raw)) return base;
+
+  const out = { ...base, ...raw };
+  for (const [key, kind] of Object.entries(FIELD_KINDS)) {
+    if (kind === 'any') continue;
+    const ok = kind === 'array' ? Array.isArray(out[key]) : isPlainObject(out[key]);
+    if (!ok) out[key] = key in base ? structuredClone(base[key]) : kind === 'array' ? [] : {};
+  }
+  // streak carries required members, so merge rather than only type-check it.
+  out.streak = { ...EMPTY_PROGRESS.streak, ...out.streak };
+  return out;
+}
+
 export function loadProgress() {
-  const p = safeParse(localStorage.getItem(PROGRESS_KEY), null);
-  if (!p) return structuredClone(EMPTY_PROGRESS);
-  return {
-    ...structuredClone(EMPTY_PROGRESS),
-    ...p,
-    streak: { ...EMPTY_PROGRESS.streak, ...(p.streak || {}) },
-    activity: p.activity || {},
-  };
+  return sanitizeProgress(safeParse(localStorage.getItem(PROGRESS_KEY), null));
 }
 
 export function saveProgress(progress) {
@@ -112,12 +150,26 @@ export function parseImport(jsonText) {
   if (!data || data.app !== 'zoroclaude-dojo' || !data.progress) {
     throw new Error('That file does not look like a ZoroClaude Dojo export.');
   }
-  const progress = {
-    ...structuredClone(EMPTY_PROGRESS),
-    ...data.progress,
-    streak: { ...EMPTY_PROGRESS.streak, ...(data.progress.streak || {}) },
-    activity: data.progress.activity || {},
-  };
+  // An export is the ONE piece of data a user hands us from outside, and
+  // restoring it replaces their whole record. `app: 'zoroclaude-dojo'` says
+  // where a file came from, not that it is well formed — a file from a newer
+  // build, or one edited by hand, passes that check and can still carry a
+  // field of the wrong type. Sanitize it exactly like a stored record.
+  const progress = sanitizeProgress(data.progress);
   const customQuestions = Array.isArray(data.customQuestions) ? data.customQuestions : [];
   return { progress, customQuestions };
+}
+
+// What restoring this file would do, so Settings can say it out loud BEFORE
+// overwriting anything. Import is destructive and was silent; a count of what
+// arrives is the difference between a restore and an accident.
+export function importSummary(progress, customQuestions = []) {
+  const p = sanitizeProgress(progress);
+  const solves = Object.values(p.solved).filter((e) => (e?.solves || 0) > 0).length;
+  return {
+    solves,
+    lessons: Object.values(p.lessons).filter((l) => l?.completedAt).length,
+    mocks: p.mock.length,
+    customQuestions: customQuestions.length,
+  };
 }

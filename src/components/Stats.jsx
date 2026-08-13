@@ -8,6 +8,7 @@ import {
   isSolved,
   masteryLevel,
   reviewForecast,
+  solvedCount,
 } from '../state/progress.js';
 import { summarizeMocks, formatDuration } from '../state/mockSession.js';
 import { readiness, trackFitness, PACE_MIN_SAMPLES } from '../state/readiness.js';
@@ -175,9 +176,12 @@ function Forecast({ forecast }) {
 }
 
 export default function Stats({ questions, progress, backupInfo = null, onBackupNow = null }) {
-  const solvedCount = Object.values(progress.solved).filter(isSolved).length;
+  // Counted against the bank, not against the record's own keys — see
+  // state/progress.js solvedCount. This page used to print a headline that
+  // disagreed with its own breakdown pills directly beneath it.
+  const solved = solvedCount(progress, questions);
   const total = questions.length;
-  const belt = beltFor(solvedCount);
+  const belt = beltFor(solved);
   const streak = currentStreak(progress.streak);
   const validIds = useMemo(() => new Set(questions.map((q) => q.id)), [questions]);
   const dueCount = dueQuestionIds(progress, validIds).length;
@@ -223,7 +227,7 @@ export default function Stats({ questions, progress, backupInfo = null, onBackup
       .slice(0, 8);
   }, [questions, progress]);
 
-  const pct = total ? Math.round((solvedCount / total) * 100) : 0;
+  const pct = total ? Math.round((solved / total) * 100) : 0;
   const revealRef = useReveal('stats');
 
   return (
@@ -238,7 +242,7 @@ export default function Stats({ questions, progress, backupInfo = null, onBackup
       {backupInfo?.nudge && onBackupNow && (
         <div className="backup-nudge" role="status" data-reveal>
           <span>
-            {solvedCount} solves live only in this browser
+            {solved} solves live only in this browser
             {backupInfo.daysSince != null
               ? ` — last backup was ${backupInfo.daysSince} days ago.`
               : ' — never backed up.'}{' '}
@@ -262,7 +266,7 @@ export default function Stats({ questions, progress, backupInfo = null, onBackup
           <h3 className="bento-title">The path</h3>
           <div className="journey-headline">
             <span className="journey-count">
-              {solvedCount}
+              {solved}
               <span className="journey-of"> / {total}</span>
             </span>
             <span className="journey-sub">solved · {pct}% of the path</span>
@@ -275,7 +279,7 @@ export default function Stats({ questions, progress, backupInfo = null, onBackup
               <span className="belt-strip-fill" style={{ '--fill': belt.progress, background: belt.color }} />
             </span>
             <span className="journey-belt-next">
-              {belt.next ? `${belt.next.threshold - solvedCount} to ${belt.next.name}` : 'max rank'}
+              {belt.next ? `${belt.next.threshold - solved} to ${belt.next.name}` : 'max rank'}
             </span>
           </div>
 

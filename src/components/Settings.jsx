@@ -1,12 +1,16 @@
 import { useRef, useState } from 'react';
 import { useFocusTrap } from './useFocusTrap.js';
-import { parseImport, downloadExport, loadLastBackup } from '../state/storage.js';
+import { parseImport, downloadExport, loadLastBackup, importSummary } from '../state/storage.js';
 import { loadUiPrefs, saveUiPrefs, NAME_MAX } from '../state/uiPrefs.js';
 
 export default function Settings({ progress, customQuestions, onImport, onBackedUp, onClose }) {
   const [message, setMessage] = useState('');
   const [name, setName] = useState(() => loadUiPrefs().name);
   const [lastBackup, setLastBackup] = useState(loadLastBackup);
+  const [pending, setPending] = useState(null); // a parsed file awaiting confirmation
+  // What the import would overwrite. Stated next to what arrives, because
+  // "restore my backup" and "wipe six weeks of work" look identical otherwise.
+  const currentSummary = importSummary(progress, customQuestions);
   const fileRef = useRef(null);
   const trapRef = useRef(null);
   useFocusTrap(trapRef, { onEscape: onClose });
@@ -18,18 +22,29 @@ export default function Settings({ progress, customQuestions, onImport, onBacked
     setMessage('Exported. Keep that file safe — it is your full training record.');
   }
 
+  // Importing REPLACES the whole record, and it used to happen the instant you
+  // picked a file — no preview, no confirmation, no undo. Now the file is
+  // parsed and held, and what it contains is stated against what it would
+  // overwrite, so a restore can't be an accident.
   async function handleImportFile(e) {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
       const data = parseImport(await file.text());
-      onImport(data);
-      setMessage('Import complete — progress and imported questions restored.');
+      setPending({ data, summary: importSummary(data.progress, data.customQuestions) });
+      setMessage('');
     } catch (err) {
+      setPending(null);
       setMessage(`Import failed: ${err.message}`);
     } finally {
       e.target.value = '';
     }
+  }
+
+  function confirmImport() {
+    onImport(pending.data);
+    setPending(null);
+    setMessage('Import complete — progress and imported questions restored.');
   }
 
   return (
@@ -80,6 +95,47 @@ export default function Settings({ progress, customQuestions, onImport, onBacked
             onChange={handleImportFile}
           />
         </div>
+
+        {pending && (
+          <div className="import-confirm" role="alertdialog" aria-label="Confirm import">
+            <p className="import-confirm-head">
+              This replaces everything in this browser. It cannot be undone.
+            </p>
+            <ul className="import-confirm-list">
+              <li>
+                <strong>{pending.summary.solves}</strong> solved question
+                {pending.summary.solves === 1 ? '' : 's'} in the file
+                <span className="import-confirm-now">
+                  you have {currentSummary.solves} now
+                </span>
+              </li>
+              <li>
+                <strong>{pending.summary.lessons}</strong> lesson
+                {pending.summary.lessons === 1 ? '' : 's'} finished
+                <span className="import-confirm-now">you have {currentSummary.lessons} now</span>
+              </li>
+              <li>
+                <strong>{pending.summary.mocks}</strong> mock interview
+                {pending.summary.mocks === 1 ? '' : 's'}
+                <span className="import-confirm-now">you have {currentSummary.mocks} now</span>
+              </li>
+            </ul>
+            {pending.summary.solves < currentSummary.solves && (
+              <p className="import-confirm-warn">
+                That file has fewer solves than you do — check it is the one you meant before
+                replacing your record.
+              </p>
+            )}
+            <div className="modal-actions" style={{ justifyContent: 'flex-start' }}>
+              <button className="btn btn-danger" onClick={confirmImport}>
+                Replace my record
+              </button>
+              <button className="btn-plain" onClick={() => setPending(null)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
 
         {message && (
           <p className="note" role="status" style={{ marginTop: 14, color: 'var(--jade)' }}>

@@ -1787,12 +1787,85 @@ try {
     await page.evaluate(() => document.querySelector('.modal').contains(document.activeElement)),
     'Tab cycles inside the dialog — focus never escapes behind it'
   );
+  // Importing REPLACES the whole record, so it states what arrives against what
+  // it would overwrite and waits for a second, explicit click. It used to land
+  // the instant a file was picked, with no preview and no undo.
+  {
+    const before = await page.evaluate(() => localStorage.getItem('zoro.progress.v1'));
+    const foreign = JSON.stringify({
+      app: 'zoroclaude-dojo',
+      version: 1,
+      progress: { solved: { 'py-two-sum': { solves: 1 } }, mock: { runs: 3 } }, // note: wrong-typed `mock`
+      customQuestions: [],
+    });
+    await page.setInputFiles('.modal input[type=file]', {
+      name: 'backup.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(foreign),
+    });
+    await page.locator('.import-confirm').waitFor({ timeout: 5000 });
+    check(true, 'picking an import file asks before it overwrites anything');
+    check(
+      (await page.evaluate(() => localStorage.getItem('zoro.progress.v1'))) === before,
+      '  ↳ and nothing is written until you confirm'
+    );
+    check(
+      (await page.locator('.import-confirm').innerText()).includes('cannot be undone'),
+      '  ↳ and it says the change is irreversible'
+    );
+    await page.locator('.import-confirm .btn-plain', { hasText: 'Cancel' }).click();
+    check(
+      (await page.evaluate(() => localStorage.getItem('zoro.progress.v1'))) === before,
+      'cancelling an import leaves the record untouched'
+    );
+  }
+
   await page.keyboard.press('Escape');
   check((await page.locator('.modal').count()) === 0, 'Esc closes the dialog');
   check(
     await page.evaluate(() => document.activeElement?.getAttribute('aria-label') === 'Settings'),
     'closing returns focus to the button that opened it'
   );
+
+  // ---- a malformed record must not brick the app ----
+  // The whole training history lives in one localStorage key with no server
+  // copy. A field of the wrong type used to throw inside render, and because
+  // the bad value stayed on disk, every reload came back blank — the record was
+  // unreachable without devtools. Sanitising on load is what stops that.
+  //
+  // This runs in its OWN page: it has to reload twice, and a reload restarts the
+  // home map's entrance animation, which the topic-clicking further down is
+  // timing-sensitive to (a drifting node is not something Playwright will
+  // click — see clickTopic). A corruption check should not be able to perturb
+  // the sequence it happens to sit next to.
+  {
+    const poisoned = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    await poisoned.goto(BASE);
+    await poisoned.waitForTimeout(1500);
+    await poisoned.evaluate(() => {
+      localStorage.setItem('zoro.onboarded.v1', '1');
+      localStorage.setItem(
+        'zoro.progress.v1',
+        JSON.stringify({
+          solved: [], // documented as an object
+          mock: { runs: 3 }, // documented as an array; every reader calls .filter
+          srs: 'nonsense',
+          streak: 42,
+        })
+      );
+    });
+    await poisoned.reload();
+    await poisoned.locator('.hero-copy, .roadmap-home').first().waitFor({ timeout: 20000 });
+    check(
+      (await poisoned.locator('body').innerText()).length > 200,
+      'a record with wrong-typed fields still boots the app instead of blanking it'
+    );
+    check(
+      (await poisoned.locator('.crash').count()) === 0,
+      '  ↳ and it does so without hitting the crash screen'
+    );
+    await poisoned.close();
+  }
 
   // ---- weak-spot chips on the home map ----
   await page.evaluate(() => {

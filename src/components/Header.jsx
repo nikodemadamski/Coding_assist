@@ -14,7 +14,7 @@ import {
   ChevronDown,
   Shirt,
 } from 'lucide-react';
-import { beltFor, currentStreak, isSolved } from '../state/progress.js';
+import { beltFor, currentStreak } from '../state/progress.js';
 import DojoLogo from './header/DojoLogo.jsx';
 import NavButton from './header/NavButton.jsx';
 import { StreakChip, BeltChip, CoinChip, useTactile } from './header/HeaderChips.jsx';
@@ -29,6 +29,10 @@ const LIBRARY = [
 
 export default function Header({
   progress,
+  // Counted once, in App, against the question bank — see progress.solvedCount.
+  // Counting `progress.solved`'s own keys here made the belt chip disagree with
+  // Stats and the shop whenever the record held an id the bank no longer has.
+  solvedCount = 0,
   coins = 0,
   onHome,
   onSearch,
@@ -44,7 +48,6 @@ export default function Header({
   backupNudge = false,
   view = 'home',
 }) {
-  const solvedCount = Object.values(progress.solved).filter(isSolved).length;
   const belt = beltFor(solvedCount);
   const streak = currentStreak(progress.streak);
   const reduced = useReducedMotion();

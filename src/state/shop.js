@@ -14,7 +14,7 @@
 // and you can't wear a rank you haven't paid for either.
 //
 // Everything here is pure. tests/shop-tests.mjs holds all of it.
-import { BELTS, beltFor, isSolved } from './progress.js';
+import { BELTS, beltFor, solvedCount } from './progress.js';
 
 // What a unit of training is worth. Deliberately flat and legible — a learner
 // should be able to predict their balance, not reverse-engineer it.
@@ -62,11 +62,7 @@ export const itemById = (id) => ITEMS.find((i) => i.id === id) ?? null;
 // Where every coin came from, so the shop can show its working. A learner who
 // can't see why they have 240 coins will assume the number is arbitrary.
 export function earnBreakdown(progress = {}, questions = []) {
-  const solved = progress.solved ?? {};
-  const validIds = new Set(questions.map((q) => q.id));
-  const solves = Object.entries(solved).filter(
-    ([id, e]) => validIds.has(id) && isSolved(e)
-  ).length;
+  const solves = solvedCount(progress, questions);
   // SRS stage counts the intervals you've climbed — a question reviewed four
   // times is worth more than one solved once and never seen again.
   const reviews = Object.values(progress.srs ?? {}).reduce((n, s) => n + (s?.stage ?? 0), 0);
@@ -101,11 +97,7 @@ export const owns = (progress, id) => ownedIds(progress).includes(id);
 
 // Which belt you're standing on, as an index into BELTS.
 export function beltIndex(progress = {}, questions = []) {
-  const validIds = new Set(questions.map((q) => q.id));
-  const solves = Object.entries(progress.solved ?? {}).filter(
-    ([id, e]) => validIds.has(id) && isSolved(e)
-  ).length;
-  const name = beltFor(solves).name;
+  const name = beltFor(solvedCount(progress, questions)).name;
   return Math.max(0, BELTS.findIndex((b) => b.name === name));
 }
 

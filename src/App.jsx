@@ -43,6 +43,7 @@ import {
   currentStreak,
   backupStatus,
   recordBigO,
+  solvedCount,
 } from './state/progress.js';
 import { nextOnPath, neighborOnPath } from './data/roadmap.js';
 import { coinBalance } from './state/shop.js';
@@ -126,15 +127,15 @@ export default function App() {
   // Celebrate belt promotions and streak milestones the moment they happen.
   const [celebration, setCelebration] = useState(null);
   const milestoneRef = useRef(null);
-  const solvedCount = useMemo(
-    () => allQuestions.filter((q) => isSolved(progress.solved[q.id])).length,
+  const solveTotal = useMemo(
+    () => solvedCount(progress, allQuestions),
     [allQuestions, progress]
   );
   const streakVal = currentStreak(progress.streak);
   const coins = useMemo(() => coinBalance(progress, allQuestions), [progress, allQuestions]);
   // Nudge for a fresh export when progress is only in this browser's storage.
   const [lastBackup, setLastBackup] = useState(loadLastBackup);
-  const backupInfo = useMemo(() => backupStatus(lastBackup, solvedCount), [lastBackup, solvedCount]);
+  const backupInfo = useMemo(() => backupStatus(lastBackup, solveTotal), [lastBackup, solveTotal]);
   const handleBackupNow = useCallback(
     () => setLastBackup(downloadExport(progress, customQuestions)),
     [progress, customQuestions]
@@ -152,7 +153,7 @@ export default function App() {
     return { done, total, due, nextTitle: up?.title ?? '' };
   }, [progress]);
   useEffect(() => {
-    const cur = { solvedCount, streak: streakVal };
+    const cur = { solvedCount: solveTotal, streak: streakVal };
     if (milestoneRef.current === null) {
       milestoneRef.current = cur; // first render — establish the baseline, no fanfare
       return;
@@ -163,7 +164,7 @@ export default function App() {
       setCelebration(cel);
       setMood('cheer'); // a belt or a streak milestone — he celebrates with you
     }
-  }, [solvedCount, streakVal]);
+  }, [solveTotal, streakVal]);
 
   const currentQuestion =
     view.name === 'problem' ? allQuestions.find((q) => q.id === view.id) : null;
@@ -258,6 +259,7 @@ export default function App() {
     <div className="app">
       <Header
         progress={progress}
+        solvedCount={solveTotal}
         coins={coins}
         onHome={() => setView({ name: 'home' })}
         onSearch={() => setSearchOpen(true)}

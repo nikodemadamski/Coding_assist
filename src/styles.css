@@ -5365,6 +5365,118 @@ details.hint[open] summary {
   text-decoration: underline;
 }
 
+/* The one button shape reserved for an action that destroys data. Crimson is
+   the CTA colour everywhere else, so a destructive button earns it only by
+   being genuinely irreversible — replacing the record, erasing it. */
+.btn-danger {
+  background: var(--crimson);
+  border: 1px solid var(--crimson);
+  color: #fff;
+  cursor: pointer;
+  border-radius: var(--r-sm);
+  padding: 8px 14px;
+  font-size: var(--t-sm);
+  font-weight: 600;
+}
+.btn-danger:hover {
+  background: var(--crimson-bright);
+  border-color: var(--crimson-bright);
+}
+
+/* ── import confirmation ────────────────────────────────────────────────── */
+/* Restoring a file overwrites everything, so what arrives is stated against
+   what it would replace before anything is touched. */
+.import-confirm {
+  margin-top: var(--s-4);
+  padding: var(--s-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--panel-2);
+}
+.import-confirm-head {
+  margin: 0 0 var(--s-3);
+  font-weight: 600;
+  color: var(--text);
+}
+.import-confirm-list {
+  margin: 0 0 var(--s-3);
+  padding-left: var(--s-4);
+  font-size: var(--t-sm);
+  color: var(--text);
+}
+.import-confirm-list li {
+  margin-bottom: 4px;
+}
+.import-confirm-now {
+  color: var(--text-dim);
+  margin-left: var(--s-2);
+}
+.import-confirm-warn {
+  margin: 0 0 var(--s-3);
+  font-size: var(--t-sm);
+  color: var(--gold);
+  max-width: var(--measure);
+}
+
+/* ── the crash screen ───────────────────────────────────────────────────── */
+/* Rendered by AppErrorBoundary when the app throws. It has one job before it
+   has any other: get the record out of the browser. */
+.crash {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-6);
+  background: var(--ink);
+  color: var(--text);
+}
+.crash-inner {
+  max-width: 560px;
+  width: 100%;
+}
+.crash h1 {
+  margin: 0 0 var(--s-3);
+}
+.crash-lede {
+  margin: 0 0 var(--s-5);
+  color: var(--text-dim);
+  max-width: var(--measure);
+}
+.crash-actions {
+  display: flex;
+  gap: var(--s-3);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.crash-detail {
+  margin-top: var(--s-5);
+  font-size: var(--t-sm);
+  color: var(--text-dim);
+}
+.crash-detail summary {
+  cursor: pointer;
+}
+.crash-detail pre {
+  margin-top: var(--s-2);
+  padding: var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--panel);
+  overflow-x: auto;
+  font-size: var(--t-micro);
+}
+.crash-reset {
+  margin-top: var(--s-6);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--line);
+}
+.crash-warn {
+  margin: 0 0 var(--s-3);
+  color: var(--gold);
+  font-size: var(--t-sm);
+  max-width: var(--measure);
+}
+
 /* Guidance sits below the question proper, behind a quiet divider. */
 .pv-extras {
   margin-top: 22px;
