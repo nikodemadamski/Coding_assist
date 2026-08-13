@@ -465,10 +465,17 @@ button {
   font-size: var(--t-sm);
 }
 
+/* A selected filter is STATE, not a call to action. Crimson is reserved for the
+   one thing the page wants you to press (DESIGN.md), and Browse was spending it
+   on three chips at once next to a crimson "Start review" — four reds competing
+   on one screen, none of them winning. Selection now reads as a filled chip in
+   the ink/text pair, which is louder against the unselected chips than the tint
+   ever was, and gives the CTA its colour back. */
 .chip.active {
-  border-color: var(--crimson);
-  color: var(--text);
-  background: color-mix(in srgb, var(--crimson) 14%, var(--panel));
+  border-color: var(--text);
+  background: var(--text);
+  color: var(--ink);
+  font-weight: 600;
 }
 
 .q-list {
@@ -1958,6 +1965,24 @@ details.hint[open] summary {
 .ready-part-cap {
   color: var(--gold);
   font-size: var(--t-micro);
+}
+
+/* An escape hatch from the fixed path order. Deliberately the quietest control
+   in the hero — it sits under the one loud thing and must never compete with
+   it; you should find it when you look for it, not before. */
+.hero-skip {
+  margin-top: var(--s-2);
+  align-self: start;
+  background: none;
+  border: none;
+  padding: 6px 2px;
+  color: var(--text-dim);
+  font-size: var(--t-sm);
+  cursor: pointer;
+}
+.hero-skip:hover {
+  color: var(--text);
+  text-decoration: underline;
 }
 
 /* ── the topic rail (phones) ─────────────────────────────────────────────── */
@@ -9289,6 +9314,11 @@ p,
 }
 
 /* ── a row you can read at a glance ─────────────────────────────────────── */
+/* The slot is always reserved so titles stay aligned, but an UNSOLVED row draws
+   nothing in it. It used to render an 18px bordered circle with transparent
+   content — indistinguishable from an unchecked checkbox, on 174 rows that are
+   not selectable. Absence of a tick already says "not done"; a hollow control
+   invites a click that does something else. */
 .q-mark {
   flex: none;
   display: grid;
@@ -9296,7 +9326,6 @@ p,
   width: 18px;
   height: 18px;
   border-radius: var(--r-full);
-  border: 1.5px solid color-mix(in srgb, var(--text-dim) 40%, transparent);
   font-size: var(--t-tiny);
   font-weight: 700;
   line-height: 1;

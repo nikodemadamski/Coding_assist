@@ -3,6 +3,7 @@ import {
   isSolved,
   masteryLevel,
   practiceCounts,
+  solvedCount,
   todayStr,
 } from '../state/progress.js';
 import { todaysMisses, isGoalMetToday } from '../state/activity.js';
@@ -13,6 +14,10 @@ import { Search, X } from 'lucide-react';
 
 const TRACKS = ['all', 'python', 'pandas', 'sql'];
 const DIFFICULTIES = ['all', 'easy', 'medium', 'hard'];
+// Three chips reading "all" sat on one screen — one per filter row — and none
+// of them said what they were all OF. The value stays 'all'; only the label
+// tells you which axis you are clearing.
+const CHIP_LABEL = { track: { all: 'all tracks' }, difficulty: { all: 'any level' } };
 
 const MASTERY_LABEL = {
   new: 'new',
@@ -83,10 +88,8 @@ export default function Picker({
   }, [focusCategory]);
 
   const counts = useMemo(() => practiceCounts(progress, questions, today), [progress, questions, today]);
-  const solvedCount = useMemo(
-    () => questions.filter((q) => isSolved(progress.solved[q.id])).length,
-    [questions, progress]
-  );
+  // The shared count — see state/progress.js.
+  const solveTotal = useMemo(() => solvedCount(progress, questions), [questions, progress]);
   const validIds = useMemo(() => new Set(questions.map((q) => q.id)), [questions]);
   const missCount = useMemo(
     () => todaysMisses(progress).filter((id) => validIds.has(id)).length,
@@ -99,7 +102,7 @@ export default function Picker({
     () => nextOnPath(questions, (id) => isSolved(progress.solved[id])),
     [questions, progress]
   );
-  const brandNew = solvedCount === 0;
+  const brandNew = solveTotal === 0;
 
   const filters = { track, difficulty, status, query };
   const filtered = useMemo(
@@ -160,7 +163,7 @@ export default function Picker({
         <div className="today-head">
           <h2>Today&apos;s practice</h2>
           <span className="today-progress">
-            step {Math.min(solvedCount + 1, questions.length)} of {questions.length}
+            {solveTotal} of {questions.length} solved
           </span>
         </div>
         <p className="today-line">
@@ -274,7 +277,7 @@ export default function Picker({
               onClick={() => setTrack(t)}
               aria-pressed={track === t}
             >
-              {t}
+              {CHIP_LABEL.track[t] ?? t}
             </button>
           ))}
           <span className="bank-gap" />
@@ -285,7 +288,7 @@ export default function Picker({
               onClick={() => setDifficulty(d)}
               aria-pressed={difficulty === d}
             >
-              {d}
+              {CHIP_LABEL.difficulty[d] ?? d}
             </button>
           ))}
           {narrowed && (
@@ -303,7 +306,7 @@ export default function Picker({
         </span>
         {!nothingDue && (
           <span className="count bank-head-note">
-            free practice doesn&apos;t enforce the review gate
+browse anything — reviews only gate the Start review button
           </span>
         )}
       </h2>

@@ -44,6 +44,7 @@ import {
   backupStatus,
   recordBigO,
   solvedCount,
+  skipQuestion,
 } from './state/progress.js';
 import { nextOnPath, neighborOnPath } from './data/roadmap.js';
 import { coinBalance } from './state/shop.js';
@@ -250,6 +251,12 @@ export default function App() {
     setCustomQuestions((qs) => [...qs, ...questions]);
   }, []);
 
+  // "I already know this one" — see progress.skipQuestion. Deliberately not a
+  // solve: it records nothing about ability and pays nothing.
+  const handleSkip = useCallback((questionId) => {
+    setProgress((p) => skipQuestion(p, questionId));
+  }, []);
+
   const handleRestore = useCallback(({ progress: p, customQuestions: qs }) => {
     setProgress(p);
     setCustomQuestions(qs);
@@ -289,6 +296,7 @@ export default function App() {
             onBrowse={(key) => setView({ name: 'browse', focusCategory: key })}
             onStats={() => setView({ name: 'stats' })}
             onLearn={() => setView({ name: 'learn' })}
+            onSkip={handleSkip}
             lessonInfo={lessonInfo}
           />
         )}

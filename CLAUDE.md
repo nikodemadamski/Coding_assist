@@ -139,6 +139,13 @@ move). Smoke's `checkRevealSettled` asserts nothing is left transparent.
   file). Pinned by tests/storage-tests.mjs + two smoke checks.
 - `progress.js` — SRS (stages [1,3,7,16,30]), recordSolve (keeps mistakes; first-solve
   `firstSolveMs`), belts, weakSpots (≥2 mistakes), reviewForecast, backupStatus, recordBigO.
+  **`skipQuestion` / `isSkipped` / `isSettled`** — "I already know this one". The path is a
+  fixed order, right for someone starting at the beginning and wrong for everyone else: solve
+  Two Sum first and the hero offered Reverse a string forever. A skip records NOTHING about
+  ability — no solve, no coins, no SRS entry, no effect on `solvedCount` — it only removes the
+  question from `newQuestionIds`, so the hero and the practice session agree on what "next"
+  means while DUE REVIEWS stay untouched. It stays in Browse, so solving it later works
+  normally and does count. `isSettled` = solved OR skipped.
   **`solvedCount(progress, questions)` is the ONE answer to "how many have I solved"** —
   counted against the bank, never against the record's own keys. The record can hold ids the
   bank no longer has (a deleted custom question, a seed id renamed later), and this existed

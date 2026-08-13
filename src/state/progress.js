@@ -154,9 +154,32 @@ export function dueQuestionIds(progress, validIds, today = todayStr()) {
     .map(([id]) => id);
 }
 
+// "I already know this one." The path is a fixed order, which is right for
+// someone starting at the beginning and wrong for everyone else: solve Two Sum
+// and Group Anagrams first and the home screen still offers you Reverse a
+// string, forever, with no way to say otherwise. Skipping records nothing about
+// your ability — it is not a solve, it earns no coins and no review — it only
+// stops a question being OFFERED as the next new one. It still appears in
+// Browse and is still solvable, so the decision is reversible by just doing it.
+export function isSkipped(progress, id) {
+  return !!progress?.skipped?.[id];
+}
+
+export function skipQuestion(progress, questionId) {
+  return { ...progress, skipped: { ...(progress.skipped ?? {}), [questionId]: true } };
+}
+
+// Solved OR skipped — "do not offer me this as something new".
+export function isSettled(progress, id) {
+  return isSolved(progress.solved?.[id]) || isSkipped(progress, id);
+}
+
 // Questions never solved yet — the pool that unlocks once reviews are cleared.
+// Skipped ones are excluded so the hero and the practice session agree about
+// what "next" means; DUE REVIEWS are untouched, because a question you chose to
+// solve is one you chose to keep.
 export function newQuestionIds(progress, questions) {
-  return questions.filter((q) => !isSolved(progress.solved[q.id])).map((q) => q.id);
+  return questions.filter((q) => !isSettled(progress, q.id)).map((q) => q.id);
 }
 
 // ---- deterministic shuffle (so a practice session has a stable random order) ----

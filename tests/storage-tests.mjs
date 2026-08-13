@@ -3,7 +3,10 @@
 //   1. a malformed record can never reach the app, and
 //   2. counting solves gives ONE answer, whoever asks.
 import { sanitizeProgress, parseImport, exportData, importSummary, EMPTY_PROGRESS } from '../src/state/storage.js';
-import { solvedCount, beltFor, BELTS } from '../src/state/progress.js';
+import {
+  solvedCount, beltFor, BELTS, skipQuestion, isSkipped, isSettled,
+  newQuestionIds, isSolved, recordSolve,
+} from '../src/state/progress.js';
 import { coinBalance, beltIndex } from '../src/state/shop.js';
 
 let pass = 0;
@@ -136,6 +139,30 @@ console.log('\nOne answer for "how many have I solved":');
   check(coins < coinsIfStaleCounted, 'coins are not paid for questions that no longer exist');
   check(solvedCount({}, questions) === 0, 'an empty record counts zero without throwing');
   check(solvedCount({ solved: null }, questions) === 0, 'a null solved map counts zero without throwing');
+}
+
+console.log('\n"I already know this one":');
+
+// Skipping must move the path along WITHOUT ever looking like an achievement.
+{
+  const qs = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+  const p0 = { solved: {}, srs: {}, skipped: {}, streak: { count: 0, lastActiveDate: null } };
+  const p1 = skipQuestion(p0, 'a');
+  check(isSkipped(p1, 'a'), 'a skipped question is marked skipped');
+  check(!isSolved(p1.solved?.a), '  ↳ but it is NOT solved');
+  check(solvedCount(p1, qs) === 0, '  ↳ it does not raise the solve count');
+  check(coinBalance(p1, qs) === 0, '  ↳ and it pays no coins');
+  check(!p1.srs?.a, '  ↳ and it schedules no review');
+  check(isSettled(p1, 'a') && !isSettled(p1, 'b'), 'settled means solved OR skipped');
+  check(
+    newQuestionIds(p1, qs).join(',') === 'b,c',
+    'a skipped question is no longer offered as the next new one'
+  );
+  check(p0.skipped.a === undefined, 'skipping does not mutate the record it was given');
+  // Reversible: actually solving it later works normally and DOES count.
+  const p2 = recordSolve(p1, 'a', new Date());
+  check(solvedCount(p2, qs) === 1, 'solving a skipped question later still counts');
+  check(!!p2.srs.a, '  ↳ and schedules its first review');
 }
 
 console.log(`\n${pass} passed, ${fail} failed.`);

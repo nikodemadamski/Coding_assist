@@ -22,7 +22,7 @@ check(
   "today's solves take priority over the time of day"
 );
 check(
-  greeting(20, 'Nick', { streak: 12 }) === 'Day 12, Nick. Keep it.',
+  greeting(20, 'Nick', { streak: 12 }) === 'Day 12, Nick. Keep it going.',
   'a live streak is worth saying out loud'
 );
 check(

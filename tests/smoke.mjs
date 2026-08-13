@@ -79,12 +79,25 @@ const resultText = (page) => page.locator('.pane-result').innerText();
 // The home map breathes at rest and pauses the moment the pointer is on it, so
 // its topic nodes are only a stable click target once hovered. Hover first
 // (force skips the very stability check we are about to satisfy), then click.
+// Clicking a topic on the home map is deliberately awkward, and the awkwardness
+// is the feature: the map bobs (`.orbit-drift`, 14s) and leans toward the
+// pointer, so a topic is a moving, 3D-transformed target.
+//
+// Hovering to stop it is the obvious approach and is flaky for two compounding
+// reasons: `hover({force:true})` skips the stability check, so the pointer aims
+// at wherever the node was a moment ago; and the pointer arriving is exactly
+// what starts the lean, which tilts the node so that Chromium's hit test and
+// the visual box no longer agree. The click then lands on nothing and the
+// popup never opens — an abort with no failed assertion.
+//
+// FOCUS pauses the bob through the same `:focus-within` rule, without moving
+// the pointer, so the lean stays at rest and the box is where it looks. Then a
+// real pointer click still exercises hit-testing, which is the thing this map
+// has broken before (see the `--z` note in CLAUDE.md).
 async function clickTopic(page, name) {
   const node = page.locator('.graph-node', { hasText: name });
-  await node.hover({ force: true });
-  // The pointer arriving also starts the lean, and a node a few degrees into a
-  // 520ms tilt is a target that moves out from under the cursor. Let it land.
-  await page.waitForTimeout(700);
+  await node.evaluate((el) => el.focus());
+  await page.waitForTimeout(400); // the bob eases to a stop
   await node.click();
 }
 

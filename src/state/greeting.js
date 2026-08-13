@@ -6,7 +6,7 @@
 // clock. Pure, so tests/home-tests.mjs can check every branch.
 export function greeting(hour, name, { streak = 0, solvedToday = 0 } = {}) {
   if (solvedToday > 0) return `${solvedToday} down today, ${name}.`;
-  if (streak >= 3) return `Day ${streak}, ${name}. Keep it.`;
+  if (streak >= 3) return `Day ${streak}, ${name}. Keep it going.`;
   if (hour < 5) return `Still up, ${name}?`;
   if (hour < 12) return `Morning, ${name}.`;
   if (hour < 18) return `Afternoon, ${name}.`;

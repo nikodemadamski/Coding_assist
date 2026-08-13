@@ -17,6 +17,7 @@ export const EMPTY_PROGRESS = {
   quiz: null, // pattern-recognition record — see state/patternQuiz.js (quizRecord)
   lessons: {}, // lessonId -> { completedAt, runs, missedIdx, srs: { stage, nextDue } }
   shop: {}, // { spent, owned: [itemId], equipped: { slot -> itemId } } — see state/shop.js
+  skipped: {}, // questionId -> true: "I already know this one, stop offering it"
 };
 
 function safeParse(raw, fallback) {
@@ -48,6 +49,7 @@ const FIELD_KINDS = {
   bigo: PLAIN_OBJECT,
   lessons: PLAIN_OBJECT,
   shop: PLAIN_OBJECT,
+  skipped: PLAIN_OBJECT,
   mock: 'array',
   quiz: 'any', // legitimately null until the first drill round
 };

@@ -15,6 +15,7 @@ import {
   isSolved,
   isDue,
   masteryLevel,
+  isSettled,
   practiceCounts,
   solvedCount,
   todayStr,
@@ -49,6 +50,7 @@ export default function RoadmapGraph({
   onBrowse,
   onStats,
   onLearn,
+  onSkip = null,
   lessonInfo = null, // { done, total, due, nextTitle }
 }) {
   const [openCat, setOpenCat] = useState(null);
@@ -125,7 +127,7 @@ export default function RoadmapGraph({
   );
   const brandNew = solveTotal === 0;
   const nextUp = useMemo(
-    () => nextOnPath(questions, (id) => isSolved(progress.solved[id])),
+    () => nextOnPath(questions, (id) => isSettled(progress, id)),
     [questions, progress]
   );
   const weak = useMemo(() => weakSpots(progress, questions), [progress, questions]);
@@ -179,7 +181,7 @@ export default function RoadmapGraph({
     () =>
       nextOnPath(
         questions.filter((q) => mapKeys.has(categoryKeyOf(q.pattern))),
-        (id) => isSolved(progress.solved[id])
+        (id) => isSettled(progress, id)
       ),
     [questions, progress, mapKeys]
   );
@@ -261,15 +263,12 @@ export default function RoadmapGraph({
         <div className="hero-copy">
         <div className="hero-lead">
           <h1 className="hero-title">{hello}</h1>
-          {/* One live status line under the greeting: what's waiting, then where
-              you are. It reads as a sentence rather than a label. */}
+          {/* One live status line under the greeting: where you are, in a
+              sentence. It used to open with "N reviews waiting" as well, which
+              is the same number the review button two inches below already
+              leads with — and that button is the one you can actually press.
+              Saying it twice made neither say it louder. */}
           <p className="hero-line">
-            {counts.due > 0 && (
-              <span className="hero-due">
-                <span className="hero-dot" aria-hidden="true" />
-                {counts.due} review{counts.due === 1 ? '' : 's'} waiting
-              </span>
-            )}
             {brandNew ? (
               <>
                 {questions.length} problems between here and interview-ready. The order is
@@ -314,6 +313,23 @@ export default function RoadmapGraph({
             <span className="hero-next-title">All {questions.length} solved.</span>
             <span className="hero-next-why">Keep the reviews clear and run mocks.</span>
           </div>
+        )}
+
+        {/* The path is a fixed order, which is right if you started at the
+            beginning and wrong for everyone else — solve Two Sum first and the
+            hero still offers Reverse a string, forever. Skipping records nothing
+            about your ability: no solve, no coins, no review. It only stops this
+            one being OFFERED, and the question stays in Browse, so doing it
+            later undoes the decision. Outside the card because .hero-next is
+            itself a button. */}
+        {nextUp && onSkip && (
+          <button
+            className="hero-skip"
+            onClick={() => onSkip(nextUp.id)}
+            title={`Stop offering ${nextUp.title} — it stays in Browse if you change your mind`}
+          >
+            I know this one — show me the next
+          </button>
         )}
 
         {/* Everything else you might do, one row, deliberately quieter. */}
