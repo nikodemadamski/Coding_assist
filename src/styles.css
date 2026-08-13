@@ -5535,29 +5535,28 @@ details.hint[open] summary {
   border-color: var(--gold);
 }
 
-/* ── guided learning layer: why card, constraints, go-deeper ────────────── */
+/* ── guided learning layer ──────────────────────────────────────────────────
+   Was five blocks with five headings: a learn-first banner above the question,
+   a why card, the ladder, a go-deeper disclosure and Approaches. Now the
+   question is the question, and every kind of help is one block below it —
+   `why` is a quiet line, the lesson offer is a row inside the help block, and
+   the go-deeper essay became the ladder's last rung. */
 
-.why-card {
-  margin: 14px 0;
-  padding: 12px 14px;
-  border-radius: var(--r-md);
-  border: 1px solid color-mix(in srgb, var(--jade) 35%, transparent);
-  background: color-mix(in srgb, var(--jade) 8%, transparent);
+.pv-why {
+  margin: 0 0 var(--s-5);
+  color: var(--text-dim);
+  line-height: 1.6;
+  max-width: var(--measure);
 }
-.why-card-label {
-  display: block;
-  font-family: var(--font-display);
-  font-weight: 700;
+.pv-why-label {
   color: var(--jade);
-  margin-bottom: 4px;
-  font-size: var(--t-body);
+  font-weight: 600;
 }
-.why-card p {
-  margin: 0;
-  font-size: var(--t-body);
-  line-height: 1.55;
+.pv-why-label::after {
+  content: ' — ';
+  color: var(--text-dim);
+  font-weight: 400;
 }
-
 .constraints {
   margin-top: 16px;
 }
@@ -5573,29 +5572,6 @@ details.hint[open] summary {
   font-size: var(--t-sm);
   color: var(--text-dim);
   line-height: 1.7;
-}
-
-.go-deeper {
-  margin-top: 14px;
-  border: 1px solid color-mix(in srgb, var(--gold) 30%, var(--line));
-  border-radius: var(--r-md);
-  padding: 4px 14px;
-  background: color-mix(in srgb, var(--gold) 5%, transparent);
-}
-.go-deeper > summary {
-  cursor: pointer;
-  padding: 8px 0;
-  font-weight: 600;
-  color: var(--gold);
-  list-style: none;
-}
-.go-deeper > summary::-webkit-details-marker {
-  display: none;
-}
-.go-deeper-body {
-  padding-bottom: 10px;
-  font-size: var(--t-body);
-  line-height: 1.6;
 }
 
 /* guided next-step card on the map home */

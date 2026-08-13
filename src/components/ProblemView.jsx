@@ -592,37 +592,12 @@ export default function ProblemView({
         onTouchEnd={onSwipeEnd}
       >
         <section className={`pv-pane pane-problem ${tab === 'problem' ? 'visible' : ''}`}>
-          {/* Learn-before-use: if this problem leans on a Python basic you
-              haven't met, offer the 2-minute lesson first — with an escape
-              hatch. Never blocks. */}
-          {!mockMode &&
-            onOpenLesson &&
-            !lessonDismissed &&
-            (() => {
-              const ids = lessonsForQuestion(question, progress);
-              if (ids.length === 0) return null;
-              const lesson = lessonById(ids[0]);
-              if (!lesson) return null;
-              return (
-                <div className="pv-learn-first">
-                  <span className="pv-learn-first-text">
-                    New to this? It uses <strong>{lesson.title}</strong> — learn it first, then
-                    this clicks.
-                  </span>
-                  <div className="pv-learn-first-actions">
-                    <button className="btn btn-jade" onClick={() => onOpenLesson(lesson.id)}>
-                      Learn it ({lesson.minutes} min) →
-                    </button>
-                    <button className="btn-plain" onClick={() => setLessonDismissed(true)}>
-                      I know it — continue
-                    </button>
-                  </div>
-                </div>
-              );
-            })()}
-          {/* The question itself comes first — description, examples,
-              constraints — exactly what you'd see in the interview. All
-              guidance (why, stuck ladder, go-deeper, notes) waits below. */}
+          {/* The question comes first — description, examples, constraints,
+              exactly what you'd see in the interview. Every kind of help lives
+              in ONE block below it. It used to be five: a learn-first banner
+              above the description, a why card, the ladder, a go-deeper
+              disclosure and Approaches, each with its own heading and box. The
+              first thing you read on a question should be the question. */}
           <Markdown text={question.description} />
           {question.examples?.length > 0 && (
             <>
@@ -656,12 +631,41 @@ export default function ProblemView({
             </div>
           ) : (
             <div className="pv-extras">
+              {/* Motivation, not instruction — one quiet line under the
+                  problem rather than a card competing with it. */}
               {question.why && (
-                <div className="why-card">
-                  <span className="why-card-label">Why this one</span>
-                  <Markdown text={question.why} />
-                </div>
+                <p className="pv-why">
+                  <span className="pv-why-label">Why this one</span>
+                  {question.why}
+                </p>
               )}
+              {/* Learn-before-use, demoted to a row INSIDE the help block: if
+                  the problem leans on a Python basic you have not met, the
+                  lesson is offered — but after the question, not before it. */}
+              {onOpenLesson &&
+                !lessonDismissed &&
+                (() => {
+                  const ids = lessonsForQuestion(question, progress);
+                  if (ids.length === 0) return null;
+                  const lesson = lessonById(ids[0]);
+                  if (!lesson) return null;
+                  return (
+                    <div className="pv-learn-first">
+                      <span className="pv-learn-first-text">
+                        New to this? It uses <strong>{lesson.title}</strong> — learn it first, then
+                        this clicks.
+                      </span>
+                      <div className="pv-learn-first-actions">
+                        <button className="btn btn-jade" onClick={() => onOpenLesson(lesson.id)}>
+                          Learn it ({lesson.minutes} min) →
+                        </button>
+                        <button className="btn-plain" onClick={() => setLessonDismissed(true)}>
+                          I know it — continue
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
               {/* Once you've solved it, a ladder of hints is the wrong thing
                   to have sitting open — you want the model approaches instead.
                   It's still one click away, because a re-clear can still stall. */}
@@ -689,14 +693,6 @@ export default function ProblemView({
                 />
               )}
             </div>
-          )}
-          {!mockMode && question.insight && (
-            <details className="go-deeper">
-              <summary>Go deeper — why this works &amp; why it&apos;s worth knowing</summary>
-              <div className="go-deeper-body">
-                <Markdown text={question.insight} />
-              </div>
-            </details>
           )}
           {!mockMode && onNote && (
             <Notes

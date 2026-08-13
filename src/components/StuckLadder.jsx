@@ -81,6 +81,20 @@ export default function StuckLadder({ question, progress, onVisualize, onSeePatt
         </div>
       ),
     },
+    // The "go deeper" essay used to be its own disclosure further down the
+    // column, which meant two separate places to look for an explanation. It
+    // is the same ladder, one rung further: read it AFTER the code, when the
+    // shape is fresh and the generalisation can land.
+    question.insight && {
+      key: 'insight',
+      label: 'Why it works, and why it is worth knowing',
+      teaser: 'The generalisation — what this technique buys you on the next problem.',
+      body: (
+        <div className="rung-body">
+          <Markdown text={question.insight} />
+        </div>
+      ),
+    },
   ].filter(Boolean);
 
   const [open, setOpen] = useState(0); // number of rungs revealed so far

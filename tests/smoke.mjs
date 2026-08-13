@@ -459,20 +459,48 @@ try {
   check((await page.locator('.example-block').count()) >= 2, 'problem shows multiple worked examples');
   const exampleHeight = await page.locator('.example-block').first().evaluate((el) => el.clientHeight);
   check(exampleHeight >= 24, `examples are not squished/clipped (${exampleHeight}px tall)`);
-  check(await page.locator('.why-card').isVisible(), 'problem shows a guided "why this one" card');
+  check(await page.locator('.pv-why').isVisible(), 'the problem says why it is worth doing');
   check(
     (await page.locator('.constraints li').count()) >= 2,
     'problem shows a proper Constraints list'
   );
+
+  // ---- one help block, not five --------------------------------------------
+  // The question is the question: description, examples, constraints. Every
+  // kind of help — the lesson offer, the ladder, the code, the go-deeper
+  // essay — lives in ONE block BELOW it, so the first thing you read on a
+  // problem is the problem.
+  const problemBox = await page.locator('.pane-problem').boundingBox();
+  const extrasTop = (await page.locator('.pv-extras').boundingBox()).y;
+  const firstExample = (await page.locator('.example-block').first().boundingBox()).y;
+  check(extrasTop > firstExample, 'every explanation sits below the question, never above it');
   check(
-    (await page.locator('.go-deeper').count()) === 1,
-    'an unlockable "go deeper" insight is offered'
+    (await page.locator('.pane-problem .stuck').count()) === 1 &&
+      (await page.locator('.pane-problem .pv-extras > .stuck').count()) === 1,
+    'and the ladder is inside that one block'
   );
-  await page.locator('.go-deeper > summary').click();
+  // The go-deeper essay is now the ladder's LAST rung rather than a separate
+  // disclosure — one place to look for an explanation, not two.
   check(
-    (await page.locator('.go-deeper-body').innerText()).toLowerCase().includes('hash'),
-    'go-deeper reveals the transferable insight'
+    (await page.locator('.go-deeper').count()) === 0,
+    'the separate go-deeper disclosure is gone'
   );
+  const rungLabels = async () =>
+    (await page.locator('.stuck-rung-label').allInnerTexts()).join(' | ');
+  for (let i = 0; i < 6; i++) {
+    const next = page.locator('.stuck-next');
+    if ((await next.count()) === 0) break;
+    await next.first().click();
+  }
+  check(
+    /worth knowing/i.test(await rungLabels()),
+    'the go-deeper essay is the ladder’s last rung instead'
+  );
+  check(
+    (await page.locator('.stuck-rung.open .rung-body').last().innerText()).length > 60,
+    'and it still carries the real text'
+  );
+  void problemBox;
   // ---- path stepper: move on without solving, and step back ----
   {
     const startTitle = await page.locator('.pv-title').innerText();
@@ -1027,7 +1055,7 @@ try {
   await page.locator('.q-card', { hasText: 'Strong swordsmen' }).first().click();
   // every question — pandas & SQL included — carries the premium learning UI
   check(
-    (await page.locator('.pane-problem .why-card').innerText()).includes('SELECT'),
+    (await page.locator('.pane-problem .pv-why').innerText()).includes('SELECT'),
     'SQL questions also show the guided "why this one" card'
   );
   await setEditor(page, 'SELECT name, power FROM fighters WHERE power >= 80 ORDER BY power DESC;');

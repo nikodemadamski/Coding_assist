@@ -11,7 +11,7 @@ copy text from LeetCode/NeetCode.**
 npm run dev / build / lint
 npm test                     # 26 unit suites, incl. run-seed-tests (runs EVERY solution
                              # and EVERY alternative approach through real engines)
-# Browser smoke (~392 checks). CDN is blocked in the dev container:
+# Browser smoke (~395 checks). CDN is blocked in the dev container:
 node tests/setup-local-pyodide.mjs         # once per container
 VITE_PYODIDE_BASE=/pyodide/ npm run build
 CHROMIUM_PATH=/opt/pw-browsers/chromium node tests/smoke.mjs
@@ -389,10 +389,15 @@ pv-body grid — desktop is `problem | ‖ | code / ═ / console`, with BOTH di
 draggable and persisted (`--pv-split` cols, `--pv-vsplit` rows) → editor-bar (lang chip +
 fn name left, quiet `.bar-btn` tools right: Visualize, A−/A+, Reset) → `.mkeys` mobile key
 strip (pointerdown+preventDefault keeps the phone keyboard open) → **TestConsole**.
-StuckLadder / Approaches (tabbed brute→optimal, each with Visualize) / Notes live in the
-problem column — and the column is **state-aware**: once a question is solved the hint
-ladder folds into a `.stuck-after` disclosure and Approaches takes its place, because a
-ladder of hints is the wrong thing to have open after the fact. VisualizerModal: fixed
+**The problem column is the question, then ONE help block.** It used to be five separate
+boxes with five headings — a learn-first banner ABOVE the description, a `.why-card`, the
+ladder, a `.go-deeper` disclosure and Approaches. Now: description / examples / constraints,
+then `.pv-extras` holding everything explanatory. `why` is a quiet `.pv-why` line rather than
+a card; the prerequisite-lesson offer is a row inside the block instead of an interruption
+before the question; and the **`insight` essay is the ladder's last rung** (`Why it works, and
+why it is worth knowing`) so there is one place to look for an explanation, not two. Smoke
+asserts `.pv-extras` starts below the first example. The column stays **state-aware**: once
+solved, the ladder folds into a `.stuck-after` disclosure and Approaches takes its place. VisualizerModal: fixed
 height, hero narration, element-level diff highlights, pointer overlay, runs on ANY code.
 
 **The keyboard layer** is two tiers with different rules, and `ShortcutSheet.jsx` is the
