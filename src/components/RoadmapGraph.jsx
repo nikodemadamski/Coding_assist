@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFocusTrap } from './useFocusTrap.js';
+import { useIsNarrow } from './useIsNarrow.js';
 import { useReveal } from '../anim/useReveal.js';
 import { useAnime, stagger } from '../anim/useAnime.js';
 import { presets } from '../anim/presets.js';
@@ -56,6 +57,8 @@ export default function RoadmapGraph({
   const [scale, setScale] = useState(1);
   const fitRef = useRef(null);
   const today = todayStr();
+  // Phones get the topic rail instead of the map — see the render below.
+  const narrow = useIsNarrow(700);
 
   // Fit the fixed-size canvas to the window — BOTH axes. Width alone left a
   // tall map pushing the hero past the fold on a short laptop screen, and the
@@ -395,6 +398,48 @@ export default function RoadmapGraph({
                               smoothed by a CSS transition)
             The nodes each carry a `--z`, so the lean parallaxes them against
             the edges instead of tipping a flat picture. */}
+        {/* **A phone gets a list, not a shrunk diagram.** The map is fitted with
+            `min(width/840, …)`, which on a 390px screen is about 0.42 — so an
+            11px label renders near 4px. It was still "visible" in the sense the
+            old smoke check meant, and completely unreadable in the sense that
+            matters, while being the app's primary navigation. The rail carries
+            exactly the same information (path order, solved counts, where you
+            are, tap for the questions) at a size you can read and hit. */}
+        {narrow ? (
+          <nav className="topic-rail" aria-label="The path — topics in order">
+            <p className="topic-rail-cap">
+              The path — {shownNodes.length} topics, in order. Tap one for its questions.
+            </p>
+            {shownNodes.map((n, i) => {
+              const st = stats[n.key] || { total: 0, solved: 0 };
+              const pct = st.total ? st.solved / st.total : 0;
+              const done = st.total > 0 && st.solved === st.total;
+              const current = !done && currentKey === n.key;
+              const started = !done && !current && st.solved > 0;
+              return (
+                <button
+                  key={n.key}
+                  className={`topic-row ${done ? 'done' : ''} ${current ? 'current' : ''} ${started ? 'started' : ''}`}
+                  onClick={() => setOpenCat(n.key)}
+                >
+                  <span className="topic-row-step">{i + 1}</span>
+                  <span className="topic-row-main">
+                    <span className="topic-row-label">
+                      {label(n.key)}
+                      {current && <span className="topic-row-here">you are here</span>}
+                    </span>
+                    <span className="topic-row-bar">
+                      <span className="topic-row-fill" style={{ '--fill': pct }} />
+                    </span>
+                  </span>
+                  <span className="topic-row-count">
+                    {st.solved}/{st.total}
+                  </span>
+                </button>
+              );
+            })}
+          </nav>
+        ) : (
         <div className="hero-orbit" ref={orbitFieldRef}>
           {/* data-bleed: an ambient layer that deliberately extends past its
               frame so the nebula never looks cut off. The shell clips it at the
@@ -499,6 +544,7 @@ export default function RoadmapGraph({
             An arrow means &ldquo;learn this one first&rdquo;. Tap a topic for its questions.
           </p>
         </div>
+        )}
       </section>
 
       {/* Python is the support act: a quiet lane that shrinks to a chip once

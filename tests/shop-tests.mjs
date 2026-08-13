@@ -4,7 +4,7 @@ import {
   earnBreakdown, coinsEarned, coinBalance, coinsSpent,
   owns, ownedIds, beltIndex, itemState, buyItem, equipItem, equipped, outfitFor,
 } from '../src/state/shop.js';
-import { BELTS } from '../src/state/progress.js';
+import { BELTS, todayStr, addDays } from '../src/state/progress.js';
 import { COSTUMES } from '../src/state/mascot.js';
 
 let failures = 0;
@@ -42,7 +42,7 @@ const P1 = {
   lessons: { l1: { completedAt: 'x' }, l2: {} },
   mock: [{ passed: true }, { passed: false }],
   warmup: { beginner: { runs: 3 } },
-  streak: { count: 4 },
+  streak: { count: 4, lastActiveDate: todayStr() },
 };
 const b = earnBreakdown(P1, Q);
 const expect =
@@ -58,6 +58,23 @@ check(
   'an unfinished lesson pays nothing'
 );
 check(earnBreakdown({ mock: [{ passed: false }] }, Q).total === 0, 'a failed mock pays nothing');
+// **A streak you are no longer on stops paying.** `streak.count` keeps its
+// value after a missed day — the header chip already drops to 0 via
+// currentStreak, and the wallet used to read the raw field, so breaking a
+// 30-day streak left you collecting for 30 days forever.
+check(
+  earnBreakdown({ streak: { count: 30, lastActiveDate: addDays(todayStr(), -5) } }, Q).total === 0,
+  'a broken streak pays nothing, however high it once was'
+);
+check(
+  earnBreakdown({ streak: { count: 6, lastActiveDate: addDays(todayStr(), -1) } }, Q).total ===
+    6 * RATES.streakDay,
+  'a streak kept up to yesterday still pays (the day is not over)'
+);
+check(
+  earnBreakdown({ streak: { count: 3 } }, Q).total === 0,
+  'a streak with no last-active date pays nothing'
+);
 // solves for questions that no longer exist must not pay
 check(
   earnBreakdown({ solved: { ghost: { solves: 1 } } }, Q).total === 0,

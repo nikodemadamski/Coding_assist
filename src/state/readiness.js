@@ -61,6 +61,10 @@ const ADVICE = {
   mastery: 'Biggest gap: retention. Clear your reviews daily so solved problems become owned problems.',
   mocks: 'Biggest gap: pressure. Run mock interviews — the timer changes everything, practice under it.',
   pace: 'Biggest gap: speed. Re-solve problems you know and race the target time, not just correctness.',
+  // When the pace score is held down by difficulties you have never timed, the
+  // fix is not "go faster" — it is "go and be measured at all".
+  paceUntimed:
+    'Biggest gap: speed — and it is untested. Time yourself on {LIST} before this number can mean anything.',
   bigo: 'Biggest gap: complexity fluency. Answer the after-solve Big-O check every time — say the bound before you peek.',
 };
 
@@ -120,9 +124,18 @@ export function readiness(progress, questions) {
 
   const mockStats = summarizeMocks(progress.mock || []);
   const pace = paceByDifficulty(progress, questions);
-  const paceRatios = Object.values(pace)
-    .filter((p) => p.n >= PACE_MIN_SAMPLES)
-    .map((p) => p.ratio);
+  // **A difficulty you have never timed counts as unproven, not as absent.**
+  // This used to average only the difficulties that had enough samples, so
+  // three quick easy solves and no hard ones scored pace at 100% — printed
+  // directly beside the words "hard: no timed solves". Readiness is a claim
+  // about an interview, and speed you have not demonstrated at a difficulty is
+  // not speed. The divisor is the difficulties the bank actually CONTAINS —
+  // you cannot be asked to time a hard solve in a set with no hard questions.
+  const paceDifficulties = Object.keys(PACE_TARGETS_MS).filter((d) =>
+    questions.some((q) => q.difficulty === d)
+  );
+  const measuredPace = paceDifficulties.filter((d) => pace[d].n >= PACE_MIN_SAMPLES);
+  const paceRatios = measuredPace.map((d) => pace[d].ratio);
 
   const bigoRight = progress.bigo?.right || 0;
   const bigoAnswered = bigoRight + (progress.bigo?.wrong || 0);
@@ -134,7 +147,9 @@ export function readiness(progress, questions) {
     mocks: mockStats.count
       ? mockStats.passRate * Math.min(1, mockStats.count / MOCK_FULL_CREDIT)
       : 0,
-    pace: paceRatios.length ? paceRatios.reduce((a, b) => a + b, 0) / paceRatios.length : 0,
+    pace: paceDifficulties.length
+      ? paceRatios.reduce((a, b) => a + b, 0) / paceDifficulties.length
+      : 0,
   };
   if (bigoAnswered > 0) parts.bigo = bigoRight / bigoAnswered;
 
@@ -163,8 +178,21 @@ export function readiness(progress, questions) {
     level: LEVELS.find(([min]) => score >= min)[1],
     parts,
     pace,
+    // Which difficulties actually back the pace number, so the UI can say the
+    // dimension is capped by missing evidence rather than by being slow.
+    paceCoverage: {
+      measured: measuredPace.length,
+      of: paceDifficulties.length,
+      untimed: paceDifficulties.filter((d) => pace[d].n < PACE_MIN_SAMPLES),
+    },
     bigo: { answered: bigoAnswered, active: bigoActive, needed: BIGO_MIN_SAMPLES },
-    advice: ADVICE[weakest],
+    advice:
+      weakest === 'pace' && measuredPace.length < paceDifficulties.length
+        ? ADVICE.paceUntimed.replace(
+            '{LIST}',
+            paceDifficulties.filter((d) => pace[d].n < PACE_MIN_SAMPLES).join(' and ')
+          )
+        : ADVICE[weakest],
     weakest,
   };
 }

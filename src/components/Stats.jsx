@@ -88,9 +88,23 @@ function ReadinessCard({ ready }) {
             <div className={`ready-part ${k === ready.weakest ? 'weakest' : ''}`} key={k}>
               <span
                 className="ready-part-label"
-                title={gated ? `Joins the score after ${ready.bigo.needed} answered checks` : undefined}
+                title={
+                  gated
+                    ? `Joins the score after ${ready.bigo.needed} answered checks`
+                    : k === 'pace' && ready.paceCoverage.untimed.length
+                      ? `Capped at ${ready.paceCoverage.measured}/${ready.paceCoverage.of} — no timed solves at ${ready.paceCoverage.untimed.join(' or ')}`
+                      : undefined
+                }
               >
                 {READY_PART_LABEL[k]}
+                {/* A capped dimension has to say it is capped. 100% beside the
+                    words "hard: no timed solves" was the score flattering you. */}
+                {k === 'pace' && ready.paceCoverage.untimed.length > 0 && (
+                  <span className="ready-part-cap">
+                    {' '}
+                    {ready.paceCoverage.measured}/{ready.paceCoverage.of} timed
+                  </span>
+                )}
               </span>
               <span className="ready-part-track">
                 <span className="ready-part-fill" style={{ '--fill': v }} />

@@ -11,7 +11,7 @@ copy text from LeetCode/NeetCode.**
 npm run dev / build / lint
 npm test                     # 27 unit suites, incl. run-seed-tests (runs EVERY solution
                              # and EVERY alternative approach through real engines)
-# Browser smoke (~404 checks). CDN is blocked in the dev container:
+# Browser smoke (~408 checks). CDN is blocked in the dev container:
 node tests/setup-local-pyodide.mjs         # once per container
 VITE_PYODIDE_BASE=/pyodide/ npm run build
 CHROMIUM_PATH=/opt/pw-browsers/chromium node tests/smoke.mjs
@@ -147,7 +147,12 @@ move). Smoke's `checkRevealSettled` asserts nothing is left transparent.
   all three surfaces. Header now takes the count as a PROP rather than computing a sixth.
 - `readiness.js` — 0-100 score: coverage .3 / mastery .25 / mocks .25 / pace .2, plus a
   Big-O dimension at 10% once ≥15 answers (others scale ×0.9). Pace targets 15/25/40 min,
-  median firstSolveMs, ≥3 samples per difficulty.
+  median firstSolveMs, ≥3 samples per difficulty. **Pace divides by the difficulties the
+  BANK CONTAINS, not by the ones you happen to have timed** — averaging only the measured
+  ones scored three quick easy solves at 100% while the same card printed "hard: no timed
+  solves". `paceCoverage` reports measured/of/untimed so the Stats label can say it is
+  capped by missing evidence, and the advice switches from "go faster" to "go get measured
+  on X and Y", which is the actual fix.
 - `bigo.js` — bigOBucket maps a complexity string's time part to 6 buckets; product forms
   (O(m·n)), O(h), O(L) return null = reveal-don't-grade.
 - `lessonProgress.js` — progress.lessons[id] = {completedAt, runs, missedIdx, srs};
@@ -158,7 +163,9 @@ move). Smoke's `checkRevealSettled` asserts nothing is left transparent.
   recomputed from the training record each time (solves/review stages/lessons/mocks/warm-up
   runs/streak days/belts × `RATES`) minus `progress.shop.spent`, so there is no counter to
   double-count, no migration when a rate changes, and export/import carries the wallet for
-  free. **Belts gate, coins cost** — `ITEMS` name a `belt` index into BELTS and a price, and
+  free. The streak term reads `currentStreak()`, **not** `streak.count` — the raw field keeps
+  its value after a missed day, so breaking a 30-day streak used to drop the header chip to 0
+  while the wallet kept paying for 30 days forever. **Belts gate, coins cost** — `ITEMS` name a `belt` index into BELTS and a price, and
   `itemState()` is the single source for owned/locked/affordable/buyable so the button, the
   tag and the lock note can't disagree. `outfitFor(progress, roomCostume)` resolves what the
   mascot wears: the room's costume takes its slot, your equipped kit fills the rest.
@@ -224,7 +231,14 @@ a primary action's arrow in its own disc (the one thing that moves on hover);
 also inline so it's right without JS); `CountUp.jsx` races a number to its value by
 animating a plain object (no per-frame React render) and always lands on the truth.
 
-**Home** (`RoadmapGraph.jsx`) is a **two-column hero**: copy left, the map in orbit right.
+**Home** (`RoadmapGraph.jsx`) is a **two-column hero**: copy left, the map in orbit right —
+**on desktop only**. Under 700px (`useIsNarrow`, matchMedia) the map is replaced by
+`.topic-rail`, a vertical list of the same 17 topics carrying path order, solved counts,
+"you are here" and the same tap-to-open-questions handler. The map is fitted with
+`min(width/840, …)`, which at 390px is ~0.42 — an 11px label draws near 4px, so the app's
+primary navigation was legible on desktop and unusable on a phone. Smoke measures the
+things that matter (rows ≥44px, labels ≥11px, tapping opens the topic) rather than the old
+check, which counted `.graph-node` and called the result "visible on a phone".
 `.hero-copy` carries `state/greeting.js`'s greeting (`uiPrefs.name`, default Nick, editable in
 Settings — solves-today > streak ≥3 > clock), a live status line, `.hero-next` (the next
 unsolved question at display scale with the page's one red CTA) and `.hero-actions`. **Every

@@ -77,6 +77,53 @@ console.log('readiness-tests: score');
     return readiness(enough, qs).parts.pace === 1;
   })());
 
+  // **Speed you have never demonstrated is not speed.** Pace used to average
+  // only the difficulties that had enough timed solves, so three quick easy
+  // solves in a bank containing medium and hard scored 100% — printed right
+  // beside the words "hard: no timed solves".
+  {
+    const mixed = [
+      q('e1'), q('e2'), q('e3'),
+      q('m1', 'medium'), q('m2', 'medium'), q('m3', 'medium'),
+      q('h1', 'hard'), q('h2', 'hard'), q('h3', 'hard'),
+    ];
+    const easyOnly = fresh();
+    for (const id of ['e1', 'e2', 'e3']) easyOnly.solved[id] = solvedEntry(min(1));
+    const r1 = readiness(easyOnly, mixed);
+    check(`fast on easy alone does not score full pace (got ${r1.parts.pace.toFixed(2)})`,
+      r1.parts.pace === 1 / 3);
+    check('and it reports which difficulties are untimed',
+      r1.paceCoverage.measured === 1 && r1.paceCoverage.of === 3 &&
+      r1.paceCoverage.untimed.join(',') === 'medium,hard');
+
+    const allTimed = fresh();
+    for (const id of ['e1', 'e2', 'e3']) allTimed.solved[id] = solvedEntry(min(1));
+    for (const id of ['m1', 'm2', 'm3']) allTimed.solved[id] = solvedEntry(min(1));
+    for (const id of ['h1', 'h2', 'h3']) allTimed.solved[id] = solvedEntry(min(1));
+    const r2 = readiness(allTimed, mixed);
+    check('timing all three difficulties can still reach full pace', r2.parts.pace === 1);
+    check('  and nothing is reported untimed', r2.paceCoverage.untimed.length === 0);
+
+    // The advice has to name the actual fix. "Go faster" is wrong when the
+    // problem is that you have never been measured.
+    const paceWeak = fresh();
+    for (const id of ['e1', 'e2', 'e3']) paceWeak.solved[id] = solvedEntry(min(1));
+    const adv = readiness(paceWeak, mixed);
+    if (adv.weakest === 'pace') {
+      check('untimed-pace advice says to get measured, not to hurry',
+        adv.advice.includes('medium and hard') && !adv.advice.includes('race the target'));
+    }
+  }
+
+  // A bank with no hard questions must not be capped for lacking them.
+  {
+    const noHard = [q('a'), q('b'), q('c'), q('d', 'medium'), q('e', 'medium'), q('f', 'medium')];
+    const p2 = fresh();
+    for (const id of ['a', 'b', 'c', 'd', 'e', 'f']) p2.solved[id] = solvedEntry(min(1));
+    check('a bank without hard questions can still reach full pace',
+      readiness(p2, noHard).parts.pace === 1);
+  }
+
   // One passed mock is heavily discounted vs five.
   const one = fresh();
   one.mock = [{ passed: true, timeMs: min(20) }];

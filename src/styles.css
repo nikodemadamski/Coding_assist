@@ -1953,6 +1953,105 @@ details.hint[open] summary {
   color: var(--gold);
   font-weight: 600;
 }
+/* A dimension held down by missing evidence rather than by poor performance
+   says so on its own label — gold, because it is a "look at this", not a fail. */
+.ready-part-cap {
+  color: var(--gold);
+  font-size: var(--t-micro);
+}
+
+/* ── the topic rail (phones) ─────────────────────────────────────────────── */
+/* What replaces the algorithm map under 700px. The map is fitted to the
+   viewport, which on a 390px screen is about 0.42 scale — an 11px label lands
+   near 4px. Shrinking the app's primary navigation until it cannot be read is
+   not a responsive design, so a phone gets the same information as a list:
+   path order, progress, where you are, tap for the questions. */
+.topic-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: var(--s-5);
+}
+.topic-rail-cap {
+  margin: 0 0 var(--s-3);
+  font-size: var(--t-sm);
+  color: var(--text-dim);
+  max-width: var(--measure);
+}
+.topic-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--s-3);
+  /* 52px: comfortably past the 44px thumb minimum, with the count and the bar
+     still on one line. */
+  min-height: 52px;
+  padding: var(--s-2) var(--s-3);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+.topic-row:hover {
+  background: var(--panel-2);
+}
+.topic-row-step {
+  font-size: var(--t-micro);
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  min-width: 1.5em;
+}
+.topic-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.topic-row-label {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  font-size: var(--t-body);
+  font-weight: 600;
+}
+.topic-row-here {
+  font-size: var(--t-micro);
+  font-weight: 500;
+  color: var(--gold);
+  white-space: nowrap;
+}
+.topic-row-bar {
+  display: block;
+  height: 4px;
+  border-radius: var(--r-full);
+  background: var(--panel-2);
+  overflow: hidden;
+}
+.topic-row-fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--r-full);
+  background: var(--jade);
+  transform-origin: left center;
+  transform: scaleX(var(--fill));
+  transition: transform var(--dur-2) var(--ease);
+}
+.topic-row-count {
+  font-size: var(--t-sm);
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+/* Colour carries state, exactly as it does on the map: gold = you are here,
+   jade = finished. */
+.topic-row.current {
+  border-color: var(--gold);
+}
+.topic-row.done .topic-row-count {
+  color: var(--jade);
+}
 .ready-part-track {
   height: 7px;
   background: var(--panel-2);

@@ -2254,10 +2254,31 @@ try {
     () => document.documentElement.scrollWidth <= window.innerWidth
   );
   check(noHScrollMap, 'mobile: the map home scales down with no horizontal scroll');
+  // The old check here counted `.graph-node` and called the map "visible on a
+  // phone". It was visible and unreadable: fitted to 390px the map runs at about
+  // 0.42 scale, so an 11px label draws near 4px. A phone gets the topic rail
+  // instead — same information, legible, thumb-sized. So this asserts the things
+  // that actually make navigation work.
   check(
-    (await mobile.locator('.graph-node').count()) >= 15,
-    'mobile: the whole roadmap is visible on a phone'
+    (await mobile.locator('.graph-canvas').count()) === 0,
+    'mobile: the shrunken map is not what a phone gets'
   );
+  const railRows = mobile.locator('.topic-row');
+  check((await railRows.count()) >= 15, 'mobile: every topic is listed on the rail');
+  {
+    const first = railRows.first();
+    const box = await first.boundingBox();
+    check(box.height >= 44, `mobile: topic rows clear the 44px thumb minimum (${Math.round(box.height)}px)`);
+    const fontPx = await first
+      .locator('.topic-row-label')
+      .evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+    check(fontPx >= 11, `mobile: topic labels are readable, not scaled to nothing (${fontPx}px)`);
+    // The rail is navigation, so it has to actually navigate.
+    await first.click();
+    await mobile.locator('.cat-modal').waitFor({ timeout: 5000 });
+    check(true, 'mobile: tapping a topic opens its questions');
+    await mobile.locator('.cat-modal .icon-btn[aria-label="Close"]').click();
+  }
 
   await mobile.locator('.icon-btn', { hasText: 'Browse' }).click();
   const noHScroll = await mobile.evaluate(

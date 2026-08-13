@@ -14,7 +14,7 @@
 // and you can't wear a rank you haven't paid for either.
 //
 // Everything here is pure. tests/shop-tests.mjs holds all of it.
-import { BELTS, beltFor, solvedCount } from './progress.js';
+import { BELTS, beltFor, solvedCount, currentStreak } from './progress.js';
 
 // What a unit of training is worth. Deliberately flat and legible — a learner
 // should be able to predict their balance, not reverse-engineer it.
@@ -69,7 +69,12 @@ export function earnBreakdown(progress = {}, questions = []) {
   const lessons = Object.values(progress.lessons ?? {}).filter((l) => l?.completedAt).length;
   const mocks = (progress.mock ?? []).filter((m) => m?.passed).length;
   const warmups = Object.values(progress.warmup ?? {}).reduce((n, w) => n + (w?.runs ?? 0), 0);
-  const streak = progress.streak?.count ?? 0;
+  // The streak you are actually ON, not the highest number the record happens
+  // to hold. `streak.count` keeps its value after a missed day — currentStreak
+  // is what decides whether it still counts, and it is what the header chip
+  // shows. Reading the raw field here meant breaking a 30-day streak dropped
+  // the chip to 0 while the wallet kept paying for 30 days forever.
+  const streak = currentStreak(progress.streak);
   const beltIdx = Math.max(0, BELTS.findIndex((b) => b.name === beltFor(solves).name));
 
   const rows = [
