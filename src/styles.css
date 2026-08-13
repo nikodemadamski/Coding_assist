@@ -1361,6 +1361,24 @@ details.hint[open] summary {
   }
 }
 
+/* Solved: the take-away opens the column. It is prose, so it gets the measure
+   cap and a hairline — edge OR elevation, never both. Jade on the heading
+   because it belongs to the "you cleared it" state, same as the panel above. */
+.pv-takeaway {
+  margin-top: var(--s-4);
+  padding: var(--s-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--panel-2);
+}
+.pv-takeaway h3 {
+  margin: 0 0 var(--s-3);
+  color: var(--jade);
+}
+.pv-takeaway .rung-body {
+  max-width: var(--measure);
+}
+
 /* Solved: the hint ladder folds away behind a disclosure, because after the
    fact it is the wrong thing to have open. */
 .stuck-after {

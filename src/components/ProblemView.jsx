@@ -671,6 +671,21 @@ export default function ProblemView({
                   It's still one click away, because a re-clear can still stall. */}
               {solved ? (
                 <>
+                  {/* The take-away is the whole reason to solve a second one:
+                      what the technique buys you on the NEXT problem. Before it
+                      was the ladder's last rung, which meant that once you had
+                      cleared the question — the one moment it can actually
+                      land — it was folded away behind "still want hints?".
+                      Now it opens the solved column, and the ladder below no
+                      longer repeats it (`hideInsight`). */}
+                  {question.insight && (
+                    <section className="pv-takeaway">
+                      <h3>Why it works, and why it is worth knowing</h3>
+                      <div className="rung-body">
+                        <Markdown text={question.insight} />
+                      </div>
+                    </section>
+                  )}
                   <Approaches question={question} onVisualize={openVisualizer} />
                   <details className="stuck-after">
                     <summary>Still want the hint ladder?</summary>
@@ -680,6 +695,7 @@ export default function ProblemView({
                       onVisualize={openVisualizer}
                       onSeePattern={onSeePattern}
                       onOpenLesson={onOpenLesson}
+                      hideInsight
                     />
                   </details>
                 </>

@@ -27,7 +27,12 @@ dp-1d ×2, and one each for dp-2d / backtracking / binary-search / tries / inter
 greedy / trees / stack / arrays-hashing / math-geometry. **22 hard Python problems, up from 7.**
 Note when authoring an approach: a brute force still has to RUN — a permutation brute force over
 an 11-element test case passed but added nine minutes to `npm test`)
-→ spread `LEARN[id]` (learn.js: why / insight / constraints / examples)
+→ spread `LEARN[id]` (learn.js: why / insight / constraints / examples). **Every one of the
+  174 questions now carries an `insight`** — the 2–4 paragraph essay on what the technique
+  generalises to, surfaced in `.pv-takeaway` once solved. Write new ones the same way: name
+  the reusable idea, name the trap, and point forward at the problems that reuse it. They are
+  single-quoted JS strings, so **apostrophes must be escaped** (`\'`) — an unescaped one
+  breaks the module and every test at once.
 → set `unordered` from UNORDERED map (deep|outer — order-insensitive grading)
 → set `complexity` from `COMPLEXITY[id]` (complexity.js) if absent
 → set `approaches` from `APPROACHES[id]` (approaches.js) if absent.
@@ -397,7 +402,13 @@ a card; the prerequisite-lesson offer is a row inside the block instead of an in
 before the question; and the **`insight` essay is the ladder's last rung** (`Why it works, and
 why it is worth knowing`) so there is one place to look for an explanation, not two. Smoke
 asserts `.pv-extras` starts below the first example. The column stays **state-aware**: once
-solved, the ladder folds into a `.stuck-after` disclosure and Approaches takes its place. VisualizerModal: fixed
+solved, the ladder folds into a `.stuck-after` disclosure and Approaches takes its place —
+and the insight is **promoted out of it** into `.pv-takeaway`, open at the top of the column.
+It is the one piece of help whose value is highest AFTER you clear the question, and burying
+the generalisation behind "still want hints?" was throwing it away at exactly the moment it
+lands. `StuckLadder` takes `hideInsight` so the folded ladder can't repeat it two inches
+below; smoke asserts the block is visible, is real prose (>200 chars), and appears exactly
+once with the ladder reopened. VisualizerModal: fixed
 height, hero narration, element-level diff highlights, pointer overlay, runs on ANY code.
 
 **The keyboard layer** is two tiers with different rules, and `ShortcutSheet.jsx` is the

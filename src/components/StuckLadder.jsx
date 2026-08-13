@@ -12,7 +12,17 @@ import { lessonById } from '../data/lessons.js';
 //   1. which pattern is this?   2. a nudge   3. the plan   4. the code
 // A YouTube search link waits at the very bottom, for when you truly want to
 // hear someone else explain it.
-export default function StuckLadder({ question, progress, onVisualize, onSeePattern, onOpenLesson }) {
+// `hideInsight` drops the last rung: once a question is solved ProblemView
+// shows the take-away as its own block, and the folded ladder must not repeat
+// it two inches below.
+export default function StuckLadder({
+  question,
+  progress,
+  onVisualize,
+  onSeePattern,
+  onOpenLesson,
+  hideInsight = false,
+}) {
   const hint = patternHint(question);
   const missingLesson =
     onOpenLesson && progress
@@ -85,16 +95,17 @@ export default function StuckLadder({ question, progress, onVisualize, onSeePatt
     // column, which meant two separate places to look for an explanation. It
     // is the same ladder, one rung further: read it AFTER the code, when the
     // shape is fresh and the generalisation can land.
-    question.insight && {
-      key: 'insight',
-      label: 'Why it works, and why it is worth knowing',
-      teaser: 'The generalisation — what this technique buys you on the next problem.',
-      body: (
-        <div className="rung-body">
-          <Markdown text={question.insight} />
-        </div>
-      ),
-    },
+    !hideInsight &&
+      question.insight && {
+        key: 'insight',
+        label: 'Why it works, and why it is worth knowing',
+        teaser: 'The generalisation — what this technique buys you on the next problem.',
+        body: (
+          <div className="rung-body">
+            <Markdown text={question.insight} />
+          </div>
+        ),
+      },
   ].filter(Boolean);
 
   const [open, setOpen] = useState(0); // number of rungs revealed so far

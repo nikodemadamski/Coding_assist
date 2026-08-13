@@ -1866,7 +1866,22 @@ try {
     await page.locator('.pv-extras .approaches').isVisible(),
     'and the model approaches sit where the ladder was'
   );
+  // The take-away is the payoff for having solved it, so it is OPEN on a
+  // cleared question rather than folded inside the ladder — and it must not
+  // then appear twice on the same screen.
+  check(
+    await page.locator('.pv-takeaway').isVisible(),
+    'the take-away — what this technique buys you next — is open once cleared'
+  );
+  check(
+    (await page.locator('.pv-takeaway .rung-body').innerText()).length > 200,
+    'and it is a real explanation, not a one-liner'
+  );
   await page.locator('.stuck-after > summary').click();
+  check(
+    (await page.locator('.pv-takeaway').count()) === 1,
+    'and the reopened ladder does not repeat it'
+  );
   // climb the stuck ladder to the code rung, then Visualize
   for (let i = 0; i < 4; i++) {
     const next = page.locator('.stuck-next');
