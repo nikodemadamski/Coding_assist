@@ -81,7 +81,15 @@ an 11-element test case passed but added nine minutes to `npm test`)
 
 `pyHarness.js` holds PY_PRELUDE (defaultdict, Counter, deque, heapq, `import bisect`,
 math, itertools, functools cache/lru_cache, inf, typing…) **injected into exec globals,
-never prepended** (keeps user line numbers). PY_HARNESS runs tests; PY_TRACE_HARNESS is
+never prepended** (keeps user line numbers). **Every harness catches BaseException, not
+just Exception** — `SystemExit` (what `exit()`/`quit()`/`sys.exit()` raise) is a
+BaseException, so it used to escape to Emscripten, which ends the WASM program with
+exit(1). The interpreter was then DEAD but still cached, so one `exit()` made every later
+run fail identically and a correct solution was reported as wrong. Three layers now:
+the harnesses contain it, `py.worker.js` probes the runtime (`runPython('1')`) after a
+failure and drops its cached promise when it is unusable, and `pyClient.js` terminates the
+worker on a `fatal` error. tests/runtime-survival-tests.mjs re-runs a known-good solution
+after every hostile input — that follow-up is the real assertion. PY_HARNESS runs tests; PY_TRACE_HARNESS is
 the settrace visualizer with an AST narrator (`_narrate`, `_cond_text`, MAX_STEPS 400).
 Both run identically in the Pyodide module worker (5s kill switch) and in Node tests.
 Result comparison canonicalizes via `_canon`, honoring `unordered`.

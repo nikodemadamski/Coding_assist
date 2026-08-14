@@ -143,7 +143,28 @@ try:
     exec(compile(user_code, "<string>", "exec"), ns)
 except SyntaxError:
     outcome = {"status": "syntax_error", "message": traceback.format_exc(limit=0).strip()}
+# **SystemExit is a BaseException, not an Exception**, so exit(), quit() and
+# sys.exit() used to sail straight past 'except Exception', out of the
+# harness, and into Emscripten — which treats it as the program ending and
+# tears the interpreter down with exit(1). The WASM instance is then DEAD: every
+# later run in that worker fails identically, so a learner who typed exit() once
+# could never pass anything again, however correct their next answer was.
+# Catching it here turns it back into what the learner actually meant: an error
+# in this run, reported like any other.
+except SystemExit:
+    outcome = {
+        "status": "runtime_error",
+        "message": (
+            "Your code called exit() (or sys.exit()), which stops the whole program. "
+            "Return a value from the function instead — the tests call it and read what comes back."
+        ),
+    }
 except Exception:
+    outcome = {"status": "runtime_error", "message": _user_error()}
+# Anything else that derives from BaseException (a bare "raise BaseException",
+# GeneratorExit, KeyboardInterrupt) would ALSO escape to Emscripten and end the
+# program. Nothing may leave this block uncaught.
+except BaseException:
     outcome = {"status": "runtime_error", "message": _user_error()}
 
 if outcome["status"] == "ok":
@@ -187,7 +208,16 @@ if outcome["status"] == "ok":
                         entry["got"] = _n
                 except Exception:
                     pass
+        # Same reasoning as the exec above: a function that calls exit() when
+        # the tests invoke it would otherwise kill the interpreter mid-run.
+        except SystemExit:
+            entry["error"] = (
+                "Your code called exit() (or sys.exit()) while the tests were running. "
+                "Return a value from the function instead."
+            )
         except Exception:
+            entry["error"] = _user_error()
+        except BaseException:
             entry["error"] = _user_error()
         entry["stdout"] = buf.getvalue()[:4000]
         outcome["results"].append(entry)
@@ -423,7 +453,18 @@ try:
         outcome["lines"] = user_code.split("\\n")
 except SyntaxError:
     outcome = {"status": "error", "message": traceback.format_exc(limit=0).strip()}
+# SystemExit is a BaseException — without this, exit() in traced code kills the
+# interpreter instead of reporting an error. See the note in PY_HARNESS.
+except SystemExit:
+    sys.settrace(None)
+    outcome = {
+        "status": "error",
+        "message": "Your code called exit() (or sys.exit()). Return a value from the function instead.",
+    }
 except Exception:
+    outcome = {"status": "error", "message": traceback.format_exc().splitlines()[-1]}
+except BaseException:
+    sys.settrace(None)
     outcome = {"status": "error", "message": traceback.format_exc().splitlines()[-1]}
 
 json.dumps(outcome)
@@ -444,7 +485,21 @@ try:
     with redirect_stdout(_buf):
         exec(compile(payload["code"], "<lesson>", "exec"), _ns)
     outcome = {"status": "ok", "stdout": _buf.getvalue()}
+# SystemExit is a BaseException. A lesson snippet calling exit() would otherwise
+# kill the shared interpreter for every later run. See the note in PY_HARNESS.
+except SystemExit:
+    outcome = {
+        "status": "error",
+        "message": "This snippet called exit() (or sys.exit()), which stops the program.",
+        "stdout": _buf.getvalue(),
+    }
 except Exception:
+    outcome = {
+        "status": "error",
+        "message": traceback.format_exc().splitlines()[-1],
+        "stdout": _buf.getvalue(),
+    }
+except BaseException:
     outcome = {
         "status": "error",
         "message": traceback.format_exc().splitlines()[-1],

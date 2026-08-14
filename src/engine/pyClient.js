@@ -111,12 +111,22 @@ function dispatchJob(type, payload, needsPandas, onStatus) {
       } else if (msg.type === 'result') {
         finish({ data: msg.data });
       } else if (msg.type === 'error') {
+        // `fatal` means the worker found the interpreter itself dead — an
+        // Emscripten exit, an abort, an OOM — not just a failing run. It has
+        // already dropped its cached runtime; throw the whole worker away too
+        // so the next run starts from a clean process rather than inheriting
+        // whatever wedged this one. Without this, ONE fatal error made every
+        // subsequent run report the same failure forever, and a learner with a
+        // correct solution was told they were wrong.
         finish({
           error: {
             errorType: 'runtime',
-            message: `The Python runtime hit a problem: ${msg.message}`,
+            message: msg.fatal
+              ? `The Python runtime stopped: ${msg.message}\nIt has been restarted — run again.`
+              : `The Python runtime hit a problem: ${msg.message}`,
           },
         });
+        if (msg.fatal) killWorker();
       }
     };
 
