@@ -147,6 +147,12 @@ move). Smoke's `checkRevealSettled` asserts nothing is left transparent.
   file). Pinned by tests/storage-tests.mjs + two smoke checks.
 - `progress.js` — SRS (stages [1,3,7,16,30]), recordSolve (keeps mistakes; first-solve
   `firstSolveMs`), belts, weakSpots (≥2 mistakes), reviewForecast, backupStatus, recordBigO.
+  **REST DAYS** — `restAllowance` / `restStatus` / `setRestDays`, allowance on `streak.restDays`
+  (default 2, max 6) so it export/imports with the record and the same history gives the same
+  streak anywhere. `currentStreak` survives up to that many CONSECUTIVE missed days; resting
+  never adds to `count` (which stays trained days), so coins can't inflate either. `touchStreak`
+  spreads the old streak — rebuilding it from scratch silently reset the user's allowance on
+  every solve. `restDays: 0` restores the original strict rule exactly.
   **`skipQuestion` / `isSkipped` / `isSettled`** — "I already know this one". The path is a
   fixed order, right for someone starting at the beginning and wrong for everyone else: solve
   Two Sum first and the hero offered Reverse a string forever. A skip records NOTHING about
@@ -201,7 +207,9 @@ move). Smoke's `checkRevealSettled` asserts nothing is left transparent.
   Learn lane and the Learn page, where you go when you mean to. Pinned by
   lesson-progress-tests (a check due AND a question due must still open on the question, and
   every id a session can hand you must be a question id) and by smoke end to end.
-- others: activity (daily goal + todayPulse), mockSession (formats incl. data round via
+- others: activity (daily goal + todayPulse; `calendarDays` returns goal|visited|**rest**|none —
+  a day off inside the allowance vs one that broke the run, `countRestDays` for the summary;
+  days before you ever trained are `none`, not rest), mockSession (formats incl. data round via
   format.tracks, optimalComplexity = last approach's complexity else question.complexity),
   celebrate, theme, uiPrefs, vizPointers (▲ markers from subscript scan).
 

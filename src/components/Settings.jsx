@@ -2,8 +2,9 @@ import { useRef, useState } from 'react';
 import { useFocusTrap } from './useFocusTrap.js';
 import { parseImport, downloadExport, loadLastBackup, importSummary } from '../state/storage.js';
 import { loadUiPrefs, saveUiPrefs, NAME_MAX } from '../state/uiPrefs.js';
+import { restAllowance, REST_DAYS_MAX } from '../state/progress.js';
 
-export default function Settings({ progress, customQuestions, onImport, onBackedUp, onClose }) {
+export default function Settings({ progress, customQuestions, onImport, onBackedUp, onSetRestDays, onClose }) {
   const [message, setMessage] = useState('');
   const [name, setName] = useState(() => loadUiPrefs().name);
   const [lastBackup, setLastBackup] = useState(loadLastBackup);
@@ -65,6 +66,31 @@ export default function Settings({ progress, customQuestions, onImport, onBacked
             aria-label="Your name, used on the home screen"
           />
         </label>
+
+        {/* The streak exists to keep you coming back, not to punish a week with
+            no free evenings. This is the one number that decides whether a day
+            off costs you the run, so it belongs to you, not to the app. */}
+        {onSetRestDays && (
+          <label className="set-rest">
+            <span className="set-name-label">Rest days</span>
+            <select
+              className="set-rest-input"
+              value={restAllowance(progress?.streak)}
+              onChange={(e) => onSetRestDays(Number(e.target.value))}
+              aria-label="How many days off in a row your streak survives"
+            >
+              {Array.from({ length: REST_DAYS_MAX + 1 }, (_, n) => (
+                <option key={n} value={n}>
+                  {n === 0 ? 'none — every day counts' : `${n} day${n === 1 ? '' : 's'} in a row`}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        <p className="note">
+          Your streak survives that many days off in a row. Rest days never count as training —
+          they just do not reset the run.
+        </p>
 
         <p className="note">
           This app never connects to any AI service. New questions come in through

@@ -14,7 +14,7 @@ import {
   ChevronDown,
   Shirt,
 } from 'lucide-react';
-import { beltFor, currentStreak } from '../state/progress.js';
+import { beltFor, currentStreak, restStatus } from '../state/progress.js';
 import DojoLogo from './header/DojoLogo.jsx';
 import NavButton from './header/NavButton.jsx';
 import { StreakChip, BeltChip, CoinChip, useTactile } from './header/HeaderChips.jsx';
@@ -50,6 +50,7 @@ export default function Header({
 }) {
   const belt = beltFor(solvedCount);
   const streak = currentStreak(progress.streak);
+  const rest = restStatus(progress.streak);
   const reduced = useReducedMotion();
   const tactile = useTactile();
 
@@ -88,7 +89,7 @@ export default function Header({
 
       <div className="header-spacer" />
 
-      <StreakChip streak={streak} />
+      <StreakChip streak={streak} rest={rest} />
       <BeltChip belt={belt} solvedCount={solvedCount} />
       <CoinChip coins={coins} onClick={onShop} />
 

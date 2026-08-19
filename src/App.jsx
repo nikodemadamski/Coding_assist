@@ -45,6 +45,7 @@ import {
   recordBigO,
   solvedCount,
   skipQuestion,
+  setRestDays,
 } from './state/progress.js';
 import { nextOnPath, neighborOnPath } from './data/roadmap.js';
 import { coinBalance } from './state/shop.js';
@@ -257,6 +258,10 @@ export default function App() {
     setProgress((p) => skipQuestion(p, questionId));
   }, []);
 
+  const handleSetRestDays = useCallback((n) => {
+    setProgress((p) => setRestDays(p, n));
+  }, []);
+
   const handleRestore = useCallback(({ progress: p, customQuestions: qs }) => {
     setProgress(p);
     setCustomQuestions(qs);
@@ -462,6 +467,7 @@ export default function App() {
           customQuestions={customQuestions}
           onImport={handleRestore}
           onBackedUp={setLastBackup}
+          onSetRestDays={handleSetRestDays}
           onClose={() => setSettingsOpen(false)}
         />
       )}

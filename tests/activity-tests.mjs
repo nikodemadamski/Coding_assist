@@ -6,11 +6,12 @@ import {
   todaysMisses,
   isGoalMetToday,
   calendarDays,
+  countRestDays,
   activitySummary,
   todayPulse,
 } from '../src/state/activity.js';
 import { createDrillSession, currentId, sessionCounts } from '../src/state/practiceSession.js';
-import { todayStr } from '../src/state/progress.js';
+import { todayStr, setRestDays } from '../src/state/progress.js';
 import { EMPTY_PROGRESS } from '../src/state/storage.js';
 
 let failures = 0;
@@ -129,6 +130,67 @@ const questions = [{ id: 'q1' }, { id: 'q2' }, { id: 'q3' }];
   check(pulse.goalMet === false, 'pulse carries goal state');
   const empty = todayPulse(structuredClone(EMPTY_PROGRESS), qs, NOW);
   check(empty.solves === 0 && empty.dueLeft === 0 && !empty.goalMet, 'fresh day pulses zeros');
+}
+
+// ---- rest days on the calendar ----
+// A day off you were entitled to and a day that cost you a run look identical
+// on a plain attendance grid. Only one of them is worth feeling bad about, so
+// the grid has to tell them apart.
+{
+  const d = (n) => {
+    const dt = new Date();
+    dt.setDate(dt.getDate() + n);
+    return todayStr(dt);
+  };
+  const trained = { visited: true, solves: 1, fails: 0, missed: [], goalMet: true };
+  // Trained 6 and 5 days ago, then again 3 days ago: day -4 is a single rest
+  // day inside the allowance. Days -9/-8 sit before any training in the window.
+  const p = {
+    ...structuredClone(EMPTY_PROGRESS),
+    activity: { [d(-6)]: trained, [d(-5)]: trained, [d(-3)]: trained },
+  };
+  const days = calendarDays(p, 10);
+  const byDate = Object.fromEntries(days.map((x) => [x.date, x.status]));
+  check(byDate[d(-6)] === 'goal' && byDate[d(-5)] === 'goal', 'trained days show as goal met');
+  check(byDate[d(-4)] === 'rest', 'a single day off inside the allowance reads as REST');
+  check(byDate[d(-9)] === 'none', 'days before you ever trained are not rest, just empty');
+  check(countRestDays(days) >= 1, 'rest days are counted for tracking');
+
+  // Two days off is still rest (allowance 2); three is a break.
+  const p2 = {
+    ...structuredClone(EMPTY_PROGRESS),
+    activity: { [d(-8)]: trained, [d(-5)]: trained },
+  };
+  const s2 = Object.fromEntries(calendarDays(p2, 12).map((x) => [x.date, x.status]));
+  check(s2[d(-7)] === 'rest' && s2[d(-6)] === 'rest', 'two consecutive days off are both rest');
+
+  const p3 = {
+    ...structuredClone(EMPTY_PROGRESS),
+    activity: { [d(-9)]: trained, [d(-5)]: trained },
+  };
+  const s3 = Object.fromEntries(calendarDays(p3, 12).map((x) => [x.date, x.status]));
+  check(
+    s3[d(-8)] === 'none' && s3[d(-7)] === 'none' && s3[d(-6)] === 'none',
+    'three days off exceed the allowance and read as a real break'
+  );
+
+  // With the allowance turned off, nothing is ever rest.
+  const strict = setRestDays(
+    { ...structuredClone(EMPTY_PROGRESS), activity: { [d(-6)]: trained, [d(-3)]: trained } },
+    0
+  );
+  check(countRestDays(calendarDays(strict, 10)) === 0, 'restDays 0 means no day is ever rest');
+
+  // The open run up to today is forgiven on the same terms — otherwise today
+  // would read as a miss while the streak is still alive.
+  const openRun = {
+    ...structuredClone(EMPTY_PROGRESS),
+    activity: { [d(-1)]: trained },
+  };
+  check(
+    Object.fromEntries(calendarDays(openRun, 5).map((x) => [x.date, x.status]))[d(0)] === 'rest',
+    'today reads as rest while the streak is still alive'
+  );
 }
 
 console.log(failures === 0 ? '\nAll attendance/drill tests green.' : `\n${failures} FAILURE(S).`);

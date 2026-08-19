@@ -17,29 +17,86 @@ export function addDays(dateStr, days) {
   return todayStr(dt);
 }
 
-function yesterdayStr(today) {
-  return addDays(today, -1);
-}
-
 export function isDue(srsEntry, today = todayStr()) {
   return !!srsEntry && srsEntry.nextDue <= today;
 }
 
-// Streak the user should *see*: 0 if they missed a day.
+// ---- rest days ----
+// A streak that breaks the first day you cannot train is measuring the wrong
+// thing. The goal here is "one more question whenever I have time", and a
+// person with a job has days where there is no time — punishing those turns a
+// motivator into a reason to give up. So the streak tolerates a REST ALLOWANCE:
+// you may miss up to this many consecutive days and the run continues.
+//
+// Rest days are not counted as training. `count` stays the number of days you
+// actually solved something, so the number never flatters you — resting simply
+// does not reset it. Coins follow the same rule, because they are paid from
+// currentStreak.
+export const REST_DAYS_DEFAULT = 2;
+export const REST_DAYS_MAX = 6; // beyond this a "streak" stops meaning anything
+
+// Stored on the streak itself so it exports/imports with the record — the same
+// history must produce the same streak on any device.
+export function restAllowance(streak) {
+  const n = Number(streak?.restDays);
+  if (!Number.isFinite(n)) return REST_DAYS_DEFAULT;
+  return Math.min(REST_DAYS_MAX, Math.max(0, Math.round(n)));
+}
+
+// Whole calendar days from `from` to `to` (both 'YYYY-MM-DD'). 0 = same day.
+export function daysBetween(from, to) {
+  const [ay, am, ad] = from.split('-').map(Number);
+  const [by, bm, bd] = to.split('-').map(Number);
+  const a = new Date(ay, am - 1, ad);
+  const b = new Date(by, bm - 1, bd);
+  return Math.round((b - a) / 86400000);
+}
+
+// Days with no training between the last active day and `today`. Same day or
+// yesterday means none missed yet — today is not over.
+export function missedSince(lastActiveDate, today) {
+  return Math.max(0, daysBetween(lastActiveDate, today) - 1);
+}
+
+// Streak the user should *see*: it survives rest days, and breaks only when the
+// gap exceeds the allowance.
 export function currentStreak(streak, today = todayStr()) {
   if (!streak || !streak.lastActiveDate) return 0;
-  if (streak.lastActiveDate === today || streak.lastActiveDate === yesterdayStr(today)) {
-    return streak.count;
-  }
-  return 0;
+  const gap = daysBetween(streak.lastActiveDate, today);
+  // A last-active date in the future means a clock change, not a missed day.
+  if (gap < 0) return streak.count;
+  return missedSince(streak.lastActiveDate, today) <= restAllowance(streak) ? streak.count : 0;
+}
+
+// How much rest is left before the run breaks — what the UI needs to say
+// "rest tomorrow and it holds" rather than leaving you to guess.
+export function restStatus(streak, today = todayStr()) {
+  const allowance = restAllowance(streak);
+  if (!streak?.lastActiveDate) return { allowance, used: 0, left: allowance, alive: false };
+  const used = Math.min(allowance + 1, missedSince(streak.lastActiveDate, today));
+  return {
+    allowance,
+    used,
+    left: Math.max(0, allowance - used),
+    alive: used <= allowance && streak.count > 0,
+    restingToday: used > 0,
+  };
 }
 
 function touchStreak(streak, today) {
   if (streak.lastActiveDate === today) return streak;
-  if (streak.lastActiveDate === yesterdayStr(today)) {
-    return { count: streak.count + 1, lastActiveDate: today };
+  // `...streak` preserves restDays — rebuilding the object from scratch here
+  // would silently reset the user's allowance on every solve.
+  if (streak.lastActiveDate && missedSince(streak.lastActiveDate, today) <= restAllowance(streak)) {
+    return { ...streak, count: streak.count + 1, lastActiveDate: today };
   }
-  return { count: 1, lastActiveDate: today };
+  return { ...streak, count: 1, lastActiveDate: today };
+}
+
+// Change the allowance without disturbing the run it governs.
+export function setRestDays(progress, days) {
+  const n = Math.min(REST_DAYS_MAX, Math.max(0, Math.round(Number(days) || 0)));
+  return { ...progress, streak: { ...(progress.streak ?? {}), restDays: n } };
 }
 
 // How a confidence rating on a review shifts the SRS stage.

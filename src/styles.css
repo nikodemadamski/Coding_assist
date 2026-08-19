@@ -2594,9 +2594,38 @@ details.hint[open] summary {
   background: var(--gold);
   opacity: 0.55;
 }
+/* A rest day is not a miss and must not read like one — but it is not training
+   either, so it does not earn a state colour. A ringed, unfilled cell says
+   "deliberately empty" where a flat panel cell says "nothing here". */
+.cal-rest {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--sky) 55%, transparent);
+}
 .cal-goal {
   background: var(--jade);
 }
+/* The rest-day control mirrors the name field above it. */
+.set-rest {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  margin-top: var(--s-4);
+}
+.set-rest-input {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  padding: 7px 10px;
+  font-size: var(--t-sm);
+  font-family: inherit;
+}
+
+/* Resting, not broken: the flame cools rather than going out. */
+.streak-chip.is-resting .hdr-chip-icon {
+  color: var(--sky);
+}
+
 .cal-legend {
   display: flex;
   align-items: center;

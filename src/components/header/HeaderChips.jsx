@@ -31,12 +31,26 @@ function Tip({ children }) {
   );
 }
 
-export function StreakChip({ streak }) {
+// `rest` is the restStatus for the current run — see progress.restStatus. The
+// tooltip states how much rest is left rather than leaving you to work out
+// whether today off costs you the run; that uncertainty is the thing that makes
+// a streak stressful instead of motivating.
+export function StreakChip({ streak, rest = null }) {
   const t = useTactile();
   const alive = streak > 0;
+  const resting = alive && rest?.used > 0;
+  const tip = () => {
+    if (!alive) return 'No streak yet — one solve today starts it';
+    if (rest && rest.left > 0) {
+      return `${streak}-day streak — solve one today, or rest ${rest.left} more day${
+        rest.left === 1 ? '' : 's'
+      } and it still holds`;
+    }
+    return `${streak}-day streak — rest days used up, solve one today to keep it`;
+  };
   return (
     <motion.span
-      className={`hdr-chip streak-chip ${alive ? 'is-alive' : ''}`}
+      className={`hdr-chip streak-chip ${alive ? 'is-alive' : ''} ${resting ? 'is-resting' : ''}`}
       tabIndex={0}
       transition={t.transition}
       whileHover={t.whileHover}
@@ -45,11 +59,7 @@ export function StreakChip({ streak }) {
       <Flame className="hdr-chip-icon" size={15} strokeWidth={2.2} aria-hidden="true" />
       <span className="hdr-chip-n">{streak}</span>
       <span className="hdr-chip-l">day{streak === 1 ? '' : 's'}</span>
-      <Tip>
-        {alive
-          ? `${streak}-day streak — solve one today to keep it`
-          : 'No streak yet — one solve today starts it'}
-      </Tip>
+      <Tip>{tip()}</Tip>
     </motion.span>
   );
 }

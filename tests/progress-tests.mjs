@@ -5,6 +5,11 @@ import {
   applyRating,
   isDue,
   currentStreak,
+  restAllowance,
+  restStatus,
+  setRestDays,
+  REST_DAYS_DEFAULT,
+  REST_DAYS_MAX,
   dueQuestionIds,
   beltFor,
   addDays,
@@ -114,9 +119,46 @@ console.log('Training logic tests\n');
   p = recordSolve(p, 'c', day(1));
   check(currentStreak(p.streak, todayStr(day(1))) === 2, 'consecutive day increments streak');
   check(currentStreak(p.streak, todayStr(day(2))) === 2, 'streak still shows the day after (grace to solve today)');
-  check(currentStreak(p.streak, todayStr(day(3))) === 0, 'missed day resets displayed streak to 0');
+
+  // ---- rest days ----
+  // A streak that breaks the first day you cannot train measures the wrong
+  // thing: the goal is "one more question whenever I have time", and some days
+  // there is none. Up to REST_DAYS_DEFAULT consecutive days off are forgiven.
+  check(currentStreak(p.streak, todayStr(day(3))) === 2, 'one rest day does not break the streak');
+  check(currentStreak(p.streak, todayStr(day(4))) === 2, 'two rest days still hold it');
+  check(currentStreak(p.streak, todayStr(day(5))) === 0, 'a third missed day breaks it');
+
+  // Resting does not EARN anything: the count is days actually trained.
   p = recordSolve(p, 'd', day(3));
-  check(currentStreak(p.streak, todayStr(day(3))) === 1, 'solving after a gap restarts at 1');
+  check(currentStreak(p.streak, todayStr(day(3))) === 3, 'training after a rest day continues the run');
+  check(p.streak.count === 3, '  and the count is trained days, not calendar days');
+
+  // Past the allowance the run really does restart.
+  let q = structuredClone(EMPTY_PROGRESS);
+  q = recordSolve(q, 'a', day(0));
+  q = recordSolve(q, 'b', day(1));
+  q = recordSolve(q, 'c', day(5));
+  check(q.streak.count === 1, 'solving after too long a gap restarts at 1');
+
+  // The allowance is configurable, travels with the record, and 0 restores the
+  // original strict behaviour exactly.
+  let strict = setRestDays(structuredClone(EMPTY_PROGRESS), 0);
+  strict = recordSolve(strict, 'a', day(0));
+  check(currentStreak(strict.streak, todayStr(day(1))) === 1, 'restDays 0: yesterday still counts');
+  check(currentStreak(strict.streak, todayStr(day(2))) === 0, 'restDays 0: one missed day breaks it');
+  strict = recordSolve(strict, 'b', day(2));
+  check(strict.streak.count === 1, 'restDays 0: and the run restarts');
+  check(restAllowance(strict.streak) === 0, 'the allowance survives a solve');
+  check(restAllowance(setRestDays({}, 99).streak) === REST_DAYS_MAX, 'the allowance is clamped');
+  check(restAllowance({}) === REST_DAYS_DEFAULT, 'a record with no allowance uses the default');
+
+  // What the UI needs in order to say how much rest is left.
+  let rs = structuredClone(EMPTY_PROGRESS);
+  rs = recordSolve(rs, 'a', day(0));
+  check(restStatus(rs.streak, todayStr(day(0))).left === 2, 'fresh solve: full allowance left');
+  check(restStatus(rs.streak, todayStr(day(2))).left === 1, 'after one rest day: one left');
+  check(restStatus(rs.streak, todayStr(day(3))).left === 0, 'after two: none left');
+  check(restStatus(rs.streak, todayStr(day(4))).alive === false, 'and past that the run is gone');
 }
 
 // ---- belts ----

@@ -2,7 +2,7 @@
 // Records, per calendar day, whether you showed up, how many solves/fails you
 // had, which questions you missed (fuel for the drill), and whether you met the
 // daily goal: solve at least one question AND leave no review due.
-import { todayStr, dueQuestionIds } from './progress.js';
+import { todayStr, dueQuestionIds, restAllowance } from './progress.js';
 
 function emptyDay() {
   return { visited: false, solves: 0, fails: 0, missed: [], goalMet: false };
@@ -75,8 +75,19 @@ export function todayPulse(progress, questions, now = new Date()) {
 // ---- calendar + summary ----
 
 // Returns the last `days` calendar days (oldest first) with their status:
-// 'none' (didn't show), 'visited' (showed, goal unmet), 'goal' (goal met).
+// 'goal' (goal met), 'visited' (showed, goal unmet), 'rest' (no training, but
+// inside the rest allowance so the streak held), 'none' (a gap that broke it).
+//
+// Separating REST from NONE is the whole point of tracking rest days: a day off
+// you were entitled to and a day that cost you a run look identical on a plain
+// attendance grid, and only one of them is worth feeling bad about.
+//
+// A day counts as training if it has a solve — that is what touchStreak
+// records. Showing up without solving is 'visited': honest attendance, but it
+// does not extend the run, so it is treated as a gap day when measuring rest.
 export function calendarDays(progress, days = 84, today = todayStr()) {
+  const activity = progress.activity || {};
+  const allowance = restAllowance(progress.streak);
   const out = [];
   const [y, m, d] = today.split('-').map(Number);
   const base = new Date(y, m - 1, d);
@@ -84,13 +95,44 @@ export function calendarDays(progress, days = 84, today = todayStr()) {
     const dt = new Date(base);
     dt.setDate(dt.getDate() - i);
     const key = todayStr(dt);
-    const rec = (progress.activity || {})[key];
+    const rec = activity[key];
+    const trained = (rec?.solves || 0) > 0;
     let status = 'none';
     if (rec?.goalMet) status = 'goal';
     else if (rec?.visited) status = 'visited';
-    out.push({ date: key, status, solves: rec?.solves || 0 });
+    out.push({ date: key, status, solves: rec?.solves || 0, trained });
   }
+
+  // Second pass: promote gap days to 'rest' when they sit in a run short enough
+  // to have been forgiven. A run is only rest if training PRECEDED it — days
+  // before you ever started are not rest, they are just not your history.
+  // (A run reaching the start of the window has no visible predecessor, so it
+  // stays 'none' rather than being guessed at.)
+  let runStart = -1;
+  const closeRun = (endExclusive) => {
+    if (runStart <= 0) return; // no preceding trained day inside the window
+    const len = endExclusive - runStart;
+    if (len > 0 && len <= allowance) {
+      for (let k = runStart; k < endExclusive; k++) {
+        if (out[k].status === 'none') out[k].status = 'rest';
+      }
+    }
+  };
+  for (let i = 0; i < out.length; i++) {
+    if (out[i].trained) {
+      if (runStart >= 0) closeRun(i);
+      runStart = i + 1;
+    }
+  }
+  // The trailing run runs up to today and is still open — forgiven on the same
+  // terms, which is what keeps today's cell honest while the streak is alive.
+  if (runStart >= 0) closeRun(out.length);
   return out;
+}
+
+// How many of the days shown were rest days rather than misses.
+export function countRestDays(days) {
+  return days.filter((d) => d.status === 'rest').length;
 }
 
 export function activitySummary(progress) {

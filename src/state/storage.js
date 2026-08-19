@@ -8,7 +8,7 @@ export const EMPTY_PROGRESS = {
   solved: {}, // questionId -> { firstSolvedAt, attempts, solves, mistakes, lastSolvedAt }
   drafts: {}, // questionId -> code string
   srs: {}, // questionId -> { stage: 0..4, nextDue: 'YYYY-MM-DD' }
-  streak: { count: 0, lastActiveDate: null },
+  streak: { count: 0, lastActiveDate: null, restDays: 2 }, // restDays = rest allowance, see progress.restAllowance
   activity: {}, // 'YYYY-MM-DD' -> { visited, solves, fails, missed: [id], goalMet }
   warmup: {}, // level -> { best, runs, lastRunAt }
   mock: [], // [{ id, title, difficulty, date, format, timeMs, passed, ... }]
