@@ -370,6 +370,15 @@ asymmetric: smoke asserts the bento cells do NOT all share one width.
 catches the generated-UI tells — coloured side-tabs, thin-border+wide-shadow, bounce
 easing, layout-animating transitions, sub-11px text, contrast failures, long lines.
 
+**One known false positive, do not "fix" it.** Run with an explicit
+`--viewport 1440x900` and impeccable reports `.graph-fit clips a positioned child`,
+warning that a clip cuts off tooltips and popovers. Measured in the rendered page: the
+only positioned children inside `.graph-fit` are the `.graph-node` tiles, none is
+clipped (`anyClipped: false`), and the topic popup renders OUTSIDE the container and is
+fully visible. The clip is load-bearing — it stops the canvas's unscaled 840px layout box
+escaping its column — so removing it to silence the linter would reintroduce a real bug.
+Verified pre-existing by stashing, rebuilding and re-running against the baseline.
+
 ## UI shell (src/components/)
 
 **The top bar** (`Header.jsx` + `components/header/`) is frosted glass: sticky, translucent

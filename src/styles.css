@@ -642,6 +642,22 @@ button {
 .pane-problem > * {
   flex-shrink: 0;
 }
+/* Cap the PROSE at the measure. DESIGN.md has always said prose is capped, but
+   the description paragraphs carried max-width:none and only LOOKED capped on
+   desktop, where the two-column split happens to constrain the column to ~62
+   characters. At 768 the column is full width and the same paragraphs ran to
+   80 characters — past comfortable reading, and only visible once a tablet was
+   actually tested.
+   Deliberately prose only: examples, constraints and the code blocks inside
+   them need the full column, so capping them would reintroduce wrapping in
+   exactly the places where a line break changes the meaning. */
+.pane-problem .prose p,
+.pane-problem .prose li,
+.pane-problem .pv-why,
+.pane-problem .rung-body p,
+.pane-problem .pv-takeaway p {
+  max-width: var(--measure);
+}
 
 .pane-code {
   display: flex;

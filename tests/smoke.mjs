@@ -2405,6 +2405,30 @@ try {
     'tablet: no horizontal scroll'
   );
   {
+    // Prose is capped at --measure. This only ever LOOKED true on desktop,
+    // where the two-column split constrains the column by accident; at 768 the
+    // column is full width and the same paragraphs ran to 80 characters.
+    // Measured in rendered characters, not in px, because that is what a
+    // reader actually experiences.
+    await tablet.locator('.icon-btn').nth(1).click().catch(() => {});
+    await tablet.waitForTimeout(700);
+    await tablet.locator('.q-card').first().click();
+    await tablet.waitForTimeout(1200);
+    const chars = await tablet.evaluate(() => {
+      const el = [...document.querySelectorAll('.pane-problem .prose p')].find(
+        (e) => e.textContent.trim().length > 80
+      );
+      if (!el) return -1;
+      const cs = getComputedStyle(el);
+      const ctx = document.createElement('canvas').getContext('2d');
+      ctx.font = `${cs.fontSize} ${cs.fontFamily}`;
+      return Math.round(el.getBoundingClientRect().width / ctx.measureText('0').width);
+    });
+    check(chars > 0 && chars <= 75, `tablet: problem prose stays inside the measure (${chars} chars)`);
+    await tablet.goto(BASE);
+    await tablet.waitForTimeout(900);
+  }
+  {
     // A wrapped nav is measured, not eyeballed: does any header child begin
     // below the bottom of the first one?
     const hdr = await tablet.evaluate(() => {
