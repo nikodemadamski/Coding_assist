@@ -2378,6 +2378,84 @@ try {
   );
   await mobile.close();
 
+  // ================= tablet (768px, touch) =================
+  // 768 was never tested, and it is not a wide phone or a narrow desktop: the
+  // stylesheet's breakpoints cluster at <=760 then jump to 800+, so this width
+  // missed every mobile rule AND was treated as desktop by the rest. It landed
+  // a two-row header (90px, over the 80px nav cap) with the theme toggle and
+  // Settings pushed onto a second line.
+  //
+  // `hasTouch` is what makes this test meaningful: the touch-size rules are
+  // keyed on `pointer: coarse`, not on width, because a 768 tablet and a 1024
+  // iPad Pro are both fingers while a 1280 laptop is a mouse. Without touch
+  // emulation those rules never apply and the assertions below would pass
+  // against the unfixed stylesheet.
+  const tablet = await browser.newPage({ viewport: { width: 768, height: 1024 }, hasTouch: true });
+  await tablet.goto(BASE);
+  const tabletSkip = tablet.locator('.onboard-skip');
+  if (await tabletSkip.isVisible().catch(() => false)) await tabletSkip.click();
+  await tablet.waitForTimeout(400);
+
+  check(
+    await tablet.evaluate(() => window.matchMedia('(pointer: coarse)').matches),
+    'tablet: the run really is a touch context (coarse pointer)'
+  );
+  check(
+    await tablet.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    'tablet: no horizontal scroll'
+  );
+  {
+    // A wrapped nav is measured, not eyeballed: does any header child begin
+    // below the bottom of the first one?
+    const hdr = await tablet.evaluate(() => {
+      const h = document.querySelector('.header');
+      const kids = [...h.children].filter((e) => {
+        const r = e.getBoundingClientRect();
+        return r.width > 0 && r.height > 0;
+      });
+      const first = kids[0].getBoundingClientRect();
+      return {
+        height: Math.round(h.getBoundingClientRect().height),
+        wrapped: kids.filter((e) => e.getBoundingClientRect().top >= first.bottom - 1).length,
+      };
+    });
+    check(hdr.wrapped === 0, `tablet: the header stays on one row (${hdr.wrapped} wrapped)`);
+    check(hdr.height <= 80, `tablet: and inside the 80px nav cap (${hdr.height}px)`);
+  }
+  {
+    // Every control a finger has to hit clears 44px. Before the coarse-pointer
+    // rules the header buttons were 28px here.
+    const small = await tablet.evaluate(() =>
+      [...document.querySelectorAll('.header button, .hero-act, .hero-skip, .weak-chip')]
+        .map((e) => ({ c: (e.className || '').toString().slice(0, 22), h: Math.round(e.getBoundingClientRect().height) }))
+        .filter((x) => x.h > 0 && x.h < 44)
+    );
+    check(
+      small.length === 0,
+      `tablet: every touch target clears 44px${small.length ? ` (${small.map((x) => x.c + '=' + x.h).join(', ')})` : ''}`
+    );
+  }
+  {
+    // NOT isVisible(): the label is clipped to 1x1 on purpose so it survives as
+    // the accessible name, and Playwright counts a 1px box as visible. What
+    // "icon-only" means here is that the label occupies no layout width.
+    const labelW = await tablet.evaluate(() => {
+      const el = document.querySelector('.hdr-btn-label');
+      return el ? Math.round(el.getBoundingClientRect().width) : -1;
+    });
+    check(labelW <= 1, `tablet: nav goes icon-only rather than wrapping (label ${labelW}px wide)`);
+  }
+  {
+    // Icon-only must not mean unlabelled: the accessible name is still there.
+    const named = await tablet.evaluate(() =>
+      [...document.querySelectorAll('.header .icon-btn')].every(
+        (b) => (b.getAttribute('aria-label') || b.textContent || '').trim().length > 0
+      )
+    );
+    check(named, 'tablet: every icon button keeps an accessible name');
+  }
+  await tablet.close();
+
   // ================= reduced motion: the whole thing goes still ===========
   // Every ambient loop and every pointer response above is exactly what this
   // preference exists to stop. The finished state has to survive it, so this

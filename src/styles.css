@@ -5571,6 +5571,50 @@ details.hint[open] summary {
   max-width: var(--measure);
 }
 
+
+/* ── touch sizing ────────────────────────────────────────────────────────── */
+/* Keyed on the INPUT DEVICE, not the width. A 768px tablet and a 1024px iPad
+   Pro are both fingers; a 1280px laptop is a mouse, where a 28px control is
+   fine and inflating it would only cost density. `pointer: coarse` asks the
+   right question.
+   44px is the floor a fingertip needs. Measured before this rule: header
+   buttons 28px at tablet and 34px at phone, the skip link 28px, weak-spot
+   chips 26px — all comfortably under, on exactly the devices that cannot
+   aim. Height is added with min-height plus padding rather than a fixed
+   height, so a control that is already large keeps its size and nothing is
+   stretched out of proportion. */
+@media (pointer: coarse) {
+  .header .icon-btn,
+  .header .hdr-menu-btn,
+  .header .hdr-chip,
+  .hero-skip,
+  .weak-chip,
+  .btn,
+  .btn-plain,
+  .chip {
+    min-height: 44px;
+  }
+  /* Icon-only buttons need the width too, or they stay a thin column. */
+  .header .icon-btn,
+  .header .hdr-menu-btn {
+    min-width: 44px;
+    justify-content: center;
+  }
+  /* The brand mark is a real control - it navigates home - so it needs the
+     same 44px. Grown with PADDING, not size: the mascot keeps its drawn
+     dimensions and only the hit area expands, so the wordmark does not
+     suddenly dominate a phone header. */
+  .header-logo {
+    min-height: 44px;
+    padding-inline: var(--s-2);
+  }
+  /* The bar grew by the extra target height; pull the padding back so the
+     header does not eat more of a short tablet viewport than it did before. */
+  .header {
+    padding-block: 4px;
+  }
+}
+
 /* ── the crash screen ───────────────────────────────────────────────────── */
 /* Rendered by AppErrorBoundary when the app throws. It has one job before it
    has any other: get the record out of the browser. */
@@ -9195,7 +9239,12 @@ p,
    a 390px phone, and wrapping to two rows costs vertical space the content
    needs more. The labels stay in the DOM — hidden, not removed — so every
    button keeps its accessible name. */
-@media (max-width: 700px) {
+/* 900, not 700. At 768 the labels still fitted individually but the ROW did
+   not: `.header` is flex-wrap:wrap, so the theme toggle and Settings dropped
+   to a second line and the bar went 62px -> 90px. A tablet is not a small
+   desktop; it gets the icon-only nav deliberately, and every button keeps its
+   accessible name because the label is clipped, never removed. */
+@media (max-width: 900px) {
   .hdr-btn-label {
     position: absolute;
     width: 1px;
