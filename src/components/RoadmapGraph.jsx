@@ -50,6 +50,8 @@ export default function RoadmapGraph({
   onBrowse,
   onStats,
   onLearn,
+  onRehearse = null,
+  rehearse = null, // rehearsalStatus — see state/rehearsal.js
   onSkip = null,
   lessonInfo = null, // { done, total, due, nextTitle }
 }) {
@@ -352,6 +354,29 @@ export default function RoadmapGraph({
               {counts.due > 0 ? 'questions due' : 'next question'}
             </span>
           </button>
+          {/* Rehearsal is available whenever you have solved ANYTHING — it is
+              not gated on the review schedule, because its whole purpose is
+              practising what you already know, whenever you feel like it. The
+              number is how far through the current round you are, so an
+              unfinished round is visible from the front door. */}
+          {onRehearse && rehearse?.ready && (
+            <button
+              className="hero-act"
+              onClick={onRehearse}
+              title={
+                rehearse.inProgress
+                  ? `Rehearsal round ${rehearse.round}: ${rehearse.left} of ${rehearse.size} still to go`
+                  : `Replay all ${rehearse.poolSize} questions you have solved, in random order`
+              }
+            >
+              <span className="hero-act-n">
+                {rehearse.inProgress ? rehearse.left : rehearse.poolSize}
+              </span>
+              <span className="hero-act-l">
+                {rehearse.inProgress ? 'left to rehearse' : 'to rehearse'}
+              </span>
+            </button>
+          )}
           {/* Every chip leads with a number that MEANS something — your own
               record, not a decorative glyph — and says in its tooltip why you
               would press it. A lightning bolt told you nothing. */}

@@ -18,6 +18,7 @@ export const EMPTY_PROGRESS = {
   lessons: {}, // lessonId -> { completedAt, runs, missedIdx, srs: { stage, nextDue } }
   shop: {}, // { spent, owned: [itemId], equipped: { slot -> itemId } } — see state/shop.js
   skipped: {}, // questionId -> true: "I already know this one, stop offering it"
+  rehearsal: {}, // { remaining: [id], size, round } — the persistent shuffled bag
 };
 
 function safeParse(raw, fallback) {
@@ -50,6 +51,7 @@ const FIELD_KINDS = {
   lessons: PLAIN_OBJECT,
   shop: PLAIN_OBJECT,
   skipped: PLAIN_OBJECT,
+  rehearsal: PLAIN_OBJECT,
   mock: 'array',
   quiz: 'any', // legitimately null until the first drill round
 };

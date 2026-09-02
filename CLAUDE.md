@@ -9,7 +9,7 @@ copy text from LeetCode/NeetCode.**
 
 ```bash
 npm run dev / build / lint
-npm test                     # 27 unit suites, incl. run-seed-tests (runs EVERY solution
+npm test                     # 29 unit suites, incl. run-seed-tests (runs EVERY solution
                              # and EVERY alternative approach through real engines)
 # Browser smoke (~408 checks). CDN is blocked in the dev container:
 node tests/setup-local-pyodide.mjs         # once per container
@@ -199,6 +199,18 @@ move). Smoke's `checkRevealSettled` asserts nothing is left transparent.
   needs no threshold, `weakPatterns` is worst-first with ties broken by miss count,
   `roundSummary`/`verdictFor` grade one round (a slow perfect round is told to speed up; a
   round lost to run-outs is diagnosed as the clock, not as ignorance).
+- `rehearsal.js` — **"everything I have already solved, on a loop"**. A shuffled BAG of
+  every `isSolved` question, drawn WITHOUT replacement so nothing repeats until the whole
+  round is done (random-with-replacement would show one question three times and another
+  never — "all of them" has to be a promise, not a probability). The bag lives in
+  `progress.rehearsal` **and not in React state**, because the mode's promise is that it
+  does not reset: closing the tab mid-round resumes on the same question. Emptying the bag
+  starts the next round immediately. Failing/skipping requeues to the BACK — you cannot
+  finish a round by failing through it — and a question solved mid-round joins the NEXT
+  round, so "all of them" keeps meaning the set you started with. Skipped questions are
+  excluded (a claim, not a demonstration); stale ids are filtered on read so a deleted
+  question can never strand the view. Pinned by tests/rehearsal-tests.mjs, including a
+  reload round-trip through sanitizeProgress.
 - `practiceSession.js` — the daily session queue: due reviews (shuffled — retrieval
   practice) → new questions in path order, fail/skip requeues to the back. **It serves
   coding questions and nothing else.** It used to open with due lesson skill checks, which

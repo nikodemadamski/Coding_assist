@@ -3,6 +3,7 @@ import Header from './components/Header.jsx';
 import Picker from './components/Picker.jsx';
 import ProblemView from './components/ProblemView.jsx';
 import PracticeView from './components/PracticeView.jsx';
+import RehearseView from './components/RehearseView.jsx';
 import WarmupView from './components/WarmupView.jsx';
 import MockInterview from './components/MockInterview.jsx';
 import Stats from './components/Stats.jsx';
@@ -48,6 +49,7 @@ import {
   setRestDays,
 } from './state/progress.js';
 import { nextOnPath, neighborOnPath } from './data/roadmap.js';
+import { ensureRound, rehearsalStatus } from './state/rehearsal.js';
 import { coinBalance } from './state/shop.js';
 import { markVisit, recordDaySolve, recordDayFail } from './state/activity.js';
 import { getInitialTheme, applyTheme } from './state/theme.js';
@@ -258,6 +260,17 @@ export default function App() {
     setProgress((p) => skipQuestion(p, questionId));
   }, []);
 
+  // Rehearsal keeps its bag in the record, so "advance" is just a commit of the
+  // moved queue — see state/rehearsal.js for why it is not React state.
+  const rehearse = useMemo(
+    () => rehearsalStatus(progress, allQuestions),
+    [progress, allQuestions]
+  );
+  const openRehearsal = useCallback(() => {
+    setProgress((p) => ensureRound(p, allQuestions));
+    setView({ name: 'rehearse' });
+  }, [allQuestions]);
+
   const handleSetRestDays = useCallback((n) => {
     setProgress((p) => setRestDays(p, n));
   }, []);
@@ -294,6 +307,8 @@ export default function App() {
             progress={progress}
             onOpenQuestion={(id) => setView({ name: 'problem', id, from: 'home' })}
             onStartPractice={() => setView({ name: 'practice' })}
+            onRehearse={openRehearsal}
+            rehearse={rehearse}
             onWarmup={() => setView({ name: 'warmup' })}
             onMock={() => setView({ name: 'mock' })}
             onDrill={() => setView({ name: 'drill' })}
@@ -394,6 +409,20 @@ export default function App() {
             onNote={handleNote}
             onBigO={handleBigO}
             onExit={() => setView({ name: 'browse' })}
+          />
+        )}
+        {view.name === 'rehearse' && (
+          <RehearseView
+            questions={allQuestions}
+            progress={progress}
+            onSolve={handleSolve}
+            onRate={handleRate}
+            onFail={handleFail}
+            onDraft={handleDraft}
+            onNote={handleNote}
+            onBigO={handleBigO}
+            onAdvance={setProgress}
+            onExit={() => setView({ name: 'home' })}
           />
         )}
         {view.name === 'problem' && currentQuestion && (

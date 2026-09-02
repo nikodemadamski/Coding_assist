@@ -464,7 +464,9 @@ export default function ProblemView({
         ? `New · ${practiceInfo.newLeft} left`
         : practiceInfo?.phase === 'drill'
           ? `Drill · ${practiceInfo.reviewsLeft} left`
-          : '';
+          : practiceInfo?.phase === 'rehearse'
+            ? `Rehearsal ${practiceInfo.round} · ${practiceInfo.done}/${practiceInfo.size}`
+            : '';
 
   return (
     <div className={`problem-view ${focusCode ? 'focus-code' : ''}`}>
