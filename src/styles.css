@@ -1,15 +1,12 @@
 /* ── typeface ───────────────────────────────────────────────────────────
-   Self-hosted variable fonts (latin subset, 108KB total). They used to load
-   from Google's CDN, which the service worker passes straight through — so the
-   app fell back to system fonts the moment you went offline, and the PWA never
-   looked like itself. Same-origin means the SW caches them like any asset. */
-@font-face {
-  font-family: 'Bricolage Grotesque';
-  src: url('/fonts/bricolage-grotesque-latin-wght-normal.woff2') format('woff2-variations');
-  font-weight: 200 800;
-  font-style: normal;
-  font-display: swap;
-}
+   Self-hosted variable fonts (latin subset). They used to load from Google's
+   CDN, which the service worker passes straight through — so the app fell back
+   to system fonts the moment you went offline, and the PWA never looked like
+   itself. Same-origin means the SW caches them like any asset.
+   ONE text family, one mono. The display face that used to sit here was a
+   quirky grotesque; two families arguing in a header is noise, and weight plus
+   size carry hierarchy further and more quietly. Dropping it also removes a
+   font file from the critical path. */
 @font-face {
   font-family: 'Schibsted Grotesk';
   src: url('/fonts/schibsted-grotesk-latin-wght-normal.woff2') format('woff2-variations');
@@ -27,26 +24,45 @@
 
 /* ── ZoroClaude Dojo theme ─────────────────────────────────────────────── */
 
+/* ── "Quiet paper, one voice" ────────────────────────────────────────────
+   The old palette ran SEVEN accent hues at once (crimson, jade, gold, sky and
+   three track colours) over a cool blue-purple base. That is what made it read
+   as a gaming dashboard rather than an instrument you use every day: nothing
+   could be emphatic because everything already was.
+   Now: a warm neutral ground, ONE accent that means "this is the action", and
+   sage for done. Two hues total. Hierarchy comes from weight, size and space,
+   which is the only way it survives being looked at for an hour.
+   Every value below is contrast-checked, not eyeballed — the ratios are in the
+   comments and DESIGN.md records the method. */
 :root {
-  --ink: #12141d;
-  --panel: #1b1e2a;
-  --panel-2: #232739;
-  --line: #2d3147;
-  --text: #e9e7de;
-  --text-dim: #a5a294;
-  /* Filled-button red, tuned to pass AA with white text (5.1:1). The brighter
-     mark red is for icons/glyphs only — never as a background behind text. */
-  --crimson: #cf3339;
-  --crimson-bright: #e5484d;
-  --crimson-dim: #a33236;
-  --jade: #3dd68c;
-  --gold: #e8b04b;
-  --sky: #4b9de8;
-  --edge: #565b73; /* roadmap graph arrows */
-  --track-python: #6fb5e8;
-  --track-pandas: #b78ee8;
-  --track-sql: #e8b04b;
-  --font-display: 'Bricolage Grotesque', Georgia, serif;
+  --ink: #1a1f24;
+  --panel: #21272d;
+  --panel-2: #2a3138;
+  --line: #333b43;
+  --text: #eceff1; /* 14.4:1 on ink */
+  --text-dim: #9ba5ae; /* 6.6:1 on ink — dim, never faint */
+  /* The one action. Two values because a colour that is legible as a FILL and
+     a colour that is legible as TEXT are not the same colour: white on the
+     fill needs 4.5:1, and the same swatch as text on the dark ground needs
+     4.5:1 too. The source rose (#E84A5F) manages neither — 3.77:1 with white
+     — so it is darkened for the fill and lifted for text. */
+  --crimson: #e3263f; /* fill; white label 4.55:1 */
+  --crimson-bright: #e94f63; /* accent AS text on ink, 4.55:1; also marks */
+  --crimson-dim: #b01e32;
+  --jade: #99b898; /* sage: solved / progress. 7.6:1 on ink */
+  --gold: #fecea8; /* peach: attention. 11.5:1 on ink */
+  --sky: #8fa3b0; /* info, deliberately quiet — it is not a third accent */
+  --edge: #3f4952; /* roadmap graph arrows */
+  /* Tracks are three TINTS of the same two hues, not three new ones. They only
+     have to be told apart from each other, which neutral/sage/peach manages
+     without adding to the page's colour count. */
+  --track-python: #b8c4cd;
+  --track-pandas: #99b898;
+  --track-sql: #fecea8;
+  /* One typeface. The display face was a quirky grotesque doing work that
+     weight and size do better and quieter; two families competing in a header
+     is the single loudest amateur tell in the old build. */
+  --font-display: 'Schibsted Grotesk', system-ui, sans-serif;
   --font-body: 'Schibsted Grotesk', system-ui, sans-serif;
   --font-code: 'JetBrains Mono', ui-monospace, monospace;
 
@@ -96,22 +112,23 @@
 /* Light theme — a warm, paper-like day mode. Same semantic variables so every
    component adapts; accents are darkened for contrast on a light background. */
 :root[data-theme='light'] {
-  --ink: #f5f3ee;
+  --ink: #f7f5f2; /* paper, not white — white is a glare source at night */
   --panel: #ffffff;
-  --panel-2: #ece9e1;
-  --line: #dcd9d0;
-  --text: #262330;
-  --text-dim: #6a675f;
-  --crimson: #c0272e; /* AA with white text on light (5.9:1) */
-  --crimson-bright: #cf3a40;
-  --crimson-dim: #b0343a;
-  --jade: #12915a;
-  --gold: #9c6b12;
-  --sky: #2f7fc4;
-  --edge: #b3b0a6;
-  --track-python: #1a6296;
-  --track-pandas: #6a2f9e;
-  --track-sql: #7d5210;
+  --panel-2: #efece7;
+  --line: #e0dcd5;
+  --text: #1a1f24; /* 15.3:1 on paper */
+  --text-dim: #5c666e; /* 5.4:1 on paper */
+  /* Same two-value rule as dark, re-derived for a light ground. */
+  --crimson: #c3283c; /* fill; white label 5.7:1 */
+  --crimson-bright: #b32436;
+  --crimson-dim: #9e2030;
+  --jade: #547953; /* sage, darkened to 4.6:1 as text on paper */
+  --gold: #8a5a22; /* peach cannot carry text on paper; this is its dark twin */
+  --sky: #55707f;
+  --edge: #c9c4bb;
+  --track-python: #6b7780;
+  --track-pandas: #547953;
+  --track-sql: #8a5a22;
   color-scheme: light;
 }
 
@@ -309,18 +326,37 @@ button {
 
 /* ── buttons ───────────────────────────────────────────────────────────── */
 
+/* ── buttons: three tiers, and only one of them is loud ──────────────────
+   The old set had FOUR filled variants (crimson, jade, gold outline, danger)
+   competing on the same screens, which is why nothing read as the action. The
+   rule now: exactly one filled accent button per view (.btn-primary), a quiet
+   neutral for everything else, and text-only for the third tier. A second
+   colour of fill is not a second level of emphasis, it is a second voice.
+   Padding is up from 7/13 to 10/18 — the reference button sets all breathe,
+   and a cramped button reads cheap no matter what colour it is. */
 .btn {
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--r-sm);
   background: var(--panel-2);
   color: var(--text);
-  padding: 7px 13px;
+  padding: 10px 18px;
   font-size: var(--t-body);
-  font-weight: 500;
+  font-weight: 550;
+  line-height: 1.2;
+  transition:
+    background var(--dur-1) var(--ease),
+    border-color var(--dur-1) var(--ease),
+    transform var(--dur-1) var(--ease);
 }
 
-.btn:hover {
+.btn:hover:not(:disabled) {
   border-color: var(--text-dim);
+  background: color-mix(in srgb, var(--panel-2) 80%, var(--text) 6%);
+}
+/* A press should feel like a press. 1px is enough to register and small enough
+   that it never looks like the layout moved. */
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 .btn:disabled {
@@ -339,19 +375,25 @@ button {
   border-color: color-mix(in srgb, var(--crimson) 86%, #fff);
 }
 
+/* Was a filled sage button. Sage means SOLVED in this product; spending it on
+   "go and start a lesson" both diluted that meaning and put a second coloured
+   fill next to the one real CTA. It is now the neutral button with a sage
+   label, so the colour still says which family the action belongs to without
+   claiming to be the action. */
 .btn-jade {
-  background: var(--jade);
-  border-color: var(--jade);
-  color: #0b2b1c;
+  background: var(--panel-2);
+  border-color: var(--line);
+  color: var(--jade);
 }
 
 .btn-jade:hover:not(:disabled) {
-  filter: brightness(1.1);
+  border-color: var(--jade);
+  background: color-mix(in srgb, var(--jade) 10%, var(--panel-2));
 }
 
 .btn-gold {
   background: transparent;
-  border-color: var(--gold);
+  border-color: var(--line);
   color: var(--gold);
 }
 
@@ -1988,7 +2030,12 @@ details.hint[open] summary {
    it; you should find it when you look for it, not before. */
 .hero-skip {
   margin-top: var(--s-2);
-  align-self: start;
+  /* justify-self, NOT align-self. The parent is a grid, so align-self governs
+     the block axis; the button was stretching to the full column and centring
+     its own label, which read as an orphaned line floating under the card
+     rather than a control belonging to it. */
+  justify-self: start;
+  text-align: left;
   background: none;
   border: none;
   padding: 6px 2px;
@@ -8200,10 +8247,18 @@ p,
   z-index: -1;
   will-change: transform;
 }
+/* The colour is GONE from these fields. Two tinted washes (crimson + sky) over
+   the whole hero read as a stain on paper in light mode and as smog in dark,
+   and they were the last thing making this look like a gaming dashboard rather
+   than an instrument. A calm ground is not an absence of design; it is what
+   lets one accent mean something.
+   The drift is kept, at a fraction of the strength, in the NEUTRAL panel
+   colour: enough that the surface is alive under a pointer, not enough to
+   read as a colour field. */
 .hero::before {
   background: radial-gradient(
     46% 58% at 22% 26%,
-    color-mix(in srgb, var(--crimson) 20%, transparent),
+    color-mix(in srgb, var(--panel-2) 55%, transparent),
     transparent 70%
   );
   animation: aurora-a 19s ease-in-out infinite;
@@ -8212,7 +8267,7 @@ p,
 .hero::after {
   background: radial-gradient(
     40% 52% at 78% 10%,
-    color-mix(in srgb, var(--sky) 18%, transparent),
+    color-mix(in srgb, var(--panel-2) 40%, transparent),
     transparent 72%
   );
   animation: aurora-b 24s ease-in-out infinite;
@@ -8695,15 +8750,18 @@ p,
   pointer-events: none;
   z-index: 0;
   border-radius: 50%;
+  /* Neutral, like the hero fields above it and for the same reason: a coloured
+     nebula behind the map competed with the one accent and muddied the ground
+     it sits on. The light still follows the pointer; it just does not tint. */
   background:
     radial-gradient(
       54% 48% at calc(50% + (var(--px, 50%) - 50%) * 0.35) calc(46% + (var(--py, 50%) - 50%) * 0.35),
-      color-mix(in srgb, var(--sky) 24%, transparent),
+      color-mix(in srgb, var(--panel-2) 60%, transparent),
       transparent 70%
     ),
     radial-gradient(
       42% 42% at 76% 80%,
-      color-mix(in srgb, var(--crimson) 18%, transparent),
+      color-mix(in srgb, var(--panel-2) 45%, transparent),
       transparent 72%
     );
   transition: background-position 600ms var(--ease);

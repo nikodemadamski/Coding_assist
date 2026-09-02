@@ -248,3 +248,37 @@ arbitrary number is not a reward. Every coin is traceable to a row you can see.
 
 And the mascot wears your belt at all times, in every room, at every size — including in
 the flat fallback. Rank is the one thing a costume can never take off you.
+
+## The palette: "quiet paper, one voice"
+
+Two hues. That is the whole rule, and it is the reason the page reads calm.
+
+- **rose** — THE action. One filled accent button per view, never two.
+- **sage** — solved / progress. The product's core state deserves the only
+  other colour.
+- everything else is neutral: warm greys on a warm ground, no blue-purple cast.
+
+The old set ran seven accent hues at once (crimson, jade, gold, sky and three
+saturated track colours) over a cool navy base with two tinted aurora fields
+washing across the hero. Nothing could be emphatic because everything already
+was, and the tinted ground read as a stain in light mode and as smog in dark.
+
+**Every colour is contrast-checked, never eyeballed.** A colour that works as a
+FILL and a colour that works as TEXT are not the same colour, so the accent has
+two values: white on the fill must clear 4.5:1, and the same hue used as text
+on the ground must clear 4.5:1 separately. The reference rose `#E84A5F` manages
+neither — it is 3.77:1 with white — so the fill is derived at `#E3263F`
+(4.55:1) and the text value at `#E94F63` (4.55:1). Light mode re-derives both
+against paper rather than reusing the dark values.
+
+**One typeface.** Schibsted Grotesk carries everything; hierarchy is weight,
+size and space. Two families arguing in a header was the loudest amateur tell
+in the old build, and dropping the display face also removed a 41KB font from
+the critical path.
+
+**Buttons are three tiers and only one is loud.** `.btn-primary` is the single
+filled accent; `.btn` is the quiet neutral for everything else; text-only is the
+third tier. A second colour of fill is not a second level of emphasis, it is a
+second voice — which is why the sage "start a lesson" button became neutral with
+a sage label. Padding is 10/18 with a 1px press: the reference button sets all
+breathe, and a cramped button reads cheap whatever colour it is.
