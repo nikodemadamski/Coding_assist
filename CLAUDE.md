@@ -247,8 +247,14 @@ Principles: **one loud thing per screen** · colour carries state, never decorat
 `--shadow-modal`) · prose capped at `--measure` · motion moves opacity/transform on
 `--ease`, never width/height.
 
-Tokens (never hard-code a value): type `--t-micro…--t-3xl` (11px floor for functional
-text — no exceptions), spacing `--s-1…--s-8` (4px base), radius `--r-xs/sm/md/lg/full`,
+Tokens (never hard-code a value): type `--t-micro…--t-3xl` + `--t-display` (11px floor
+for functional text — no exceptions). **Every rung is ~1.2× the last**: the old ladder ran
+11/12/13/15/17, five sizes so close that nothing read as bigger than anything else, so
+screens compensated with a 68px headline and the page had no middle. `--t-display`
+(clamp 31→40px) is the ONE display size and belongs to the one loud thing on a screen —
+never to a greeting, a page title and a CTA at once. **No `font-size` clamp outside the
+token block**: two ad-hoc clamps are how the greeting ended up 70% louder than the button
+under it. Spacing `--s-1…--s-8` (4px base), radius `--r-xs/sm/md/lg/full`,
 `--shadow-pop/-modal`, `--ease` + `--dur-1/2`. Colour is semantic: `--ink/--panel/
 --panel-2/--line/--text/--text-dim`, state accents `--jade` (progress/done), `--gold`
 (current/attention), `--crimson` (the one CTA — AA-tuned; `--crimson-bright` is for
@@ -370,14 +376,20 @@ asymmetric: smoke asserts the bento cells do NOT all share one width.
 catches the generated-UI tells — coloured side-tabs, thin-border+wide-shadow, bounce
 easing, layout-animating transitions, sub-11px text, contrast failures, long lines.
 
-**One known false positive, do not "fix" it.** Run with an explicit
-`--viewport 1440x900` and impeccable reports `.graph-fit clips a positioned child`,
-warning that a clip cuts off tooltips and popovers. Measured in the rendered page: the
-only positioned children inside `.graph-fit` are the `.graph-node` tiles, none is
-clipped (`anyClipped: false`), and the topic popup renders OUTSIDE the container and is
-fully visible. The clip is load-bearing — it stops the canvas's unscaled 840px layout box
-escaping its column — so removing it to silence the linter would reintroduce a real bug.
-Verified pre-existing by stashing, rebuilding and re-running against the baseline.
+**The `.graph-fit` finding was real — it is fixed, and the lesson is worth keeping.**
+At `--viewport 1440x900` impeccable used to report `.graph-fit clips a positioned child`.
+It was written off here as a false positive on the strength of a measurement that asked
+the wrong question: the `.graph-node` tiles were compared against their own *layout*
+boxes, which are indeed unclipped. But the nodes ride at a positive `translateZ` under
+`perspective(1500px)`, so they **draw** larger than they lay out and push away from the
+canvas centre. The widest node on the bottom row (Dynamic Programming) rendered **6.1px
+past** `.graph-fit`'s right edge and had its side sliced off. Fitting the map to the raw
+`GRAPH_W` fitted the wrong rectangle; the scale now divides by `PARALLAX =
+1500 / (1500 - 60)` (max `--z` is 60px), i.e. the map is fitted to what it DRAWS. The clip
+itself stays — it is load-bearing, stopping the canvas's unscaled 840px layout box from
+escaping its column. Smoke now measures every node's rendered rect against the frame that
+clips it, so this cannot come back. **When a linter points at something, measure the thing
+it drew, not the box it was assigned.**
 
 ## UI shell (src/components/)
 

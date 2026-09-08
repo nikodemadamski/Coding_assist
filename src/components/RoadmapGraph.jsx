@@ -38,6 +38,15 @@ const MASTERY_LABEL = { new: 'new', learning: 'learning', reviewing: 'reviewing'
 // The home page: a NeetCode-style visual roadmap. The whole map scales to fit
 // the viewport width (no scroll box), each node shows its progress, and
 // clicking a node opens a popup listing that topic's questions.
+// The nodes ride at a positive translateZ under a 1500px perspective, so the
+// ones nearest the viewer DRAW BIGGER than their layout box and push away from
+// the canvas centre. Fitting to the raw 840px layout width therefore fits the
+// wrong rectangle: the widest node on the bottom row (Dynamic Programming)
+// rendered 6px past .graph-fit's edge at 1440 and was sliced down its right
+// side. The map is fitted to what it DRAWS, not to what it lays out — max --z
+// is 60px, so the drawn box is 1500/(1500-60) wider than GRAPH_W.
+const PARALLAX = 1500 / (1500 - 60);
+
 export default function RoadmapGraph({
   questions,
   progress,
@@ -78,7 +87,11 @@ export default function RoadmapGraph({
       setScale(
         Math.max(
           0.3,
-          Math.min(el.clientWidth / GRAPH_W, (window.innerHeight - CHROME) / GRAPH_H, 1.2)
+          Math.min(
+            el.clientWidth / (GRAPH_W * PARALLAX),
+            (window.innerHeight - CHROME) / GRAPH_H,
+            1.2
+          )
         )
       );
     fit();
@@ -349,9 +362,9 @@ export default function RoadmapGraph({
                 : 'Nothing due — straight on to the next question on the path'
             }
           >
-            <span className="hero-act-n">{counts.due > 0 ? counts.due : '▶'}</span>
+            {counts.due > 0 && <span className="hero-act-n">{counts.due}</span>}
             <span className="hero-act-l">
-              {counts.due > 0 ? 'questions due' : 'next question'}
+              {counts.due > 0 ? 'questions due' : 'Next question'}
             </span>
           </button>
           {/* Rehearsal is available whenever you have solved ANYTHING — it is
@@ -389,8 +402,8 @@ export default function RoadmapGraph({
                 : 'Rapid-fire one-liners against a clock: get the syntax out of the way first'
             }
           >
-            <span className="hero-act-n">{bestWarmup > 0 ? bestWarmup : '—'}</span>
-            <span className="hero-act-l">{bestWarmup > 0 ? 'best warm-up' : 'warm-up'}</span>
+            {bestWarmup > 0 && <span className="hero-act-n">{bestWarmup}</span>}
+            <span className="hero-act-l">{bestWarmup > 0 ? 'best warm-up' : 'Warm-up'}</span>
           </button>
           {!brandNew && (
             <button
@@ -402,8 +415,8 @@ export default function RoadmapGraph({
                   : 'Timed, no hints — the closest thing here to the real interview'
               }
             >
-              <span className="hero-act-n">{mockCount > 0 ? mockCount : '—'}</span>
-              <span className="hero-act-l">{mockCount > 0 ? 'mocks run' : 'mock interview'}</span>
+              {mockCount > 0 && <span className="hero-act-n">{mockCount}</span>}
+              <span className="hero-act-l">{mockCount > 0 ? 'mocks run' : 'Mock interview'}</span>
             </button>
           )}
           {missCount > 0 && !brandNew && (

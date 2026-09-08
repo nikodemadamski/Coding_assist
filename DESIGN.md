@@ -89,10 +89,24 @@ Full-page views open with a **page head**: one title at hero scale and a single 
 of lede. Same shape everywhere — that repetition is what makes separate screens read
 as one product.
 
-**No eyebrow kickers.** A tiny tracked-caps label sitting as its own block above a
-heading is the most recognisable generated-UI tell there is, and the heading always
-carried the meaning on its own. If the label says something real, work it into the
-heading ("The path — 17 topics, in order") or put it below as a plain sentence.
+**No eyebrow kickers, and no tracked caps anywhere.** A tiny tracked-caps label sitting
+as its own block above a heading is the most recognisable generated-UI tell there is, and
+the heading always carried the meaning on its own. If the label says something real, work
+it into the heading ("The path — 17 topics, in order") or put it below as a plain
+sentence. The rule now covers the whole app, not just the eyebrow position: there were
+nineteen `text-transform: uppercase` + `letter-spacing: 0.0Xem` rules doing quiet-label
+duty, and 11px caps at 0.18em tracking is harder to read AND louder than the sentence-case
+13px that replaced it. A label whispers by being small and dim, not by being shouted in
+small caps.
+
+**A number slot holds a number.** Stat chips used to print `▶` or `—` when they had
+nothing to count, which reads as data that failed to load. A chip with no number is a
+button: drop the slot, let the label take the chip and grow one step.
+
+**The loudest thing is the thing you can act on.** Sizes are relative claims about
+importance, so a decorative headline set larger than the primary button is a lie the
+layout tells. On home the greeting sits a rung BELOW the next question's title, and smoke
+asserts the ratio rather than either absolute size.
 
 Grids are **deliberately asymmetric**. An equal-width row of three or four cards is
 the default every generator reaches for, and it flattens hierarchy: everything looks

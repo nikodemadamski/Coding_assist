@@ -67,15 +67,22 @@
   --font-code: 'JetBrains Mono', ui-monospace, monospace;
 
   /* ── scales ──────────────────────────────────────────────────────────── */
-  /* Type: functional text never goes below 11px (see DESIGN.md). */
+  /* Type: functional text never goes below 11px (see DESIGN.md).
+     Every step is a STEP. The old ladder ran 11/12/13/15/17 — five sizes so
+     close together that nothing read as bigger than anything else, so screens
+     compensated with a 68px headline, and the page had no middle. Now each
+     rung is ~1.2× the last, which is the smallest gap the eye reads as
+     deliberate, and there is exactly ONE display size (--t-display), used by
+     the one loud thing on a screen and by nothing else. */
   --t-micro: 11px;
   --t-tiny: 12px;
   --t-sm: 13px;
   --t-body: 15px;
-  --t-lg: 17px;
-  --t-xl: 20px;
-  --t-2xl: 26px;
-  --t-3xl: 34px;
+  --t-lg: 18px;
+  --t-xl: 22px;
+  --t-2xl: 27px;
+  --t-3xl: 33px;
+  --t-display: clamp(31px, 3.4vw, 40px);
 
   /* Spacing: 4px base. */
   --s-1: 4px;
@@ -1960,8 +1967,6 @@ details.hint[open] summary {
   margin: 0 0 10px;
   font-size: var(--t-sm);
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
   color: var(--text-dim);
 }
 .track-fit .ready-part {
@@ -3024,8 +3029,6 @@ details.hint[open] summary {
 .today-label {
   font-size: var(--t-tiny);
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--text-dim);
 }
 .today-chip {
@@ -3534,9 +3537,7 @@ details.hint[open] summary {
 }
 .viz-hero-step {
   font-family: var(--font-code);
-  font-size: var(--t-micro);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-size: var(--t-tiny);
   color: var(--gold);
   white-space: nowrap;
   flex-shrink: 0;
@@ -3556,9 +3557,7 @@ details.hint[open] summary {
 }
 .viz-effects-label {
   font-family: var(--font-code);
-  font-size: var(--t-micro);
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
+  font-size: var(--t-tiny);
   color: var(--text-dim);
 }
 .viz-effects-label.done {
@@ -3589,9 +3588,7 @@ details.hint[open] summary {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: var(--t-micro);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-size: var(--t-tiny);
   color: var(--text-dim);
 }
 .viz-changed-flag {
@@ -3617,9 +3614,7 @@ details.hint[open] summary {
 .viz-var-tag {
   margin-left: 8px;
   font-family: var(--font-code);
-  font-size: var(--t-micro);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: var(--t-tiny);
   color: var(--ink);
   background: var(--gold);
   padding: 1px 5px;
@@ -3648,9 +3643,7 @@ details.hint[open] summary {
 .viz-var-name {
   display: block;
   font-family: var(--font-code);
-  font-size: var(--t-micro);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-size: var(--t-tiny);
   color: var(--text-dim);
   margin-bottom: 5px;
 }
@@ -5521,8 +5514,6 @@ details.hint[open] summary {
 }
 .ln-transfer-label {
   font-size: var(--t-tiny);
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
   color: var(--text-dim);
 }
 .ln-transfer-link {
@@ -5750,8 +5741,6 @@ details.hint[open] summary {
 .pattern-section-head {
   font-size: var(--t-sm);
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
   color: var(--text-dim);
   margin: 0 0 8px;
 }
@@ -5856,9 +5845,7 @@ details.hint[open] summary {
 }
 .pattern-cues-label,
 .pattern-drill-label {
-  font-size: var(--t-micro);
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
+  font-size: var(--t-tiny);
   color: var(--text-dim);
   margin-right: 4px;
 }
@@ -5877,8 +5864,6 @@ details.hint[open] summary {
   gap: 2px 14px;
   margin-bottom: 6px;
   font-size: var(--t-tiny);
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
   color: var(--text-dim);
 }
 .pattern-complexity {
@@ -5994,10 +5979,8 @@ details.hint[open] summary {
   gap: 3px;
 }
 .next-step-kicker {
-  font-size: var(--t-micro);
+  font-size: var(--t-tiny);
   font-weight: 600;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
   color: var(--jade);
 }
 .next-step-title {
@@ -6077,9 +6060,7 @@ details.hint[open] summary {
 .past-note-label {
   display: block;
   font-family: var(--font-code);
-  font-size: var(--t-micro);
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
+  font-size: var(--t-tiny);
   color: var(--sky);
   margin-bottom: 4px;
 }
@@ -6167,10 +6148,8 @@ details.hint[open] summary {
 }
 .stuck-rung-num {
   font-family: var(--font-code);
-  font-size: var(--t-micro);
+  font-size: var(--t-tiny);
   color: var(--gold);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 .stuck-rung-teaser {
   font-weight: 400;
@@ -7738,10 +7717,8 @@ p,
 }
 .stage-kicker {
   display: block;
-  font-size: var(--t-micro);
+  font-size: var(--t-tiny);
   font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
   color: var(--text-dim);
 }
 .stage-top h1 {
@@ -8182,9 +8159,7 @@ p,
   font-variant-numeric: tabular-nums;
 }
 .wu-streak-l {
-  font-size: var(--t-micro);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: var(--t-tiny);
   color: var(--text-dim);
 }
 
@@ -8346,11 +8321,16 @@ p,
     transform: scale(0.7);
   }
 }
+/* The greeting is a greeting. It was 68px — 70% louder than the button it sits
+   above — which made the least informative text on the page the loudest thing
+   on it. It now sits one rung BELOW the question card's title, so the eye
+   lands on the thing you came to press. */
 .hero-title {
   margin: 0;
-  font-size: clamp(38px, 6.2vw, 68px);
-  line-height: 0.98;
-  letter-spacing: -0.04em;
+  font-size: var(--t-2xl);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
   text-wrap: balance;
 }
 .hero-line {
@@ -8359,6 +8339,17 @@ p,
   color: var(--text-dim);
   font-size: var(--t-lg);
   line-height: 1.5;
+}
+/* On a phone the two headings sit within 1px of each other and "one loud
+   thing" collapses into two equally loud things, so the greeting steps down
+   again and the question keeps the lead. */
+@media (max-width: 560px) {
+  .hero-title {
+    font-size: var(--t-xl);
+  }
+  .hero-line {
+    font-size: var(--t-body);
+  }
 }
 .hero-line strong {
   color: var(--text);
@@ -8419,18 +8410,16 @@ p,
   display: flex;
   align-items: center;
   gap: var(--s-2);
-  font-size: var(--t-micro);
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--crimson-bright);
+  font-size: var(--t-sm);
+  font-weight: 500;
+  color: var(--text-dim);
 }
 .hero-next-title {
   font-family: var(--font-display);
-  font-size: clamp(26px, 3.4vw, 40px);
+  font-size: var(--t-display);
   font-weight: 700;
-  line-height: 1.04;
-  letter-spacing: -0.03em;
+  line-height: 1.06;
+  letter-spacing: -0.025em;
   text-wrap: balance;
 }
 .hero-next-why {
@@ -8516,11 +8505,17 @@ p,
   font-variant-numeric: tabular-nums;
 }
 .hero-act-l {
-  font-size: var(--t-micro);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-size: var(--t-sm);
   color: var(--text-dim);
   white-space: nowrap;
+}
+/* A chip with no number is a BUTTON, not a stat with a hole in it. It used to
+   print "—" or "▶" in the number slot, which reads as data that failed to
+   load; now the label simply takes the whole chip and grows one step. */
+.hero-act:not(:has(.hero-act-n)):not(.hero-act-ring) .hero-act-l {
+  font-size: var(--t-body);
+  color: var(--text);
+  font-weight: 500;
 }
 .hero-act-loud .hero-act-n {
   color: var(--gold);
@@ -8668,10 +8663,8 @@ p,
   border-radius: var(--r-md);
 }
 .weak-row .weak-label {
-  font-size: var(--t-micro);
+  font-size: var(--t-tiny);
   font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
 
 @media (max-width: 620px) {
@@ -9605,10 +9598,8 @@ p,
   border-right: 1px solid var(--line);
 }
 .guide-rail-head {
-  font-size: var(--t-micro);
+  font-size: var(--t-tiny);
   font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
   color: var(--text-dim);
   margin-bottom: var(--s-2);
 }

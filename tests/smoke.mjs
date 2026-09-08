@@ -214,10 +214,22 @@ try {
   // The hero: it greets you by name and names the next problem, loudly.
   const heroTitle = await page.locator('.hero-title').innerText();
   check(/Nick/.test(heroTitle), `the home greets you by name (${heroTitle})`);
-  const heroSize = await page.evaluate(() =>
-    parseFloat(getComputedStyle(document.querySelector('.hero-title')).fontSize)
+  // ONE loud thing, and it is the one you can act on. This used to assert the
+  // greeting was >= 36px, which is how it ended up at 68px — 70% louder than
+  // the button beneath it, and saying nothing. The size that matters is
+  // relative: the question you are about to open outranks the hello.
+  const heroType = await page.evaluate(() => {
+    const px = (sel) => parseFloat(getComputedStyle(document.querySelector(sel)).fontSize);
+    return { greeting: px('.hero-title'), next: px('.hero-next-title') };
+  });
+  check(
+    heroType.next > heroType.greeting * 1.15,
+    `the next question outranks the greeting (${Math.round(heroType.next)}px vs ${Math.round(heroType.greeting)}px)`
   );
-  check(heroSize >= 36, `the greeting is set at hero scale (${Math.round(heroSize)}px)`);
+  check(
+    heroType.greeting >= 20,
+    `and the greeting is still a heading (${Math.round(heroType.greeting)}px)`
+  );
   check(
     (await page.locator('.hero-next-title').innerText()).length > 3,
     'the hero names the next problem'
@@ -270,6 +282,21 @@ try {
   check(
     (await page.locator('.graph-node.current').count()) === 1,
     'exactly one topic is marked as where you are'
+  );
+  // The nodes ride at a positive translateZ under a perspective, so they DRAW
+  // wider than they lay out and push away from the canvas centre. Fitting to
+  // the raw layout width sliced the right-hand side off the widest node on the
+  // bottom row. Measure what is drawn, against the box that clips it.
+  const clippedNodes = await page.evaluate(() => {
+    const fit = document.querySelector('.graph-fit').getBoundingClientRect();
+    return [...document.querySelectorAll('.graph-node')]
+      .map((n) => ({ t: n.textContent.trim().slice(0, 24), b: n.getBoundingClientRect() }))
+      .filter((r) => r.b.right > fit.right + 0.5 || r.b.left < fit.left - 0.5)
+      .map((r) => r.t);
+  });
+  check(
+    clippedNodes.length === 0,
+    `no topic is clipped by the map's own frame (${clippedNodes.join(', ') || 'none'})`
   );
 
   // ---- the home page has to still be alive once it has settled ----------
